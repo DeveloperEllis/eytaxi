@@ -1,4 +1,5 @@
 import 'package:eytaxi/core/constants/app_colors.dart';
+import 'package:eytaxi/core/constants/app_routes.dart';
 import 'package:flutter/material.dart';
 
 class InfoScreen extends StatelessWidget {
@@ -193,7 +194,7 @@ class InfoScreen extends StatelessWidget {
                     ElevatedButton(
                       onPressed: () {
                         // Navegar a la pantalla de login/registro de taxistas
-                        _navigateToTaxistLogin(context);
+                        AppRoutes.router.go('/login');
                       },
                       style: ElevatedButton.styleFrom(
                         backgroundColor: AppColors.white,
@@ -353,20 +354,5 @@ class InfoScreen extends StatelessWidget {
     );
   }
 
-  void _navigateToTaxistLogin(BuildContext context) {
-    // Aquí puedes navegar a tu pantalla de login/registro de taxistas
-    // Ejemplo:
-    // Navigator.push(
-    //   context,
-    //   MaterialPageRoute(builder: (context) => TaxistLoginScreen()),
-    // );
-    
-    // Mientras tanto, mostramos un mensaje
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: const Text('Redirigiendo al registro de taxistas...'),
-        backgroundColor: AppColors.primary,
-      ),
-    );
-  }
+
 }

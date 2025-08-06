@@ -22,9 +22,10 @@ class ExcursionCard extends StatelessWidget {
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
-            color:isDarkMode ? Colors.black.withOpacity(0.2) : Colors.grey.withOpacity(0.2),
-            blurRadius: 10,
+            color: isDarkMode ? Colors.black.withOpacity(0.3) : Colors.grey.withOpacity(0.15),
+            blurRadius: 12,
             offset: const Offset(0, 4),
+            spreadRadius: 0,
           ),
         ],
       ),
@@ -71,13 +72,14 @@ class ExcursionCard extends StatelessWidget {
                 : _buildErrorImage(context),
           ),
           _buildPriceTag(context),
+          _buildDepartureTimeTag(context),
         ],
       ),
     );
   }
 
   Widget _buildPriceTag(BuildContext context) {
-    bool isDarkMode = Theme.of(context).brightness == Brightness.dark;      
+    final isDarkMode = Theme.of(context).brightness == Brightness.dark;      
     return Positioned(
       top: 12,
       right: 12,
@@ -88,16 +90,16 @@ class ExcursionCard extends StatelessWidget {
           borderRadius: BorderRadius.circular(12),
           boxShadow: [
             BoxShadow(
-              color:isDarkMode ? Colors.black.withOpacity(0.3) : Colors.grey.withOpacity(0.3),
-              blurRadius: 4,
-              offset: const Offset(0, 2),
+              color: isDarkMode ? Colors.black.withOpacity(0.4) : Colors.grey.withOpacity(0.3),
+              blurRadius: 6,
+              offset: const Offset(0, 3),
             ),
           ],
         ),
         child: Text(
           '\$${excursion['precio']}',
-          style: TextStyle(
-            color:AppColors.white,
+          style: const TextStyle(
+            color: Colors.white,
             fontSize: 19,
             fontWeight: FontWeight.bold,
           ),
@@ -106,8 +108,59 @@ class ExcursionCard extends StatelessWidget {
     );
   }
 
+  Widget _buildDepartureTimeTag(BuildContext context) {
+    final isDarkMode = Theme.of(context).brightness == Brightness.dark;
+    final horaSalida = excursion['hora_salida'] ?? '';
+    
+    if (horaSalida.isEmpty) return const SizedBox.shrink();
+    
+    return Positioned(
+      top: 12,
+      left: 12,
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+        decoration: BoxDecoration(
+          color: isDarkMode 
+              ? Colors.black.withOpacity(0.7) 
+              : Colors.white.withOpacity(0.9),
+          borderRadius: BorderRadius.circular(10),
+          border: Border.all(
+            color: isDarkMode ? Colors.grey[600]! : Colors.grey[300]!,
+            width: 0.5,
+          ),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(0.1),
+              blurRadius: 4,
+              offset: const Offset(0, 2),
+            ),
+          ],
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(
+              Icons.schedule,
+              size: 14,
+              color: isDarkMode ? Colors.grey[300] : Colors.grey[700],
+            ),
+            const SizedBox(width: 4),
+            Text(
+              horaSalida,
+              style: TextStyle(
+                color: isDarkMode ? Colors.grey[300] : Colors.grey[700],
+                fontSize: 12,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
   Widget _buildErrorImage(BuildContext context) {
-    bool isDarkMode = Theme.of(context).brightness == Brightness.dark;     
+    final isDarkMode = Theme.of(context).brightness == Brightness.dark;     
     return Container(
       color: isDarkMode ? Colors.grey[700] : Colors.grey[200],
       child: Center(
@@ -127,10 +180,10 @@ class ExcursionCard extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           _buildTitle(context),
-          const SizedBox(height: 6),
+          const SizedBox(height: 8),
           _buildDescription(context),
-          const SizedBox(height: 12),
-          _buildInfoRow(context),
+          const SizedBox(height: 14),
+          _buildInfoGrid(context),
           const SizedBox(height: 16),
           _buildReserveButton(context),
         ],
@@ -139,13 +192,14 @@ class ExcursionCard extends StatelessWidget {
   }
 
   Widget _buildTitle(BuildContext context) {
-    bool isDarkMode = Theme.of(context).brightness == Brightness.dark;     
+    final isDarkMode = Theme.of(context).brightness == Brightness.dark;     
     return Text(
       excursion['titulo'] ?? '',
       style: TextStyle(
         fontSize: 18,
-        fontWeight: FontWeight.w600,
-        color: isDarkMode ? Colors.white : Colors.black,
+        fontWeight: FontWeight.w700,
+        color: isDarkMode ? Colors.white : Colors.black87,
+        height: 1.2,
       ),
       maxLines: 2,
       overflow: TextOverflow.ellipsis,
@@ -153,59 +207,113 @@ class ExcursionCard extends StatelessWidget {
   }
 
   Widget _buildDescription(BuildContext context) {
+    final isDarkMode = Theme.of(context).brightness == Brightness.dark;
     return Text(
       excursion['descripcion'] ?? '',
       style: TextStyle(
         fontSize: 14,
-        color: Colors.grey[600],
-        height: 1.3,
+        color: isDarkMode ? Colors.grey[400] : Colors.grey[600],
+        height: 1.4,
       ),
       maxLines: 2,
       overflow: TextOverflow.ellipsis,
     );
   }
 
-  Widget _buildInfoRow(BuildContext context) {
-    return Row(
+  Widget _buildInfoGrid(BuildContext context) {
+    final ubicacion = excursion['ubicacion'] ?? '';
+    final duracion = excursion['duracion'] ?? '';
+    final horaSalida = excursion['hr_salida'] ?? '';
+
+    return Column(
       children: [
-        _buildInfoChip(Icons.location_on, excursion['ubicacion'] ?? ''),
-        const SizedBox(width: 12),
-        _buildInfoChip(Icons.access_time, '${excursion['duracion'] ?? ''} hrs'),
+        Row(
+          children: [
+            if (ubicacion.isNotEmpty)
+              Expanded(child: _buildInfoChip(Icons.location_on_outlined, ubicacion)),
+            if (ubicacion.isNotEmpty && duracion.isNotEmpty)
+              const SizedBox(width: 12),
+            if (duracion.isNotEmpty)
+              Expanded(child: _buildInfoChip(Icons.schedule_outlined, '$duracion')),
+          ],
+        ),
+        if (horaSalida.isNotEmpty && (ubicacion.isNotEmpty || duracion.isNotEmpty))
+          const SizedBox(height: 10),
+        if (horaSalida.isNotEmpty)
+          Row(
+            children: [
+              Expanded(child: _buildInfoChip(Icons.departure_board, 'Salida: $horaSalida')),
+            ],
+          ),
       ],
     );
   }
 
   Widget _buildInfoChip(IconData icon, String label) {
-    return Row(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        Icon(
-          icon,
-          size: 16,
-          color: Colors.grey[500],
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
+      decoration: BoxDecoration(
+        color: Colors.grey[100]?.withOpacity(0.5),
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(
+          color: Colors.grey[300]!.withOpacity(0.5),
+          width: 0.5,
         ),
-        const SizedBox(width: 4),
-        Text(
-          label,
-          style: TextStyle(
-            fontSize: 13,
-            color: Colors.grey[600],
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(
+            icon,
+            size: 16,
+            color: AppColors.primary.withOpacity(0.8),
           ),
-        ),
-      ],
+          const SizedBox(width: 6),
+          Flexible(
+            child: Text(
+              label,
+              style: TextStyle(
+                fontSize: 12,
+                color: Colors.grey[700],
+                fontWeight: FontWeight.w500,
+              ),
+              overflow: TextOverflow.ellipsis,
+            ),
+          ),
+        ],
+      ),
     );
   }
 
   Widget _buildReserveButton(BuildContext context) {
-    return SizedBox(
+    return Container(
       width: double.infinity,
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(12),
+        gradient: LinearGradient(
+          colors: [
+            AppColors.primary,
+            AppColors.primary.withOpacity(0.8),
+          ],
+          begin: Alignment.centerLeft,
+          end: Alignment.centerRight,
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: AppColors.primary.withOpacity(0.3),
+            blurRadius: 8,
+            offset: const Offset(0, 4),
+          ),
+        ],
+      ),
       child: ElevatedButton(
         onPressed: onReservePressed,
         style: ElevatedButton.styleFrom(
-          backgroundColor: AppColors.primary,
+          backgroundColor: Colors.transparent,
+          shadowColor: Colors.transparent,
           foregroundColor: Colors.white,
           elevation: 0,
-          padding: const EdgeInsets.symmetric(vertical: 12),
+          padding: const EdgeInsets.symmetric(vertical: 14),
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(12),
           ),
@@ -215,6 +323,7 @@ class ExcursionCard extends StatelessWidget {
           style: TextStyle(
             fontSize: 16,
             fontWeight: FontWeight.w600,
+            letterSpacing: 0.5,
           ),
         ),
       ),

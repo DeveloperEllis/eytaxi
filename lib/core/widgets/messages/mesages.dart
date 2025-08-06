@@ -21,6 +21,7 @@ class CustomDialog extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final _isDarkMode = Theme.of(context).brightness == Brightness.dark;
     return Dialog(
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
       child: Padding(
@@ -49,7 +50,7 @@ class CustomDialog extends StatelessWidget {
             const SizedBox(height: 12),
             Text(
               message,
-              style: const TextStyle(fontSize: 16, color: Colors.black87),
+              style: const TextStyle(fontSize: 16, color: Colors.black),
               textAlign: TextAlign.center,
             ),
             const SizedBox(height: 24),

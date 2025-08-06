@@ -1,6 +1,6 @@
 import 'dart:developer';
 import 'package:eytaxi/core/constants/app_colors.dart';
-import 'package:eytaxi/core/enum/Trip_enum.dart';
+import 'package:eytaxi/core/enum/Trip_status.dart';
 import 'package:eytaxi/core/services/supabase_service.dart';
 import 'package:eytaxi/core/services/trip_request__service.dart';
 import 'package:eytaxi/core/styles/button_style.dart';
@@ -171,7 +171,7 @@ class _TaxiFormState extends State<TaxiForm> {
         price: _precio,
         distanceKm: _distanciaKm,
         estimatedTimeMinutes: _tiempoMin?.toInt(),
-        createdAt: DateTime.now(),
+        createdAt: DateTime.now(), userId: '',
       );
 
       final guestcontact = GuestContact(
@@ -185,7 +185,7 @@ class _TaxiFormState extends State<TaxiForm> {
       await service.createTripRequest(trip, guestcontact );
 
       if (mounted) {
-        CustomDialog.showSuccessDialog(context, 'Éxito', 'La operación se completó correctamente.');
+        CustomDialog.showSuccessDialog(context, 'Éxito', 'Su solicitud ha sido enviado a nuestros taxistas, le contactaremos muy pronto');
         _resetForm();
       }
     } else {

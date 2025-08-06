@@ -8,10 +8,12 @@ class AppInputDecoration {
     required String labelText,
     IconData? prefixIcon,
     Widget? suffixIcon,
+    String? hintText,
     EdgeInsets contentPadding = const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
   }) {
     final isDarkMode = Theme.of(context).brightness == Brightness.dark;
     return InputDecoration(
+      hintText: hintText,
       labelText: labelText,
       labelStyle: Theme.of(context).textTheme.bodyMedium?.copyWith(
             color: isDarkMode ? AppColors.white : AppColors.black.withOpacity(0.7),

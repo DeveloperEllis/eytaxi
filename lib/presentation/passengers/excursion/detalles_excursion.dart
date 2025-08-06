@@ -7,95 +7,311 @@ class ExcursionDetallePage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final isDarkMode = Theme.of(context).brightness == Brightness.dark;
+    
     return Scaffold(
-      appBar: AppBar(
-        title: Text(
-          excursion['titulo'] ?? 'Excursión',
-          style: const TextStyle(
-            fontSize: 20,
-            fontWeight: FontWeight.bold,
-            color: Colors.white,
+      body: CustomScrollView(
+        slivers: [
+          _buildSliverAppBar(context, isDarkMode),
+          SliverToBoxAdapter(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                _buildHeaderInfo(context, isDarkMode),
+                _buildDetailsSection(context, isDarkMode),
+                _buildDescriptionSection(context, isDarkMode),
+                const SizedBox(height: 100), // Espacio para el bottom bar
+              ],
+            ),
           ),
+        ],
+      ),
+      bottomNavigationBar: _buildBottomReservationBar(context, isDarkMode),
+    );
+  }
+
+  Widget _buildSliverAppBar(BuildContext context, bool isDarkMode) {
+    return SliverAppBar(
+      expandedHeight: 250,
+      pinned: true,
+      backgroundColor: AppColors.primary,
+      leading: Container(
+        margin: const EdgeInsets.all(8),
+        decoration: BoxDecoration(
+          color: Colors.black.withOpacity(0.4),
+          borderRadius: BorderRadius.circular(10),
         ),
-        backgroundColor: AppColors.primary,
-        leading: IconButton(
+        child: IconButton(
           icon: const Icon(Icons.arrow_back, color: Colors.white),
           onPressed: () => Navigator.of(context).pop(),
         ),
       ),
-      body: Padding(
-        padding: const EdgeInsets.all(20),
-        child: ListView(
+      flexibleSpace: FlexibleSpaceBar(
+        background: Stack(
+          fit: StackFit.expand,
           children: [
             if (excursion['imagen_url'] != null)
-              ClipRRect(
-                borderRadius: BorderRadius.circular(16),
-                child: Image.network(
-                  excursion['imagen_url'],
-                  height: 200,
-                  width: double.infinity,
-                  fit: BoxFit.cover,
+              Image.network(
+                excursion['imagen_url'],
+                fit: BoxFit.cover,
+                errorBuilder: (context, error, stackTrace) => _buildErrorImage(isDarkMode),
+              )
+            else
+              _buildErrorImage(isDarkMode),
+            Container(
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  begin: Alignment.topCenter,
+                  end: Alignment.bottomCenter,
+                  colors: [
+                    Colors.transparent,
+                    Colors.black.withOpacity(0.6),
+                  ],
                 ),
               ),
-            const SizedBox(height: 16),
-            Text(
-              excursion['descripcion'] ?? '',
-              style: const TextStyle(fontSize: 16),
             ),
-            const SizedBox(height: 16),
-            // Puedes agregar más información aquí si lo deseas
           ],
         ),
       ),
-      bottomNavigationBar: SafeArea(
-        child: Container(
-          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
-          decoration: BoxDecoration(
-            color: Colors.white,
-            boxShadow: [
-              BoxShadow(
-                color: Colors.black.withOpacity(0.06),
-                blurRadius: 8,
-                offset: const Offset(0, -2),
-              ),
-            ],
+    );
+  }
+
+  Widget _buildErrorImage(bool isDarkMode) {
+    return Container(
+      color: isDarkMode ? Colors.grey[800] : Colors.grey[300],
+      child: Center(
+        child: Icon(
+          Icons.image_outlined,
+          color: isDarkMode ? Colors.grey[600] : Colors.grey[500],
+          size: 50,
+        ),
+      ),
+    );
+  }
+
+  Widget _buildHeaderInfo(BuildContext context, bool isDarkMode) {
+    return Container(
+      padding: const EdgeInsets.all(20),
+      child: Text(
+        excursion['titulo'] ?? 'Excursión',
+        style: TextStyle(
+          fontSize: 22,
+          fontWeight: FontWeight.bold,
+          color: isDarkMode ? Colors.white : Colors.black87,
+          height: 1.3,
+        ),
+      ),
+    );
+  }
+
+  Widget _buildDetailsSection(BuildContext context, bool isDarkMode) {
+    final ubicacion = excursion['ubicacion'];
+    final duracion = excursion['duracion'];
+    final horaSalida = excursion['hr_salida'];
+
+    // Si no hay información, no mostrar la sección
+    if ((ubicacion == null || ubicacion.toString().isEmpty) && 
+        (duracion == null || duracion.toString().isEmpty) && 
+        (horaSalida == null || horaSalida.toString().isEmpty)) {
+      return const SizedBox.shrink();
+    }
+
+    List<Widget> details = [];
+
+    if (ubicacion != null && ubicacion.toString().isNotEmpty) {
+      details.add(_buildDetailChip(Icons.location_on, ubicacion.toString(), isDarkMode));
+    }
+    
+    if (duracion != null && duracion.toString().isNotEmpty) {
+      details.add(_buildDetailChip(Icons.schedule, '$duracion', isDarkMode));
+    }
+    
+    if (horaSalida != null && horaSalida.toString().isNotEmpty) {
+      details.add(_buildDetailChip(Icons.departure_board, horaSalida.toString(), isDarkMode));
+    }
+
+    return Container(
+      margin: const EdgeInsets.symmetric(horizontal: 20),
+      child: Wrap(
+        spacing: 8,
+        runSpacing: 8,
+        children: details,
+      ),
+    );
+  }
+
+  Widget _buildDetailChip(IconData icon, String text, bool isDarkMode) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+      decoration: BoxDecoration(
+        color: isDarkMode ? Colors.grey[800] : Colors.grey[100],
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(
+          color: isDarkMode ? Colors.grey[700]! : Colors.grey[300]!,
+          width: 0.5,
+        ),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(
+            icon,
+            size: 16,
+            color: AppColors.primary,
           ),
-          child: Row(
-            children: [
-              Text(
-                'Precio: \$${excursion['precio']}',
-                style: TextStyle(
-                  fontSize: 20,
-                  color: AppColors.primary,
-                  fontWeight: FontWeight.bold,
+          const SizedBox(width: 6),
+          Text(
+            text,
+            style: TextStyle(
+              fontSize: 14,
+              color: isDarkMode ? Colors.grey[300] : Colors.grey[700],
+              fontWeight: FontWeight.w500,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildDescriptionSection(BuildContext context, bool isDarkMode) {
+    final descripcion = excursion['descripcion'];
+    if (descripcion == null || descripcion.toString().isEmpty) {
+      return const SizedBox.shrink();
+    }
+
+    return Container(
+      margin: const EdgeInsets.all(20),
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: isDarkMode ? Colors.grey[800] : Colors.white,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(
+          color: isDarkMode ? Colors.grey[700]! : Colors.grey[200]!,
+          width: 1,
+        ),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            'Descripción',
+            style: TextStyle(
+              fontSize: 16,
+              fontWeight: FontWeight.w600,
+              color: isDarkMode ? Colors.white : Colors.black87,
+            ),
+          ),
+          const SizedBox(height: 8),
+          Text(
+            descripcion.toString(),
+            style: TextStyle(
+              fontSize: 15,
+              color: isDarkMode ? Colors.grey[300] : Colors.grey[700],
+              height: 1.5,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildBottomReservationBar(BuildContext context, bool isDarkMode) {
+    return SafeArea(
+      child: Container(
+        padding: const EdgeInsets.all(20),
+        decoration: BoxDecoration(
+          color: isDarkMode ? Colors.grey[900] : Colors.white,
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(0.1),
+              blurRadius: 10,
+              offset: const Offset(0, -5),
+            ),
+          ],
+        ),
+        child: Row(
+          children: [
+            Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'Total',
+                  style: TextStyle(
+                    fontSize: 14,
+                    color: isDarkMode ? Colors.grey[400] : Colors.grey[600],
+                  ),
                 ),
-              ),
-              const Spacer(),
-              ElevatedButton(
-                onPressed: () {  
-                  
-                  // Tu lógica de reservar aquí
+                Text(
+                  '\$${excursion['precio']}',
+                  style: TextStyle(
+                    fontSize: 20,
+                    color: AppColors.primary,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(width: 20),
+            Expanded(
+              child: ElevatedButton(
+                onPressed: () {
+                  _showReservationDialog(context);
                 },
                 style: ElevatedButton.styleFrom(
                   backgroundColor: AppColors.primary,
                   foregroundColor: Colors.white,
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 32,
-                    vertical: 14,
-                  ),
-                  textStyle: const TextStyle(
-                    fontSize: 17,
-                    fontWeight: FontWeight.bold,
-                  ),
+                  elevation: 2,
+                  padding: const EdgeInsets.symmetric(vertical: 14),
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(12),
                   ),
                 ),
-                child: const Text('Reservar'),
+                child: const Text(
+                  'Reservar',
+                  style: TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
               ),
-            ],
-          ),
+            ),
+          ],
         ),
+      ),
+    );
+  }
+
+  void _showReservationDialog(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+        title: const Text('Confirmar reserva'),
+        content: Text(
+          '¿Confirmas la reserva de "${excursion['titulo']}" por \$${excursion['precio']}?',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(),
+            child: const Text('Cancelar'),
+          ),
+          ElevatedButton(
+            onPressed: () {
+              Navigator.of(context).pop();
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(
+                  content: Text('¡Reserva confirmada!'),
+                  backgroundColor: Colors.green,
+                ),
+              );
+            },
+            style: ElevatedButton.styleFrom(
+              backgroundColor: AppColors.primary,
+            ),
+            child: const Text('Confirmar'),
+          ),
+        ],
       ),
     );
   }

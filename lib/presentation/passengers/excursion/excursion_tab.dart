@@ -1,3 +1,4 @@
+import 'package:eytaxi/presentation/passengers/excursion/widgets/contact_widget.dart';
 import 'package:eytaxi/presentation/passengers/excursion/widgets/excursion_card.dart';
 import 'package:eytaxi/presentation/passengers/excursion/widgets/location_dropdown.dart';
 import 'package:flutter/material.dart';
@@ -90,6 +91,12 @@ class _ExcursionTabState extends State<ExcursionTab> {
           return ExcursionCard(
             excursion: excursion,
             onReservePressed: () {
+              showDialog(
+                context: context,
+                builder: (BuildContext context) {
+                  return ReservationFormDialog(excursion: excursion ); // Retorna tu widget de diálogo
+                },
+              );
             },
           );
         },
