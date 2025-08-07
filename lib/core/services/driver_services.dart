@@ -5,7 +5,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class DriverServices {
-final SupabaseClient client = Supabase.instance.client;
+  final SupabaseClient client = Supabase.instance.client;
 
   Future<bool> hasDriverResponded(String requestId, String driverId) async {
     try {
@@ -21,6 +21,7 @@ final SupabaseClient client = Supabase.instance.client;
       return false;
     }
   }
+
   Future<List<TripRequest>> fetchPendingRequests() async {
     try {
       final user = Supabase.instance.client.auth.currentUser;
@@ -32,13 +33,12 @@ final SupabaseClient client = Supabase.instance.client;
       final response = await client
           .from('trip_requests')
           .select('''
-            id,contact_id, driver_id, origen_id, destino_id, taxi_type, cantidad_personas, 
-            trip_date, status, price, 
-            distance_km, estimated_time_minutes, created_at,
-            contact:guest_contacts!contact_id(id,address,extra_info),
-            origen:ubicaciones_cuba!origen_id(id, nombre, codigo, region ,tipo, provincia),
-            destino:ubicaciones_cuba!destino_id(id, nombre, codigo, region, tipo, provincia)
-          ''')
+          id,contact_id,driver_id,origen_id,destino_id,taxi_type,cantidad_personas,
+          trip_date,status,price,distance_km,estimated_time_minutes,created_at,
+          origen:ubicaciones_cuba!origen_id(id,nombre,codigo,region,tipo,provincia),
+          destino:ubicaciones_cuba!destino_id(id,nombre,codigo,region,tipo,provincia),
+          contact:guest_contacts!contact_id(id,name,method,contact,address,extra_info)
+        ''')
           .eq('status', 'pending')
           .isFilter('driver_id', null);
 
@@ -47,21 +47,28 @@ final SupabaseClient client = Supabase.instance.client;
           .select('request_id')
           .eq('driver_id', user.id);
 
-      final respondedRequestIds = driverResponses
-          .map((response) => response['request_id'] as String)
-          .toSet();
-      final requests = (response as List<dynamic>)
-          .map((json) => TripRequest.fromJson(json as Map<String, dynamic>))
-          .where((request) => !respondedRequestIds.contains(request.id))
-          .toList();
+      final respondedRequestIds =
+          driverResponses
+              .map((response) => response['request_id'] as String)
+              .toSet();
+
+      final requests =
+          (response as List<dynamic>)
+              .map((json) {
+                final trip = TripRequest.fromJson(json as Map<String, dynamic>);
+                return trip;
+              })
+              .where((request) => !respondedRequestIds.contains(request.id))
+              .toList();
 
       return requests;
     } catch (e) {
+      print('Error al obtener solicitudes (DriverServices): $e');
       return [];
     }
   }
 
-   Future<bool> acceptTripRequest(String requestId, String driverId) async {
+  Future<bool> acceptTripRequest(String requestId, String driverId) async {
     final isConnected = await _isConnected();
     if (!isConnected) {
       await _saveActionOffline(requestId, driverId, 'accept');
@@ -109,6 +116,7 @@ final SupabaseClient client = Supabase.instance.client;
       return false;
     }
   }
+
   Future<void> _saveActionOffline(
     String requestId,
     String? driverId,
@@ -139,16 +147,24 @@ final SupabaseClient client = Supabase.instance.client;
       for (var requestJson in requests) {
         final request = jsonDecode(requestJson) as Map<String, dynamic>;
         // Validar y corregir taxi_type
-        if (request['taxi_type'] != 'colectivo' && request['taxi_type'] != 'privado') {
-          print('Invalid taxi_type in offline request: ${request['taxi_type']}, correcting to colectivo');
+        if (request['taxi_type'] != 'colectivo' &&
+            request['taxi_type'] != 'privado') {
+          print(
+            'Invalid taxi_type in offline request: ${request['taxi_type']}, correcting to colectivo',
+          );
           request['taxi_type'] = 'colectivo';
         }
-        print('Syncing offline trip request with taxi_type: ${request['taxi_type']}');
+        print(
+          'Syncing offline trip request with taxi_type: ${request['taxi_type']}',
+        );
         await client.from('trip_requests').insert(request);
         validRequests.add(requestJson);
       }
       // Solo eliminar las solicitudes que se sincronizaron con éxito
-      await prefs.setStringList('offline_trip_requests', requests.where((r) => !validRequests.contains(r)).toList());
+      await prefs.setStringList(
+        'offline_trip_requests',
+        requests.where((r) => !validRequests.contains(r)).toList(),
+      );
     } catch (e) {
       print('Error syncing offline trip requests: $e');
     }

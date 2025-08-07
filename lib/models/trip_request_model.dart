@@ -11,8 +11,6 @@ class TripRequest {
   final String taxiType;
   final int cantidadPersonas;
   final DateTime tripDate;
-  final String? physicalAddress;
-  final String? optionalNotes;
   final TripStatus status;
   final double? price;
   final double? distanceKm;
@@ -32,8 +30,6 @@ class TripRequest {
     required this.taxiType,
     required this.cantidadPersonas,
     required this.tripDate,
-    this.physicalAddress,
-    this.optionalNotes,
     required this.status,
     this.price,
     this.distanceKm,
@@ -55,8 +51,6 @@ class TripRequest {
       taxiType: json['taxi_type'],
       cantidadPersonas: json['cantidad_personas'] as int? ?? 1,
       tripDate: json['trip_date'] != null ? DateTime.parse(json['trip_date'] as String) : DateTime.now(),
-      physicalAddress: json['physical_address'] as String?,
-      optionalNotes: json['optional_notes'] as String?,
       status: _parseStatus(json['status'] as String? ?? 'pending'),
       price: json['price'] != null
           ? (json['price'] is int ? (json['price'] as int).toDouble() : json['price'] as double)
@@ -84,8 +78,6 @@ class TripRequest {
       'taxi_type': taxiType,
       'cantidad_personas': cantidadPersonas,
       'trip_date': tripDate.toIso8601String(),
-      'physical_address': physicalAddress,
-      'optional_notes': optionalNotes,
       'status': status.toString().split('.').last,
       'price': price,
       'distance_km': distanceKm,

@@ -1,3 +1,4 @@
+import 'package:eytaxi/core/enum/trip_status.dart';
 import 'package:eytaxi/models/guest_contact_model.dart';
 import 'package:eytaxi/models/trip_request_model.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
@@ -11,8 +12,6 @@ class TripRequestService {
     GuestContact contact,
   ) async {
     // Primero, insertamos el contacto del invitado
-    print(request.toJson());
-    print(contact.toJson());
     try {
       final response =
           await _client
@@ -28,7 +27,6 @@ class TripRequestService {
               .single();
 
       final contactId = response['id'];
-      print(contactId);
 
       // Luego, insertamos la solicitud de viaje con el ID del contacto
       await _client.from('trip_requests').insert({
@@ -39,7 +37,7 @@ class TripRequestService {
         "taxi_type": request.taxiType,
         "cantidad_personas": request.cantidadPersonas,
         "trip_date": request.tripDate.toIso8601String(),
-        "status": request.status,
+        "status": 'pending',
         "price": request.price ?? 0.0,
         "distance_km": request.distanceKm ?? 0.0,
         "estimated_time_minutes": request.estimatedTimeMinutes ?? 0,
@@ -48,6 +46,8 @@ class TripRequestService {
       throw Exception('Error al crear solicitud: $e');
     }
   }
+
+   
 
   Future<Map<String, dynamic>?> calculateReservationDetails(
     int idOrigen,
@@ -72,6 +72,21 @@ class TripRequestService {
       return null;
     }
   }
+
+  String _statusToString(TripStatus status) {
+  switch (status) {
+    case TripStatus.accepted:
+      return 'accepted';
+    case TripStatus.rejected:
+      return 'rejected';
+    case TripStatus.completed:
+      return 'completed';
+    case TripStatus.cancelled:
+      return 'cancelled';
+    case TripStatus.pending:
+      return 'pending';
+  }
+}
 
   /// Obtener todas las solicitudes de un usuario
   Future<List<TripRequest>> getRequestsByUser(String userId) async {

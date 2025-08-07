@@ -5,7 +5,6 @@ class GuestContact {
   final String? contact;
   final String? address;
   final String? extraInfo;
-  final DateTime? createdAt;
 
   GuestContact({
     this.id,
@@ -14,18 +13,16 @@ class GuestContact {
     this.contact,
     this.address,
     this.extraInfo,
-    this.createdAt,
   });
 
   factory GuestContact.fromJson(Map<String, dynamic> json) {
     return GuestContact(
-      id: json['id'],
-      name: json['name'],
-      method: json['method'],
-      contact: json['contact'],
-      address: json['address'],
-      extraInfo: json['extra_info'],
-      createdAt: DateTime.parse(json['created_at']),
+      id: json['id'] as String?,
+      name: json['name'] as String?,
+      method: json['method'] as String?,
+      contact: json['contact'] as String?,
+      address: json['address'] as String?,
+      extraInfo: json['extra_info'] as String?,
     );
   }
 
@@ -37,7 +34,6 @@ class GuestContact {
       'contact': contact,
       'address': address,
       'extra_info': extraInfo,
-      'created_at': createdAt?.toIso8601String(),
     };
   }
 }

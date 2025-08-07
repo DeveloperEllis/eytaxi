@@ -1,13 +1,12 @@
 import 'dart:async';
-
 import 'package:eytaxi/core/constants/app_colors.dart';
-import 'package:eytaxi/core/services/supabase_service.dart';
+import 'package:eytaxi/core/services/theme_notifier.dart';
 import 'package:eytaxi/core/widgets/messages/logs.dart';
-import 'package:eytaxi/models/trip_request_model.dart';
 import 'package:eytaxi/presentation/driver/confirm_trips/confirm_trips_page.dart';
 import 'package:eytaxi/presentation/driver/home/driver_dashboard.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:provider/provider.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 class DriverHome extends StatefulWidget {
@@ -21,20 +20,7 @@ class _DriverHomeState extends State<DriverHome> with TickerProviderStateMixin {
   int _selectedIndex = 0;
   late AnimationController _statusAnimationController;
   late Animation<double> _statusAnimation;
-
-  final List<Widget> _screens = [
-    const DriverDashboard(),
-    const ConfirmTripsPage(),
-    const Center(),
-    const Center(),
-  ];
-
-  final SupabaseService _supabaseService = SupabaseService();
   final GlobalKey<ScaffoldMessengerState> _scaffoldMessengerKey = GlobalKey<ScaffoldMessengerState>();
-  bool isOnline = false;
-  List<TripRequest> activeRequests = [];
-  String driverName = '';
-  StreamSubscription<SupabaseStreamEvent>? _subscription;
 
   @override
   void initState() {
@@ -47,80 +33,19 @@ class _DriverHomeState extends State<DriverHome> with TickerProviderStateMixin {
       parent: _statusAnimationController,
       curve: Curves.easeInOut,
     );
-    
-    _loadDriverStatus();
-    _loadDriverName();
-    
-  }
 
-  Future<void> _loadDriverStatus() async {
-    try {
-      final user = Supabase.instance.client.auth.currentUser;
-      print('Authenticated user for driver status: ${user?.id}');
-      if (user != null) {
-        final response = await Supabase.instance.client
-            .from('drivers')
-            .select('is_available')
-            .eq('id', user.id)
-            .single();
-
-        setState(() {
-          isOnline = response['is_available'] ?? false;
-          if (isOnline) {
-            _statusAnimationController.forward();
-          } else {
-            _statusAnimationController.reverse();
-          }
-        });
-      } else {
-        print('No authenticated user for driver status');
-      }
-    } catch (e) {
-      print('Error loading driver status: $e');
-      if (mounted) {
-        _scaffoldMessengerKey.currentState?.showSnackBar(
-          const SnackBar(
-            content: Text('Error al cargar el estado del conductor'),
-            backgroundColor: Colors.red,
-          ),
-        );
-      }
-    }
-  }
-
-  Future<void> _loadDriverName() async {
-    try {
-      final user = Supabase.instance.client.auth.currentUser;
-      if (user != null) {
-        final response = await Supabase.instance.client
-            .from('user_profiles')
-            .select('nombre')
-            .eq('id', user.id)
-            .single();
-
-        setState(() {
-          driverName = response['nombre'] ?? 'Conductor';
-        });
-      } else {
-        print('No authenticated user for driver name');
-      }
-    } catch (e) {
-      print('Error loading driver name: $e');
-      if (mounted) {
-        _scaffoldMessengerKey.currentState?.showSnackBar(
-          const SnackBar(
-            content: Text('Error al cargar el nombre del conductor'),
-            backgroundColor: Colors.red,
-          ),
-        );
-      }
+    // Sincronizar animación con el estado inicial de isOnline
+    final driverState = Provider.of<ThemeNotifier>(context, listen: false);
+    if (driverState.isOnline) {
+      _statusAnimationController.forward();
+    } else {
+      _statusAnimationController.reverse();
     }
   }
 
   @override
   void dispose() {
     _statusAnimationController.dispose();
-    _subscription?.cancel();
     super.dispose();
   }
 
@@ -169,30 +94,16 @@ class _DriverHomeState extends State<DriverHome> with TickerProviderStateMixin {
   }
 
   Future<void> _toggleDriverStatus(bool value) async {
-    final user = Supabase.instance.client.auth.currentUser;
-    if (user == null) return;
-    
     try {
-      await Supabase.instance.client
-          .from('drivers')
-          .update({'is_available': value})
-          .eq('id', user.id);
-      
-      setState(() {
-        isOnline = value;
-      });
-
+      await Provider.of<ThemeNotifier>(context, listen: false).toggleDriverStatus(value);
       if (value) {
         _statusAnimationController.forward();
+        LogsMessages.showOnlineDriver(context, "Estás online para recibir viajes");
       } else {
         _statusAnimationController.reverse();
+        LogsMessages.showOfflineDriver(context, "Estás offline y no recibirás viajes");
       }
-
-      (isOnline)
-          ? LogsMessages.showOnlineDriver(context, "Estás online para recibir viajes")
-          : LogsMessages.showOfflineDriver(context, "Estás offline y no recibiras viajes");
     } catch (e) {
-      print('Error updating driver status: $e');
       if (mounted) {
         _scaffoldMessengerKey.currentState?.showSnackBar(
           const SnackBar(
@@ -206,15 +117,23 @@ class _DriverHomeState extends State<DriverHome> with TickerProviderStateMixin {
 
   @override
   Widget build(BuildContext context) {
+    final driverState = Provider.of<ThemeNotifier>(context);
+    final List<Widget> _screens = [
+      const DriverDashboard(),
+      const ConfirmTripsPage(),
+      const Center(child: Text('Historial')), // Placeholder
+      const Center(child: Text('Perfil')), // Placeholder
+    ];
+
     return Scaffold(
       backgroundColor: Colors.grey[50],
       body: _screens[_selectedIndex],
       bottomNavigationBar: _buildBottomNavigationBar(),
-      appBar: _buildAppBar(),
+      appBar: _buildAppBar(driverState),
     );
   }
 
-  PreferredSizeWidget _buildAppBar() {
+  PreferredSizeWidget _buildAppBar(ThemeNotifier driverState) {
     return AppBar(
       elevation: 0,
       backgroundColor: Colors.white,
@@ -241,7 +160,7 @@ class _DriverHomeState extends State<DriverHome> with TickerProviderStateMixin {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  driverName.isEmpty ? 'Conductor' : driverName,
+                  driverState.driverName,
                   style: const TextStyle(
                     fontSize: 18,
                     fontWeight: FontWeight.w700,
@@ -273,7 +192,7 @@ class _DriverHomeState extends State<DriverHome> with TickerProviderStateMixin {
         ],
       ),
       actions: [
-        _buildOnlineStatusWidget(),
+        _buildOnlineStatusWidget(driverState),
         const SizedBox(width: 8),
         _buildLogoutButton(),
         const SizedBox(width: 16),
@@ -311,20 +230,20 @@ class _DriverHomeState extends State<DriverHome> with TickerProviderStateMixin {
     );
   }
 
-  Widget _buildOnlineStatusWidget() {
+  Widget _buildOnlineStatusWidget(ThemeNotifier driverState) {
     return AnimatedBuilder(
       animation: _statusAnimation,
       builder: (context, child) {
         return GestureDetector(
-          onTap: () => _toggleDriverStatus(!isOnline),
+          onTap: () => _toggleDriverStatus(!driverState.isOnline),
           child: Container(
             padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
             decoration: BoxDecoration(
-              color: isOnline ? Colors.green : Colors.grey[400],
+              color: driverState.isOnline ? Colors.green : Colors.grey[400],
               borderRadius: BorderRadius.circular(20),
               boxShadow: [
                 BoxShadow(
-                  color: (isOnline ? Colors.green : Colors.grey[400]!)
+                  color: (driverState.isOnline ? Colors.green : Colors.grey[400]!)
                       .withOpacity(0.3),
                   blurRadius: 6,
                   offset: const Offset(0, 2),
@@ -351,7 +270,7 @@ class _DriverHomeState extends State<DriverHome> with TickerProviderStateMixin {
                 ),
                 const SizedBox(width: 6),
                 Text(
-                  isOnline ? 'Online' : 'Offline',
+                  driverState.isOnline ? 'Online' : 'Offline',
                   style: const TextStyle(
                     color: Colors.white,
                     fontSize: 12,
@@ -415,7 +334,7 @@ class _DriverHomeState extends State<DriverHome> with TickerProviderStateMixin {
 
   Widget _buildNavItem(int index, IconData icon, String label) {
     final isSelected = _selectedIndex == index;
-    
+
     return GestureDetector(
       onTap: () => _onNavBarTap(index),
       child: AnimatedContainer(

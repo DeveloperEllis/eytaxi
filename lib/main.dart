@@ -15,7 +15,7 @@ void main() async {
 
   runApp(
     ChangeNotifierProvider(
-      create: (_) => ThemeNotifier(),
+      create: (_) => ThemeNotifier()..loadDriverStatus()..loadDriverName(),
       child: const MyApp(),
     ),
   );

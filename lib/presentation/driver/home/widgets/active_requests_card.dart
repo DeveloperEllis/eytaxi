@@ -123,25 +123,26 @@ class _ActiveRequestsCardState extends State<ActiveRequestsCard> {
   }
 
   Widget _buildRequestsList(List<TripRequest> filteredRequests) {
-    return ListView.separated(
-      shrinkWrap: true,
-      physics: const NeverScrollableScrollPhysics(),
-      padding: const EdgeInsets.symmetric(horizontal: 16),
-      itemCount: filteredRequests.length,
-      separatorBuilder: (context, index) => const SizedBox(height: 12),
-      itemBuilder: (context, index) {
-        final request = filteredRequests[index];
-        return _buildRequestCard(request);
-      },
-    );
-  }
+  print('Filtered Requests in _buildRequestsList: ${filteredRequests.map((r) => 'ID=${r.id}, Contact=${r.contact?.address}, ExtraInfo=${r.contact?.extraInfo}').toList()}');
+  return ListView.separated(
+    shrinkWrap: true,
+    physics: const NeverScrollableScrollPhysics(),
+    padding: const EdgeInsets.symmetric(horizontal: 16),
+    itemCount: filteredRequests.length,
+    separatorBuilder: (context, index) => const SizedBox(height: 12),
+    itemBuilder: (context, index) {
+      final request = filteredRequests[index];
+      return _buildRequestCard(request);
+    },
+  );
+}
 
   Widget _buildRequestCard(TripRequest request) {
     final isExpanded = _expandedStates[request.id] ?? false;
     final isHighlighted = _searchQuery.isNotEmpty &&
         (request.origen?.nombre?.toLowerCase().contains(_searchQuery) == true ||
-            request.destino?.nombre?.toLowerCase().contains(_searchQuery) == true);
-
+            request.destino?.nombre?.toLowerCase().contains(_searchQuery) == true 
+            );
     return Card(
       elevation: 0,
       shape: RoundedRectangleBorder(
@@ -295,36 +296,29 @@ class _ActiveRequestsCardState extends State<ActiveRequestsCard> {
     );
   }
 
-  Widget _buildDetails(TripRequest request) {
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Divider(color: Colors.grey[200]),
-          const SizedBox(height: 12),
-          
-          if (request.contact?.address != null) ...[
-            _buildDetailItem(
-              icon: Icons.location_on_outlined,
-              label: 'Dirección',
-              value: request.physicalAddress!,
-            ),
-            const SizedBox(height: 12),
-          ],
-          
-          if (request.contact?.extraInfo != null) ...[
-            _buildDetailItem(
-              icon: Icons.note_outlined,
-              label: 'Notas',
-              value: request.optionalNotes!,
-            ),
-          ],
-        ],
-      ),
-    );
-  }
+ Widget _buildDetails(TripRequest request) {
+  print('Contact en _buildDetails: ${request.contact}');
+  print('Address en _buildDetails: ${request.contact?.address}');
+  print('ExtraInfo en _buildDetails: ${request.contact?.extraInfo}');
+  return Container(
+    width: double.infinity,
+    padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+    child: Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Divider(color: Colors.grey[200]),
+        const SizedBox(height: 12),
+        
+        _buildDetailItem(
+          icon: Icons.location_on_outlined,
+          label: 'Dirección',
+          value: request.contact?.address?.isNotEmpty == true ? request.contact!.address! : 'No disponible',
+        ),
+        const SizedBox(height: 12),
+      ],
+    ),
+  );
+}
 
   Widget _buildDetailItem({
     required IconData icon,
