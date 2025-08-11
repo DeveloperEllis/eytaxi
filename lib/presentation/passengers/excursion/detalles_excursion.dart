@@ -1,4 +1,5 @@
 import 'package:eytaxi/core/constants/app_colors.dart';
+import 'package:eytaxi/presentation/passengers/excursion/widgets/contact_widget.dart';
 import 'package:flutter/material.dart';
 
 class ExcursionDetallePage extends StatelessWidget {
@@ -285,34 +286,6 @@ class ExcursionDetallePage extends StatelessWidget {
   void _showReservationDialog(BuildContext context) {
     showDialog(
       context: context,
-      builder: (context) => AlertDialog(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-        title: const Text('Confirmar reserva'),
-        content: Text(
-          '¿Confirmas la reserva de "${excursion['titulo']}" por \$${excursion['precio']}?',
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(context).pop(),
-            child: const Text('Cancelar'),
-          ),
-          ElevatedButton(
-            onPressed: () {
-              Navigator.of(context).pop();
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(
-                  content: Text('¡Reserva confirmada!'),
-                  backgroundColor: Colors.green,
-                ),
-              );
-            },
-            style: ElevatedButton.styleFrom(
-              backgroundColor: AppColors.primary,
-            ),
-            child: const Text('Confirmar'),
-          ),
-        ],
-      ),
-    );
+      builder: (context) => ReservationFormDialog(excursion: excursion));
   }
 }

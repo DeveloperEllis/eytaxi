@@ -21,23 +21,21 @@ class _DriverDashboardState extends State<DriverDashboard> {
   final GlobalKey<ScaffoldMessengerState> _scaffoldMessengerKey = GlobalKey<ScaffoldMessengerState>();
   List<TripRequest> activeRequests = [];
   StreamSubscription<SupabaseStreamEvent>? _subscription;
+  ThemeNotifier? _themeNotifier;
 
   @override
   void initState() {
     super.initState();
-    final driverState = Provider.of<ThemeNotifier>(context, listen: false);
-    if (driverState.isOnline) {
+    _themeNotifier = Provider.of<ThemeNotifier>(context, listen: false);
+    if (_themeNotifier!.isOnline) {
       _loadPendingRequests();
       _subscribeToRequests();
     }
-
-    // Escuchar cambios en isOnline
-    Provider.of<ThemeNotifier>(context, listen: false).addListener(_handleDriverStateChange);
+    _themeNotifier!.addListener(_handleDriverStateChange);
   }
 
   void _handleDriverStateChange() {
-    final driverState = Provider.of<ThemeNotifier>(context, listen: false);
-    if (driverState.isOnline) {
+    if (_themeNotifier!.isOnline) {
       _loadPendingRequests();
       _subscribeToRequests();
     } else {
@@ -50,14 +48,14 @@ class _DriverDashboardState extends State<DriverDashboard> {
 
   @override
   void dispose() {
+    print('Disposing DriverDashboard');
     _subscription?.cancel();
-    Provider.of<ThemeNotifier>(context, listen: false).removeListener(_handleDriverStateChange);
+    _themeNotifier?.removeListener(_handleDriverStateChange);
     super.dispose();
   }
 
   Future<void> _loadPendingRequests() async {
-    final driverState = Provider.of<ThemeNotifier>(context, listen: false);
-    if (!driverState.isOnline) {
+    if (!_themeNotifier!.isOnline) {
       setState(() {
         activeRequests = [];
       });
@@ -66,17 +64,25 @@ class _DriverDashboardState extends State<DriverDashboard> {
 
     try {
       final user = Supabase.instance.client.auth.currentUser;
+      if (user == null) {
+        print('No user authenticated');
+        setState(() {
+          activeRequests = [];
+        });
+        return;
+      }
+
       final requests = await _supabaseService.fetchPendingRequests();
       setState(() {
         activeRequests = requests;
-        print('Loaded activeRequests: ${activeRequests.map((r) => 'ID=${r.id}, Contact=${r.contact?.address}, ExtraInfo=${r.contact?.extraInfo}').toList()}');
+        print('Loaded activeRequests: ${activeRequests.map((r) => 'ID=${r.id}, Contact=${r.contact?.address ?? "null"}, ExtraInfo=${r.contact?.extraInfo ?? "null"}').toList()}');
       });
     } catch (e) {
       print('Error loading pending requests: $e');
       if (mounted) {
         _scaffoldMessengerKey.currentState?.showSnackBar(
-          const SnackBar(
-            content: Text('Error al cargar las solicitudes pendientes'),
+          SnackBar(
+            content: Text('Error al cargar las solicitudes pendientes: $e'),
             backgroundColor: Colors.red,
           ),
         );
@@ -85,8 +91,7 @@ class _DriverDashboardState extends State<DriverDashboard> {
   }
 
   void _subscribeToRequests() {
-    final driverState = Provider.of<ThemeNotifier>(context, listen: false);
-    if (!driverState.isOnline) {
+    if (!_themeNotifier!.isOnline) {
       _subscription?.cancel();
       setState(() {
         activeRequests = [];
@@ -108,8 +113,7 @@ class _DriverDashboardState extends State<DriverDashboard> {
         .eq('status', 'pending')
         .listen(
           (List<Map<String, dynamic>> data) async {
-            final driverState = Provider.of<ThemeNotifier>(context, listen: false);
-            if (!mounted || !driverState.isOnline) {
+            if (!mounted || !_themeNotifier!.isOnline) {
               setState(() {
                 activeRequests = [];
               });
@@ -117,7 +121,6 @@ class _DriverDashboardState extends State<DriverDashboard> {
             }
 
             try {
-              // Obtener respuestas del conductor
               final driverResponses = await Supabase.instance.client
                   .from('driver_responses')
                   .select('request_id')
@@ -127,9 +130,10 @@ class _DriverDashboardState extends State<DriverDashboard> {
                   .map((response) => response['request_id'] as String)
                   .toSet();
 
-              // Cargar ubicaciones para origen_id y destino_id
               final uniqueLocationIds = data
-                  .expand((json) => [json['origen_id'] as int, json['destino_id'] as int])
+                  .expand((json) => [json['origen_id'] as int?, json['destino_id'] as int?])
+                  .where((id) => id != null)
+                  .cast<int>()
                   .toSet();
               final ubicacionesResponse = await Supabase.instance.client
                   .from('ubicaciones_cuba')
@@ -140,9 +144,10 @@ class _DriverDashboardState extends State<DriverDashboard> {
                 for (var ub in ubicacionesResponse) ub['id']: Ubicacion.fromJson(ub)
               };
 
-              // Cargar contactos para contact_id
               final uniqueContactIds = data
-                  .map((json) => json['contact_id'] as String)
+                  .map((json) => json['contact_id'] as String?)
+                  .where((id) => id != null)
+                  .cast<String>()
                   .toSet();
               final contactsResponse = await Supabase.instance.client
                   .from('guest_contacts')
@@ -158,21 +163,24 @@ class _DriverDashboardState extends State<DriverDashboard> {
               setState(() {
                 activeRequests = data
                     .where((json) =>
+                        json['origen_id'] != null &&
+                        json['destino_id'] != null &&
+                        json['contact_id'] != null &&
                         !respondedRequestIds.contains(json['id']) &&
                         json['driver_id'] == null)
                     .map((json) {
                       print('Stream JSON: $json');
                       final trip = TripRequest.fromJson({
                         ...json,
-                        'origen': ubicacionesMap[json['origen_id']]?.toJson(),
-                        'destino': ubicacionesMap[json['destino_id']]?.toJson(),
-                        'contact': contactsMap[json['contact_id']]?.toJson(),
+                        'origen': ubicacionesMap[json['origen_id']]?.toJson() ?? {},
+                        'destino': ubicacionesMap[json['destino_id']]?.toJson() ?? {},
+                        'contact': contactsMap[json['contact_id']]?.toJson() ?? {},
                       });
-                      print('Stream Parsed TripRequest: ID=${trip.id}, Contact=${trip.contact?.address}, ExtraInfo=${trip.contact?.extraInfo}');
+                      print('Stream Parsed TripRequest: ID=${trip.id}, Contact=${trip.contact?.address ?? "null"}, ExtraInfo=${trip.contact?.extraInfo ?? "null"}');
                       return trip;
                     })
                     .toList();
-                print('Stream activeRequests: ${activeRequests.map((r) => 'ID=${r.id}, Contact=${r.contact?.address}, ExtraInfo=${r.contact?.extraInfo}').toList()}');
+                print('Stream activeRequests: ${activeRequests.map((r) => 'ID=${r.id}, Contact=${r.contact?.address ?? "null"}, ExtraInfo=${r.contact?.extraInfo ?? "null"}').toList()}');
               });
             } catch (e) {
               print('Error processing subscription data: $e');
@@ -201,8 +209,7 @@ class _DriverDashboardState extends State<DriverDashboard> {
               });
             }
             Future.delayed(const Duration(seconds: 5), () {
-              final driverState = Provider.of<ThemeNotifier>(context, listen: false);
-              if (mounted && driverState.isOnline) {
+              if (mounted && _themeNotifier!.isOnline) {
                 print('Reattempting subscription...');
                 _subscribeToRequests();
               }
@@ -211,8 +218,7 @@ class _DriverDashboardState extends State<DriverDashboard> {
           onDone: () {
             print('Stream closed, attempting to reconnect...');
             Future.delayed(const Duration(seconds: 5), () {
-              final driverState = Provider.of<ThemeNotifier>(context, listen: false);
-              if (mounted && driverState.isOnline) {
+              if (mounted && _themeNotifier!.isOnline) {
                 _subscribeToRequests();
               }
             });
@@ -331,14 +337,23 @@ class _DriverDashboardState extends State<DriverDashboard> {
   @override
   Widget build(BuildContext context) {
     final driverState = Provider.of<ThemeNotifier>(context);
-    print('Passing to ActiveRequestsCard: ${activeRequests.map((r) => 'ID=${r.id}, Contact=${r.contact?.address}, ExtraInfo=${r.contact?.extraInfo}').toList()}');
-    return Expanded(
-      child: ListView(
-        padding: const EdgeInsets.only(left: 8, right: 8, top: 5, bottom: 8),
-        children: [
-          _buildRequestsSection(),
-        ],
-      ),
+    print('Passing to ActiveRequestsCard: ${activeRequests.map((r) => 'ID=${r.id}, Contact=${r.contact?.address ?? "null"}, ExtraInfo=${r.contact?.extraInfo ?? "null"}').toList()}');
+
+    return Scaffold(
+      key: _scaffoldMessengerKey,
+      body: activeRequests.isEmpty
+          ? const Center(
+              child: Text(
+                'No hay solicitudes pendientes',
+                style: TextStyle(fontSize: 16, color: Colors.grey),
+              ),
+            )
+          : ListView(
+              padding: const EdgeInsets.only(left: 8, right: 8, top: 5, bottom: 8),
+              children: [
+                _buildRequestsSection(),
+              ],
+            ),
     );
   }
 

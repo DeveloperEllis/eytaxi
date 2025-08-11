@@ -7,6 +7,7 @@ import 'package:eytaxi/core/styles/button_style.dart';
 import 'package:eytaxi/core/styles/input_decorations.dart';
 import 'package:eytaxi/core/widgets/messages/mesages.dart';
 import 'package:eytaxi/models/guest_contact_model.dart';
+import 'package:eytaxi/models/user_model.dart';
 import 'package:eytaxi/presentation/passengers/widgets/pickup_dialog.dart';
 import 'package:eytaxi/models/trip_request_model.dart';
 import 'package:eytaxi/models/ubicacion_model.dart';
@@ -69,12 +70,14 @@ class _TaxiFormState extends State<TaxiForm> {
 
     if (data != null) {
       final precioBase = double.tryParse(data['precio'].toString()) ?? 0.0;
-      final distanciaKm = double.tryParse(data['distancia_km'].toString()) ?? 0.0;
+      final distanciaKm =
+          double.tryParse(data['distancia_km'].toString()) ?? 0.0;
       final tiempoMin = double.tryParse(data['tiempo_min'].toString()) ?? 0.0;
 
-      final precioFinal = _taxiType == 'colectivo'
-          ? (precioBase / 4) * _personas
-          : (_personas <= 4 ? precioBase : (precioBase / 4) * _personas);
+      final precioFinal =
+          _taxiType == 'colectivo'
+              ? (precioBase / 4) * _personas
+              : (_personas <= 4 ? precioBase : (precioBase / 4) * _personas);
 
       setState(() {
         _precio = precioFinal;
@@ -91,10 +94,9 @@ class _TaxiFormState extends State<TaxiForm> {
   }
 
   void _snack(String msg) {
-    ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-      content: Text(msg),
-      backgroundColor: Colors.red,
-    ));
+    ScaffoldMessenger.of(
+      context,
+    ).showSnackBar(SnackBar(content: Text(msg), backgroundColor: Colors.red));
   }
 
   Future<void> _selectFechaHora() async {
@@ -114,7 +116,13 @@ class _TaxiFormState extends State<TaxiForm> {
 
         if (time != null) {
           setState(() {
-            _fechaHora = DateTime(date.year, date.month, date.day, time.hour, time.minute);
+            _fechaHora = DateTime(
+              date.year,
+              date.month,
+              date.day,
+              time.hour,
+              time.minute,
+            );
             _resetPrecio();
           });
         }
@@ -147,7 +155,8 @@ class _TaxiFormState extends State<TaxiForm> {
 
   Future<void> _enviarSolicitud() async {
     if (_formKey.currentState!.validate() && _fechaHora != null) {
-      if (_taxiType == 'privado' && (_fechaHora!.hour == 0 && _fechaHora!.minute == 0)) {
+      if (_taxiType == 'privado' &&
+          (_fechaHora!.hour == 0 && _fechaHora!.minute == 0)) {
         _snack('Seleccione una hora válida para taxi privado');
         return;
       }
@@ -171,7 +180,8 @@ class _TaxiFormState extends State<TaxiForm> {
         price: _precio,
         distanceKm: _distanciaKm,
         estimatedTimeMinutes: _tiempoMin?.toInt(),
-        createdAt: DateTime.now(), userId: '',
+        createdAt: DateTime.now(),
+        userId: '',
       );
 
       final guestcontact = GuestContact(
@@ -182,10 +192,14 @@ class _TaxiFormState extends State<TaxiForm> {
         extraInfo: result['extra_info'],
       );
 
-      await service.createTripRequest(trip, guestcontact );
+      await service.createTripRequest(trip, guestcontact);
 
       if (mounted) {
-        CustomDialog.showSuccessDialog(context, 'Éxito', 'Su solicitud ha sido enviado a nuestros taxistas, le contactaremos muy pronto');
+        CustomDialog.showSuccessDialog(
+          context,
+          'Éxito',
+          'Su solicitud ha sido enviado a nuestros taxistas, le contactaremos muy pronto',
+        );
         _resetForm();
       }
     } else {
@@ -222,6 +236,7 @@ class _TaxiFormState extends State<TaxiForm> {
               });
             },
             supabaseService: _supabaseService,
+            user: UserType.passenger,
           ),
           const SizedBox(height: 16),
           LocationAutocomplete(
@@ -235,6 +250,7 @@ class _TaxiFormState extends State<TaxiForm> {
               });
             },
             supabaseService: _supabaseService,
+            user: UserType.passenger,
           ),
           const SizedBox(height: 16),
           Row(
@@ -248,7 +264,10 @@ class _TaxiFormState extends State<TaxiForm> {
                   ),
                   items: List.generate(
                     16,
-                    (index) => DropdownMenuItem(value: index + 1, child: Text('${index + 1}')),
+                    (index) => DropdownMenuItem(
+                      value: index + 1,
+                      child: Text('${index + 1}'),
+                    ),
                   ),
                   onChanged: (value) {
                     setState(() {
@@ -265,11 +284,16 @@ class _TaxiFormState extends State<TaxiForm> {
                   child: InputDecorator(
                     decoration: AppInputDecoration.buildStandardInputDecoration(
                       context: context,
-                      labelText: _taxiType == 'colectivo' ? 'Fecha' : 'Fecha y hora',
+                      labelText:
+                          _taxiType == 'colectivo' ? 'Fecha' : 'Fecha y hora',
                     ),
                     child: Row(
                       children: [
-                        Icon(Icons.calendar_today, size: 20, color: AppColors.primary),
+                        Icon(
+                          Icons.calendar_today,
+                          size: 20,
+                          color: AppColors.primary,
+                        ),
                         const SizedBox(width: 8),
                         Expanded(
                           child: Text(
@@ -278,11 +302,18 @@ class _TaxiFormState extends State<TaxiForm> {
                                 : (_taxiType == 'colectivo'
                                     ? '${_fechaHora!.day}/${_fechaHora!.month}/${_fechaHora!.year}'
                                     : '${_fechaHora!.day}/${_fechaHora!.month}/${_fechaHora!.year} ${_fechaHora!.hour}:${_fechaHora!.minute.toString().padLeft(2, '0')}'),
-                            style: Theme.of(context).textTheme.bodyMedium!.copyWith(
-                                  color: _fechaHora == null
-                                      ? (isDarkMode ? AppColors.grey : AppColors.grey.withOpacity(0.7))
-                                      : (isDarkMode ? AppColors.white : Colors.black),
-                                ),
+                            style: Theme.of(
+                              context,
+                            ).textTheme.bodyMedium!.copyWith(
+                              color:
+                                  _fechaHora == null
+                                      ? (isDarkMode
+                                          ? AppColors.grey
+                                          : AppColors.grey.withOpacity(0.7))
+                                      : (isDarkMode
+                                          ? AppColors.white
+                                          : Colors.black),
+                            ),
                           ),
                         ),
                       ],
@@ -306,13 +337,16 @@ class _TaxiFormState extends State<TaxiForm> {
             width: double.infinity,
             height: 50,
             child: ElevatedButton(
-              style: _precioCalculado
-                  ? AppButtonStyles.confirmButtonStyle(context)
-                  : AppButtonStyles.primaryButtonStyle(context),
+              style:
+                  _precioCalculado
+                      ? AppButtonStyles.confirmButtonStyle(context)
+                      : AppButtonStyles.primaryButtonStyle(context),
               onPressed: _enviarSolicitud,
-              child: Text(!_precioCalculado
-                  ? 'Calcular Precio'
-                  : (_camposEditados ? 'Recalcular' : 'Confirmar')),
+              child: Text(
+                !_precioCalculado
+                    ? 'Calcular Precio'
+                    : (_camposEditados ? 'Recalcular' : 'Confirmar'),
+              ),
             ),
           ),
         ],

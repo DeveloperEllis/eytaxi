@@ -6,17 +6,26 @@ class ThemeNotifier extends ChangeNotifier {
   static const String prefKey = 'theme_mode';
   bool _isOnline = false;
   String _driverName = 'Conductor';
+  List<String> _routers = [];
 
   bool get isOnline => _isOnline;
   String get driverName => _driverName;
+  List<String> get routers => _routers;
+  ThemeMode get value => _currentTheme;
 
   ThemeMode _currentTheme = ThemeMode.light;
 
   ThemeNotifier() {
     _loadFromPrefs();
+    Supabase.instance.client.auth.onAuthStateChange.listen((event) {
+      final session = event.session;
+      if (session != null && session.user != null) {
+        loadDriverStatus();
+        loadDriverName();
+        loadDriverRoutes();
+      }
+    });
   }
-
-  ThemeMode get value => _currentTheme;
 
   Future<void> loadDriverStatus() async {
     try {
@@ -40,6 +49,7 @@ class ThemeNotifier extends ChangeNotifier {
     }
   }
 
+
   Future<void> loadDriverName() async {
     try {
       final user = Supabase.instance.client.auth.currentUser;
@@ -58,6 +68,29 @@ class ThemeNotifier extends ChangeNotifier {
       }
     } catch (e) {
       print('Error loading driver name: $e');
+    }
+  }
+
+  Future<void> loadDriverRoutes() async {
+    try {
+      final user = Supabase.instance.client.auth.currentUser;
+      print('Authenticated user for driver routes: ${user?.id}');
+      if (user != null) {
+        final response =
+            await Supabase.instance.client
+                .from('drivers')
+                .select('routes')
+                .eq('id', user.id)
+                .single();
+
+        _routers = List<String>.from(response['routes'] ?? []);
+        print('Loaded driver routes: $_routers');
+        notifyListeners();
+      } else {
+        print('No authenticated user for driver routes');
+      }
+    } catch (e) {
+      print('Error loading driver routes: $e');
     }
   }
 

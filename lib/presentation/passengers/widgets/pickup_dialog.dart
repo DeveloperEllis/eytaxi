@@ -46,7 +46,6 @@ class _PickupDialogContentState extends State<_PickupDialogContent>
   bool _isSubmitting = false;
   String _selectedCountryCode = '+53';
 
-
   @override
   void initState() {
     super.initState();
@@ -99,7 +98,8 @@ class _PickupDialogContentState extends State<_PickupDialogContent>
         return _nameController.text.trim().isNotEmpty;
       case 1:
         return _selectedContactMethod != null &&
-            _contactController.text.trim().isNotEmpty;
+            _contactController.text.trim().isNotEmpty &&
+            _validateContact(_contactController.text) == null;
       case 2:
         return _addressController.text.trim().isNotEmpty;
       default:
@@ -113,8 +113,6 @@ class _PickupDialogContentState extends State<_PickupDialogContent>
 
       // Simulate a network request
       Future.delayed(const Duration(milliseconds: 1500), () {
-
-        
         Navigator.of(context).pop({
           'name': _nameController.text.trim(),
           'method': _selectedContactMethod.toString().split('.').last,
@@ -417,31 +415,30 @@ class _PickupDialogContentState extends State<_PickupDialogContent>
                         Expanded(
                           flex: 2,
                           child: DropdownButtonFormField<String>(
-                                    value: _selectedCountryCode,
-                                    decoration:
-                                        AppInputDecoration.buildCountryCodeInputDecoration(context: context).copyWith(
-                                          filled: true,
-                                          fillColor: Theme.of(context).brightness == Brightness.dark
-                                              ? Colors.grey[800]
-                                              : Colors.grey[50],
-                                        ),
-                                    items:
-                                        AppConstants.countryCodes
-                                            .map(
-                                              (country) => DropdownMenuItem(
-                                                value: country['code'],
-                                                child: Text(
-                                                  '${country['flag']} ${country['code']}',
-                                                ),
-                                              ),
-                                            )
-                                            .toList(),
-                                    onChanged: (value) {
-                                      setState(() {
-                                        _selectedCountryCode = value!;
-                                      });
-                                    },
+                            value: _selectedCountryCode,
+                            decoration:
+                                AppInputDecoration.buildCountryCodeInputDecoration(context: context).copyWith(
+                                  filled: true,
+                                  fillColor: Theme.of(context).brightness == Brightness.dark
+                                      ? Colors.grey[800]
+                                      : Colors.grey[50],
+                                ),
+                            items: AppConstants.countryCodes
+                                .map(
+                                  (country) => DropdownMenuItem(
+                                    value: country['code'],
+                                    child: Text(
+                                      '${country['flag']} ${country['code']}',
+                                    ),
                                   ),
+                                )
+                                .toList(),
+                            onChanged: (value) {
+                              setState(() {
+                                _selectedCountryCode = value!;
+                              });
+                            },
+                          ),
                         ),
                         const SizedBox(width: 10),
                         // WhatsApp number input

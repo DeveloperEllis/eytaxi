@@ -4,11 +4,15 @@ import 'package:eytaxi/core/constants/app_colors.dart';
 import 'package:eytaxi/core/constants/app_routes.dart';
 import 'package:eytaxi/core/services/storage_service.dart';
 import 'package:eytaxi/core/services/supabase_api.dart';
+import 'package:eytaxi/core/services/supabase_service.dart';
 import 'package:eytaxi/core/styles/button_style.dart';
 import 'package:eytaxi/core/styles/input_decorations.dart';
 import 'package:eytaxi/core/utils/regex_utils.dart';
 import 'package:eytaxi/core/widgets/messages/logs.dart';
 import 'package:eytaxi/core/widgets/messages/mesages.dart';
+import 'package:eytaxi/models/ubicacion_model.dart';
+import 'package:eytaxi/models/user_model.dart';
+import 'package:eytaxi/presentation/passengers/widgets/locatio_autocomplete.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:image_picker/image_picker.dart';
@@ -24,17 +28,20 @@ class RegisterScreen extends StatefulWidget {
 class _RegisterScreenState extends State<RegisterScreen> {
   final _formKey = GlobalKey<FormState>();
   final PageController _pageController = PageController();
-  
+
   // Controllers
   final TextEditingController _emailController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
-  final TextEditingController _confirmPasswordController = TextEditingController();
+  final TextEditingController _confirmPasswordController =
+      TextEditingController();
   final TextEditingController _phoneController = TextEditingController();
   final TextEditingController _nombreController = TextEditingController();
   final TextEditingController _apellidosController = TextEditingController();
   final TextEditingController _licenseController = TextEditingController();
-  final TextEditingController _vehicleCapacityController = TextEditingController();
-  
+  final TextEditingController _vehicleCapacityController =
+      TextEditingController();
+  final TextEditingController _mun_origenController = TextEditingController();
+
   // State variables
   String _email = '';
   String _name = '';
@@ -42,7 +49,10 @@ class _RegisterScreenState extends State<RegisterScreen> {
   int _currentStep = 0;
   final String _selectedCountryCode = '+53';
   final List<String> _selectedRoutes = [];
+  bool viajes_locales = false;
+  Ubicacion? _municipio;
   SupabaseApi supabaseApi = SupabaseApi();
+  final SupabaseService _supabaseService = SupabaseService();
 
   // Image handling
   File? _profilePhotoFile;
@@ -51,8 +61,10 @@ class _RegisterScreenState extends State<RegisterScreen> {
   Uint8List? _vehiclePhotoBytes;
   final ImagePicker _picker = ImagePicker();
 
-  bool get hasProfilePhoto => kIsWeb ? _profilePhotoBytes != null : _profilePhotoFile != null;
-  bool get hasVehiclePhoto => kIsWeb ? _vehiclePhotoBytes != null : _vehiclePhotoFile != null;
+  bool get hasProfilePhoto =>
+      kIsWeb ? _profilePhotoBytes != null : _profilePhotoFile != null;
+  bool get hasVehiclePhoto =>
+      kIsWeb ? _vehiclePhotoBytes != null : _vehiclePhotoFile != null;
 
   // Password visibility
   bool _obscurePassword = true;
@@ -62,22 +74,20 @@ class _RegisterScreenState extends State<RegisterScreen> {
   final List<String> _stepTitles = [
     'Información Personal',
     'Datos de Conductor',
-    'Fotos y Verificación'
+    'Fotos y Verificación',
   ];
 
   @override
   Widget build(BuildContext context) {
     bool isDarkMode = Theme.of(context).brightness == Brightness.dark;
-    
+
     return Scaffold(
-      backgroundColor: isDarkMode ? AppColors.backgroundDark : AppColors.background,
+      backgroundColor:
+          isDarkMode ? AppColors.backgroundDark : AppColors.background,
       appBar: AppBar(
         title: Text(
           'Registro de Conductor',
-          style: TextStyle(
-            fontWeight: FontWeight.w600,
-            fontSize: 20,
-          ),
+          style: TextStyle(fontWeight: FontWeight.w600, fontSize: 20),
         ),
         backgroundColor: AppColors.transparent,
         foregroundColor: isDarkMode ? Colors.white : Colors.black87,
@@ -92,7 +102,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
         children: [
           // Progress indicator
           _buildProgressIndicator(),
-          
+
           // Form content
           Expanded(
             child: PageView(
@@ -106,7 +116,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
               ],
             ),
           ),
-          
+
           // Navigation buttons
           _buildNavigationButtons(),
         ],
@@ -124,7 +134,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
             children: List.generate(_stepTitles.length, (index) {
               final isActive = index == _currentStep;
               final isCompleted = index < _currentStep;
-              
+
               return Expanded(
                 child: Row(
                   children: [
@@ -134,37 +144,50 @@ class _RegisterScreenState extends State<RegisterScreen> {
                       height: 32,
                       decoration: BoxDecoration(
                         shape: BoxShape.circle,
-                        color: isCompleted
-                            ? AppColors.primary
-                            : isActive
+                        color:
+                            isCompleted
+                                ? AppColors.primary
+                                : isActive
                                 ? AppColors.primary
                                 : Colors.grey[300],
                         border: Border.all(
-                          color: isActive ? AppColors.primary : Colors.grey[400]!,
+                          color:
+                              isActive ? AppColors.primary : Colors.grey[400]!,
                           width: 2,
                         ),
                       ),
                       child: Center(
-                        child: isCompleted
-                            ? const Icon(Icons.check, color: Colors.white, size: 18)
-                            : Text(
-                                '${index + 1}',
-                                style: TextStyle(
-                                  color: isActive ? Colors.white : Colors.grey[600],
-                                  fontWeight: FontWeight.bold,
-                                  fontSize: 14,
+                        child:
+                            isCompleted
+                                ? const Icon(
+                                  Icons.check,
+                                  color: Colors.white,
+                                  size: 18,
+                                )
+                                : Text(
+                                  '${index + 1}',
+                                  style: TextStyle(
+                                    color:
+                                        isActive
+                                            ? Colors.white
+                                            : Colors.grey[600],
+                                    fontWeight: FontWeight.bold,
+                                    fontSize: 14,
+                                  ),
                                 ),
-                              ),
                       ),
                     ),
-                    
+
                     // Line connector (except for last item)
                     if (index < _stepTitles.length - 1)
                       Expanded(
                         child: Container(
                           height: 2,
                           margin: const EdgeInsets.symmetric(horizontal: 8),
-                          color: index < _currentStep ? AppColors.primary : Colors.grey[300],
+                          color:
+                              index < _currentStep
+                                  ? AppColors.primary
+                                  : Colors.grey[300],
                         ),
                       ),
                   ],
@@ -172,16 +195,13 @@ class _RegisterScreenState extends State<RegisterScreen> {
               );
             }),
           ),
-          
+
           const SizedBox(height: 12),
-          
+
           // Current step title
           Text(
             _stepTitles[_currentStep],
-            style: const TextStyle(
-              fontSize: 18,
-              fontWeight: FontWeight.w600,
-            ),
+            style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w600),
           ),
         ],
       ),
@@ -197,11 +217,11 @@ class _RegisterScreenState extends State<RegisterScreen> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             const SizedBox(height: 20),
-            
+
             _buildSectionTitle('Datos Personales', Icons.person_outline),
-            
+
             const SizedBox(height: 16),
-            
+
             TextFormField(
               controller: _nombreController,
               decoration: AppInputDecoration.buildInputDecoration(
@@ -210,11 +230,15 @@ class _RegisterScreenState extends State<RegisterScreen> {
                 prefixIcon: Icons.person_outline,
               ),
               onChanged: (value) => _name = value,
-              validator: (value) => value == null || value.isEmpty ? 'Ingrese su nombre' : null,
+              validator:
+                  (value) =>
+                      value == null || value.isEmpty
+                          ? 'Ingrese su nombre'
+                          : null,
             ),
-            
+
             const SizedBox(height: 16),
-            
+
             TextFormField(
               controller: _apellidosController,
               decoration: AppInputDecoration.buildInputDecoration(
@@ -222,11 +246,15 @@ class _RegisterScreenState extends State<RegisterScreen> {
                 labelText: 'Apellidos',
                 prefixIcon: Icons.person,
               ),
-              validator: (value) => value == null || value.isEmpty ? 'Ingrese sus apellidos' : null,
+              validator:
+                  (value) =>
+                      value == null || value.isEmpty
+                          ? 'Ingrese sus apellidos'
+                          : null,
             ),
-            
+
             const SizedBox(height: 16),
-            
+
             TextFormField(
               controller: _emailController,
               decoration: AppInputDecoration.buildInputDecoration(
@@ -245,18 +273,18 @@ class _RegisterScreenState extends State<RegisterScreen> {
                 return null;
               },
             ),
-            
+
             const SizedBox(height: 16),
-            
+
             // Phone number with country code
             _buildPhoneInput(),
-            
+
             const SizedBox(height: 24),
-            
+
             _buildSectionTitle('Contraseña', Icons.lock_outline),
-            
+
             const SizedBox(height: 16),
-            
+
             TextFormField(
               controller: _passwordController,
               obscureText: _obscurePassword,
@@ -269,14 +297,16 @@ class _RegisterScreenState extends State<RegisterScreen> {
                     _obscurePassword ? Icons.visibility_off : Icons.visibility,
                     color: AppColors.primary,
                   ),
-                  onPressed: () => setState(() => _obscurePassword = !_obscurePassword),
+                  onPressed:
+                      () =>
+                          setState(() => _obscurePassword = !_obscurePassword),
                 ),
               ),
               validator: _validatePassword,
             ),
-            
+
             const SizedBox(height: 16),
-            
+
             TextFormField(
               controller: _confirmPasswordController,
               obscureText: _obscureConfirmPassword,
@@ -286,10 +316,16 @@ class _RegisterScreenState extends State<RegisterScreen> {
                 prefixIcon: Icons.lock,
                 suffixIcon: IconButton(
                   icon: Icon(
-                    _obscureConfirmPassword ? Icons.visibility_off : Icons.visibility,
+                    _obscureConfirmPassword
+                        ? Icons.visibility_off
+                        : Icons.visibility,
                     color: AppColors.primary,
                   ),
-                  onPressed: () => setState(() => _obscureConfirmPassword = !_obscureConfirmPassword),
+                  onPressed:
+                      () => setState(
+                        () =>
+                            _obscureConfirmPassword = !_obscureConfirmPassword,
+                      ),
                 ),
               ),
               validator: (value) {
@@ -302,12 +338,12 @@ class _RegisterScreenState extends State<RegisterScreen> {
                 return null;
               },
             ),
-            
+
             const SizedBox(height: 20),
-            
+
             // Password requirements
             _buildPasswordRequirements(),
-            
+
             const SizedBox(height: 40),
           ],
         ),
@@ -322,11 +358,15 @@ class _RegisterScreenState extends State<RegisterScreen> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           const SizedBox(height: 20),
-          
+
           _buildSectionTitle('Información del Conductor', Icons.badge_outlined),
-          
+
           const SizedBox(height: 16),
-          
+
+          _BuildselectedOrigen(),
+
+          const SizedBox(height: 16),
+
           TextFormField(
             controller: _licenseController,
             decoration: AppInputDecoration.buildInputDecoration(
@@ -345,23 +385,29 @@ class _RegisterScreenState extends State<RegisterScreen> {
               return null;
             },
           ),
-          
+
           const SizedBox(height: 16),
-          
+
           DropdownButtonFormField<String>(
-            value: _vehicleCapacityController.text.isEmpty ? null : _vehicleCapacityController.text,
+            value:
+                _vehicleCapacityController.text.isEmpty
+                    ? null
+                    : _vehicleCapacityController.text,
             decoration: AppInputDecoration.buildInputDecoration(
               context: context,
               labelText: 'Capacidad del Vehículo',
               prefixIcon: Icons.airline_seat_recline_normal,
               hintText: 'Seleccione el número de asientos',
             ),
-            items: List.generate(16, (index) => (index + 1).toString())
-                .map((value) => DropdownMenuItem<String>(
-                      value: value,
-                      child: Text('$value pasajeros'),
-                    ))
-                .toList(),
+            items:
+                List.generate(16, (index) => (index + 1).toString())
+                    .map(
+                      (value) => DropdownMenuItem<String>(
+                        value: value,
+                        child: Text('$value pasajeros'),
+                      ),
+                    )
+                    .toList(),
             onChanged: (String? newValue) {
               if (newValue != null) {
                 _vehicleCapacityController.text = newValue;
@@ -374,30 +420,119 @@ class _RegisterScreenState extends State<RegisterScreen> {
               return null;
             },
           ),
-          
+
           const SizedBox(height: 24),
-          
+
           _buildSectionTitle('Rutas de Operación', Icons.route),
-          
+
           const SizedBox(height: 8),
-          
+
           const Text(
             'Seleccione las regiones donde desea operar:',
-            style: TextStyle(
-              fontSize: 14,
-              color: Colors.grey,
-            ),
+            style: TextStyle(fontSize: 14, color: Colors.grey),
           ),
-          
+
           const SizedBox(height: 16),
-          
+
+          _buildViajesLocales(),
+
           _buildImprovedRoutesSelector(),
-          
+
           const SizedBox(height: 40),
         ],
       ),
     );
   }
+
+  Widget _BuildselectedOrigen() {
+    return LocationAutocomplete(
+      controller: _mun_origenController,
+      labelText: 'Municipio de Origen',
+      selectedLocation: _municipio,
+      onSelected: (Ubicacion? selection) {
+        setState(() {
+          _municipio = selection;
+        });
+      },
+      supabaseService: _supabaseService,
+      user: UserType.driver,
+    );
+  }
+
+
+Widget _buildViajesLocales() {
+  return Container(
+    margin: const EdgeInsets.only(bottom: 12),
+    child: Material(
+      color: Colors.transparent,
+      child: InkWell(
+        borderRadius: BorderRadius.circular(16),
+        onTap: () {
+          setState(() {
+            viajes_locales = !viajes_locales;
+          });
+        },
+        child: Container(
+          padding: const EdgeInsets.all(16),
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(
+              color: viajes_locales ? AppColors.primary : Colors.grey[300]!,
+              width: viajes_locales ? 2 : 1,
+            ),
+            color: viajes_locales
+                ? AppColors.primary.withOpacity(0.1)
+                : null,
+          ),
+          child: Row(
+            children: [
+              Icon(
+                Icons.location_on, // Puedes cambiar este ícono
+                color: viajes_locales
+                    ? AppColors.primary
+                    : Colors.grey[600],
+                size: 24,
+              ),
+              const SizedBox(width: 16),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Viajes locales',
+                      style: TextStyle(
+                        fontWeight: FontWeight.w600,
+                        fontSize: 16,
+                        color: viajes_locales ? AppColors.primary : null,
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      'Selecciona si opera en rutas locales o dentro de la Provincia',
+                      style: TextStyle(
+                        fontSize: 12,
+                        color: Colors.grey[600],
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              Icon(
+                viajes_locales
+                    ? Icons.check_circle
+                    : Icons.radio_button_unchecked,
+                color: viajes_locales
+                    ? AppColors.primary
+                    : Colors.grey[400],
+              ),
+            ],
+          ),
+        ),
+      ),
+    ),
+  );
+}
+
 
   Widget _buildPhotosStep() {
     return SingleChildScrollView(
@@ -406,37 +541,37 @@ class _RegisterScreenState extends State<RegisterScreen> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           const SizedBox(height: 20),
-          
-          _buildSectionTitle('Documentación Fotográfica', Icons.camera_alt_outlined),
-          
+
+          _buildSectionTitle(
+            'Documentación Fotográfica',
+            Icons.camera_alt_outlined,
+          ),
+
           const SizedBox(height: 8),
-          
+
           const Text(
             'Sube las fotos requeridas para completar tu registro:',
-            style: TextStyle(
-              fontSize: 14,
-              color: Colors.grey,
-            ),
+            style: TextStyle(fontSize: 14, color: Colors.grey),
           ),
-          
+
           const SizedBox(height: 24),
-          
+
           _buildImprovedPhotoSelector(
             label: 'Foto de Perfil',
             subtitle: 'Una foto clara de tu rostro',
             isPersonal: true,
             icon: Icons.person,
           ),
-          
+
           const SizedBox(height: 24),
-          
+
           _buildImprovedPhotoSelector(
             label: 'Foto del Vehículo',
             subtitle: 'Foto exterior completa del vehículo',
             isPersonal: false,
             icon: Icons.directions_car,
           ),
-          
+
           const SizedBox(height: 40),
         ],
       ),
@@ -450,10 +585,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
         const SizedBox(width: 8),
         Text(
           title,
-          style: const TextStyle(
-            fontSize: 18,
-            fontWeight: FontWeight.w600,
-          ),
+          style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w600),
         ),
       ],
     );
@@ -461,7 +593,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
 
   Widget _buildPhoneInput() {
     bool isDarkMode = Theme.of(context).brightness == Brightness.dark;
-    
+
     return Row(
       children: [
         Container(
@@ -509,7 +641,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
 
   Widget _buildPasswordRequirements() {
     final password = _passwordController.text;
-    
+
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
@@ -526,10 +658,19 @@ class _RegisterScreenState extends State<RegisterScreen> {
           ),
           const SizedBox(height: 8),
           _buildRequirement('Al menos 8 caracteres', password.length >= 8),
-          _buildRequirement('Una letra mayúscula', RegExp(r'[A-Z]').hasMatch(password)),
-          _buildRequirement('Una letra minúscula', RegExp(r'[a-z]').hasMatch(password)),
+          _buildRequirement(
+            'Una letra mayúscula',
+            RegExp(r'[A-Z]').hasMatch(password),
+          ),
+          _buildRequirement(
+            'Una letra minúscula',
+            RegExp(r'[a-z]').hasMatch(password),
+          ),
           _buildRequirement('Un número', RegExp(r'\d').hasMatch(password)),
-          _buildRequirement('Un carácter especial (!@#\$&*~._-)', RegExp(r'[!@#\$&*~._-]').hasMatch(password)),
+          _buildRequirement(
+            'Un carácter especial (!@#\$&*~._-)',
+            RegExp(r'[!@#\$&*~._-]').hasMatch(password),
+          ),
         ],
       ),
     );
@@ -566,79 +707,91 @@ class _RegisterScreenState extends State<RegisterScreen> {
       },
       {
         'name': 'Centro',
-        'description': 'Villa Clara, Cienfuegos, Sancti Spíritus, Ciego de Ávila, Camagüey',
+        'description':
+            'Villa Clara, Cienfuegos, Sancti Spíritus, Ciego de Ávila, Camagüey',
         'icon': Icons.center_focus_strong,
       },
       {
         'name': 'Occidente',
-        'description': 'La Habana, Matanzas, Pinar del Río, Artemisa, Mayabeque',
+        'description':
+            'La Habana, Matanzas, Pinar del Río, Artemisa, Mayabeque',
         'icon': Icons.west,
       },
     ];
 
     return Column(
-      children: routes.map((route) {
-        final isSelected = _selectedRoutes.contains(route['name']);
-        
-        return Container(
-          margin: const EdgeInsets.only(bottom: 12),
-          child: Material(
-            color: Colors.transparent,
-            child: InkWell(
-              borderRadius: BorderRadius.circular(16),
-              onTap: () => _updateRoutes(route['name'] as String, !isSelected),
-              child: Container(
-                padding: const EdgeInsets.all(16),
-                decoration: BoxDecoration(
+      children:
+          routes.map((route) {
+            final isSelected = _selectedRoutes.contains(route['name']);
+
+            return Container(
+              margin: const EdgeInsets.only(bottom: 12),
+              child: Material(
+                color: Colors.transparent,
+                child: InkWell(
                   borderRadius: BorderRadius.circular(16),
-                  border: Border.all(
-                    color: isSelected ? AppColors.primary : Colors.grey[300]!,
-                    width: isSelected ? 2 : 1,
-                  ),
-                  color: isSelected ? AppColors.primary.withOpacity(0.1) : null,
-                ),
-                child: Row(
-                  children: [
-                    Icon(
-                      route['icon'] as IconData,
-                      color: isSelected ? AppColors.primary : Colors.grey[600],
-                      size: 24,
-                    ),
-                    const SizedBox(width: 16),
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            route['name'] as String,
-                            style: TextStyle(
-                              fontWeight: FontWeight.w600,
-                              fontSize: 16,
-                              color: isSelected ? AppColors.primary : null,
-                            ),
-                          ),
-                          const SizedBox(height: 4),
-                          Text(
-                            route['description'] as String,
-                            style: TextStyle(
-                              fontSize: 12,
-                              color: Colors.grey[600],
-                            ),
-                          ),
-                        ],
+                  onTap:
+                      () => _updateRoutes(route['name'] as String, !isSelected),
+                  child: Container(
+                    padding: const EdgeInsets.all(16),
+                    decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(16),
+                      border: Border.all(
+                        color:
+                            isSelected ? AppColors.primary : Colors.grey[300]!,
+                        width: isSelected ? 2 : 1,
                       ),
+                      color:
+                          isSelected
+                              ? AppColors.primary.withOpacity(0.1)
+                              : null,
                     ),
-                    Icon(
-                      isSelected ? Icons.check_circle : Icons.radio_button_unchecked,
-                      color: isSelected ? AppColors.primary : Colors.grey[400],
+                    child: Row(
+                      children: [
+                        Icon(
+                          route['icon'] as IconData,
+                          color:
+                              isSelected ? AppColors.primary : Colors.grey[600],
+                          size: 24,
+                        ),
+                        const SizedBox(width: 16),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                route['name'] as String,
+                                style: TextStyle(
+                                  fontWeight: FontWeight.w600,
+                                  fontSize: 16,
+                                  color: isSelected ? AppColors.primary : null,
+                                ),
+                              ),
+                              const SizedBox(height: 4),
+                              Text(
+                                route['description'] as String,
+                                style: TextStyle(
+                                  fontSize: 12,
+                                  color: Colors.grey[600],
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                        Icon(
+                          isSelected
+                              ? Icons.check_circle
+                              : Icons.radio_button_unchecked,
+                          color:
+                              isSelected ? AppColors.primary : Colors.grey[400],
+                        ),
+                      ],
                     ),
-                  ],
+                  ),
                 ),
               ),
-            ),
-          ),
-        );
-      }).toList(),
+            );
+          }).toList(),
     );
   }
 
@@ -679,71 +832,88 @@ class _RegisterScreenState extends State<RegisterScreen> {
                     ),
                     Text(
                       subtitle,
-                      style: TextStyle(
-                        fontSize: 12,
-                        color: Colors.grey[600],
-                      ),
+                      style: TextStyle(fontSize: 12, color: Colors.grey[600]),
                     ),
                   ],
                 ),
               ],
             ),
           ),
-          
+
           InkWell(
             onTap: () => _pickImage(isPersonal),
-            borderRadius: const BorderRadius.vertical(bottom: Radius.circular(16)),
+            borderRadius: const BorderRadius.vertical(
+              bottom: Radius.circular(16),
+            ),
             child: Container(
               height: 200,
               width: double.infinity,
               decoration: BoxDecoration(
                 color: Colors.grey[50],
-                borderRadius: const BorderRadius.vertical(bottom: Radius.circular(16)),
+                borderRadius: const BorderRadius.vertical(
+                  bottom: Radius.circular(16),
+                ),
               ),
-              child: hasPhoto
-                  ? ClipRRect(
-                      borderRadius: const BorderRadius.vertical(bottom: Radius.circular(16)),
-                      child: Stack(
-                        children: [
-                          SizedBox(
-                            width: double.infinity,
-                            height: double.infinity,
-                            child: kIsWeb
-                                ? Image.memory(
-                                    isPersonal ? _profilePhotoBytes! : _vehiclePhotoBytes!,
-                                    fit: BoxFit.cover,
-                                  )
-                                : Image.file(
-                                    isPersonal ? _profilePhotoFile! : _vehiclePhotoFile!,
-                                    fit: BoxFit.cover,
-                                  ),
-                          ),
-                          Positioned(
-                            top: 8,
-                            right: 8,
-                            child: Container(
-                              padding: const EdgeInsets.all(4),
-                              decoration: const BoxDecoration(
-                                color: AppColors.primary,
-                                shape: BoxShape.circle,
-                              ),
-                              child: const Icon(Icons.check, color: Colors.white, size: 16),
+              child:
+                  hasPhoto
+                      ? ClipRRect(
+                        borderRadius: const BorderRadius.vertical(
+                          bottom: Radius.circular(16),
+                        ),
+                        child: Stack(
+                          children: [
+                            SizedBox(
+                              width: double.infinity,
+                              height: double.infinity,
+                              child:
+                                  kIsWeb
+                                      ? Image.memory(
+                                        isPersonal
+                                            ? _profilePhotoBytes!
+                                            : _vehiclePhotoBytes!,
+                                        fit: BoxFit.cover,
+                                      )
+                                      : Image.file(
+                                        isPersonal
+                                            ? _profilePhotoFile!
+                                            : _vehiclePhotoFile!,
+                                        fit: BoxFit.cover,
+                                      ),
                             ),
+                            Positioned(
+                              top: 8,
+                              right: 8,
+                              child: Container(
+                                padding: const EdgeInsets.all(4),
+                                decoration: const BoxDecoration(
+                                  color: AppColors.primary,
+                                  shape: BoxShape.circle,
+                                ),
+                                child: const Icon(
+                                  Icons.check,
+                                  color: Colors.white,
+                                  size: 16,
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      )
+                      : Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Icon(
+                            Icons.add_a_photo,
+                            size: 48,
+                            color: Colors.grey[400],
+                          ),
+                          const SizedBox(height: 8),
+                          Text(
+                            'Toca para seleccionar',
+                            style: TextStyle(color: Colors.grey[600]),
                           ),
                         ],
                       ),
-                    )
-                  : Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Icon(Icons.add_a_photo, size: 48, color: Colors.grey[400]),
-                        const SizedBox(height: 8),
-                        Text(
-                          'Toca para seleccionar',
-                          style: TextStyle(color: Colors.grey[600]),
-                        ),
-                      ],
-                    ),
             ),
           ),
         ],
@@ -781,9 +951,9 @@ class _RegisterScreenState extends State<RegisterScreen> {
                   child: const Text('Anterior'),
                 ),
               ),
-            
+
             if (_currentStep > 0) const SizedBox(width: 16),
-            
+
             Expanded(
               flex: 2,
               child: ElevatedButton(
@@ -793,16 +963,17 @@ class _RegisterScreenState extends State<RegisterScreen> {
                     const EdgeInsets.symmetric(vertical: 16),
                   ),
                 ),
-                child: _loading
-                    ? const SizedBox(
-                        width: 24,
-                        height: 24,
-                        child: CircularProgressIndicator(
-                          color: Colors.white,
-                          strokeWidth: 2.5,
-                        ),
-                      )
-                    : Text(_currentStep == 2 ? 'Registrarse' : 'Siguiente'),
+                child:
+                    _loading
+                        ? const SizedBox(
+                          width: 24,
+                          height: 24,
+                          child: CircularProgressIndicator(
+                            color: Colors.white,
+                            strokeWidth: 2.5,
+                          ),
+                        )
+                        : Text(_currentStep == 2 ? 'Registrarse' : 'Siguiente'),
               ),
             ),
           ],
@@ -854,22 +1025,28 @@ class _RegisterScreenState extends State<RegisterScreen> {
       LogsMessages.showInfoError(context, 'Ingrese su número de licencia');
       return false;
     }
-    
+
     if (!RegexUtils.isValidLicencia(_licenseController.text)) {
-      LogsMessages.showInfoError(context, 'Ingrese un número de licencia válido');
+      LogsMessages.showInfoError(
+        context,
+        'Ingrese un número de licencia válido',
+      );
       return false;
     }
-    
+
     if (_vehicleCapacityController.text.isEmpty) {
-      LogsMessages.showInfoError(context, 'Seleccione la capacidad del vehículo');
+      LogsMessages.showInfoError(
+        context,
+        'Seleccione la capacidad del vehículo',
+      );
       return false;
     }
-    
+
     if (_selectedRoutes.isEmpty) {
       LogsMessages.showInfoError(context, 'Debe seleccionar al menos una ruta');
       return false;
     }
-    
+
     return true;
   }
 
@@ -878,12 +1055,12 @@ class _RegisterScreenState extends State<RegisterScreen> {
       LogsMessages.showInfoError(context, 'Debe subir una foto de perfil');
       return false;
     }
-    
+
     if (!hasVehiclePhoto) {
       LogsMessages.showInfoError(context, 'Debe subir la foto del vehículo');
       return false;
     }
-    
+
     return true;
   }
 
@@ -996,11 +1173,13 @@ class _RegisterScreenState extends State<RegisterScreen> {
         'license_number': _licenseController.text.trim(),
         'vehicle_capacity': int.parse(_vehicleCapacityController.text),
         'routes': _selectedRoutes,
-        'is_available': false,
+        'is_available': true,
         'driver_status': 'pending',
         'vehicle_photo_url': vehiclePhotoUrl,
+        'id_municipio_de_origen': _municipio?.id,
+        'viajes_locales': viajes_locales,
       });
-      
+
       SupabaseApi().signOut();
     } catch (e) {
       throw Exception('Error al crear perfil: ${e.toString()}');
@@ -1063,7 +1242,8 @@ class _RegisterScreenState extends State<RegisterScreen> {
       builder: (BuildContext context) {
         return CustomDialog(
           showAnimation: true,
-          message: 'Tu solicitud está en revisión.\nTe notificaremos cuando esté lista.',
+          message:
+              'Tu solicitud está en revisión.\nTe notificaremos cuando esté lista.',
           buttonText: 'Continuar',
           onPressed: () {
             AppRoutes.router.go(AppRoutes.home);

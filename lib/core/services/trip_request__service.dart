@@ -1,5 +1,6 @@
 import 'package:eytaxi/core/enum/trip_status.dart';
 import 'package:eytaxi/models/guest_contact_model.dart';
+import 'package:eytaxi/models/reserva_excusion_model.dart';
 import 'package:eytaxi/models/trip_request_model.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
@@ -25,7 +26,6 @@ class TripRequestService {
               })
               .select()
               .single();
-
       final contactId = response['id'];
 
       // Luego, insertamos la solicitud de viaje con el ID del contacto
@@ -47,7 +47,39 @@ class TripRequestService {
     }
   }
 
-   
+  Future<void> createExcursionRequest(
+    ReservaExc request,
+    GuestContact contact,
+  ) async {
+    // Primero, insertamos el contacto del invitado
+    try {
+      final response =
+          await _client
+              .from('guest_contacts')
+              .insert({
+                'name': contact.name,
+                'method': contact.method,
+                'contact': contact.contact,
+                'address': contact.address,
+                'extra_info': contact.extraInfo,
+              })
+              .select()
+              .single();
+      final contactId = response['id'];
+
+      // Luego, insertamos la solicitud de excursiones con el ID del contacto
+      await _client.from('reservas_excursiones').insert({
+        "excursiones_id": request.exc_id as String,
+        "contact_id": contactId as String,
+        "precio": request.precio ?? 0.0,
+        "fecha": request.fecha.toIso8601String(),
+        "cantidad_personas": request.cantidad_personas,
+        "incluir_guia": request.incluir_guia,
+      }).select(); // opcional si quieres retornar el objeto insertado
+    } catch (e) {
+      throw Exception('Error al crear solicitud: $e');
+    }
+  }
 
   Future<Map<String, dynamic>?> calculateReservationDetails(
     int idOrigen,
@@ -74,19 +106,19 @@ class TripRequestService {
   }
 
   String _statusToString(TripStatus status) {
-  switch (status) {
-    case TripStatus.accepted:
-      return 'accepted';
-    case TripStatus.rejected:
-      return 'rejected';
-    case TripStatus.completed:
-      return 'completed';
-    case TripStatus.cancelled:
-      return 'cancelled';
-    case TripStatus.pending:
-      return 'pending';
+    switch (status) {
+      case TripStatus.accepted:
+        return 'accepted';
+      case TripStatus.rejected:
+        return 'rejected';
+      case TripStatus.completed:
+        return 'completed';
+      case TripStatus.cancelled:
+        return 'cancelled';
+      case TripStatus.pending:
+        return 'pending';
+    }
   }
-}
 
   /// Obtener todas las solicitudes de un usuario
   Future<List<TripRequest>> getRequestsByUser(String userId) async {

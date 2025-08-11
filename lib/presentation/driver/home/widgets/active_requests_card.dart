@@ -43,7 +43,9 @@ class _ActiveRequestsCardState extends State<ActiveRequestsCard> {
     return widget.requests.where((request) {
       final origen = request.origen?.nombre?.toLowerCase() ?? 'desconocido';
       final destino = request.destino?.nombre?.toLowerCase() ?? 'desconocido';
-      return origen.contains(_searchQuery) || destino.contains(_searchQuery);
+      final origen_provincia = request.origen?.provincia?.toLowerCase() ?? 'desconocido';
+      final destino_provincia = request.destino?.provincia?.toLowerCase() ?? 'desconocido';
+      return origen.contains(_searchQuery) || destino.contains(_searchQuery) || origen_provincia.contains(_searchQuery) || destino_provincia.contains(_searchQuery);
     }).toList();
   }
 

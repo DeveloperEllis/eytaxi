@@ -1,44 +1,59 @@
 import 'package:eytaxi/core/constants/app_colors.dart';
 import 'package:eytaxi/core/constants/app_routes.dart';
 import 'package:flutter/material.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 class InfoScreen extends StatelessWidget {
   const InfoScreen({Key? key}) : super(key: key);
 
+  // URLs para redes sociales y WhatsApp
+  static const String whatsappUrl = 'https://wa.me/+5351234567?text=¡Hola!%20Quiero%20más%20información%20sobre%20TaxiCuba';
+  static const String instagramUrl = 'https://www.instagram.com/taxicuba';
+  static const String twitterUrl = 'https://x.com/taxicuba';
+  static const String facebookUrl = 'https://www.facebook.com/taxicuba';
+
+  // Función para abrir URLs
+  Future<void> _launchUrl(String url) async {
+    final Uri uri = Uri.parse(url);
+    if (!await launchUrl(uri, mode: LaunchMode.externalApplication)) {
+      throw 'No se pudo abrir $url';
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final isDarkMode = Theme.of(context).brightness == Brightness.dark;
-    
+
     return Scaffold(
       backgroundColor: isDarkMode ? AppColors.backgroundDark : AppColors.background,
       body: SafeArea(
         child: SingleChildScrollView(
-          padding: const EdgeInsets.all(20.0),
+          padding: const EdgeInsets.all(24.0),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // Header con logo y título
+              // Header con logo, título y redes sociales
               Center(
                 child: Column(
                   children: [
                     Container(
-                      width: 100,
-                      height: 100,
+                      width: 120,
+                      height: 120,
                       decoration: BoxDecoration(
                         color: AppColors.accent,
-                        borderRadius: BorderRadius.circular(20),
+                        borderRadius: BorderRadius.circular(24),
                         boxShadow: [
                           BoxShadow(
                             color: AppColors.grey.withOpacity(0.3),
-                            spreadRadius: 2,
-                            blurRadius: 8,
+                            spreadRadius: 3,
+                            blurRadius: 10,
                             offset: const Offset(0, 4),
                           ),
                         ],
                       ),
                       child: const Icon(
                         Icons.local_taxi,
-                        size: 50,
+                        size: 60,
                         color: AppColors.white,
                       ),
                     ),
@@ -46,7 +61,7 @@ class InfoScreen extends StatelessWidget {
                     Text(
                       'TaxiCuba',
                       style: TextStyle(
-                        fontSize: 28,
+                        fontSize: 32,
                         fontWeight: FontWeight.bold,
                         color: isDarkMode ? AppColors.white : AppColors.black,
                       ),
@@ -59,12 +74,57 @@ class InfoScreen extends StatelessWidget {
                         fontStyle: FontStyle.italic,
                       ),
                     ),
+                    const SizedBox(height: 16),
+                    // Sección de redes sociales
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        _buildSocialIcon(
+                          icon: Icons.phone,
+                          color: Colors.green,
+                          onTap: () => _launchUrl(whatsappUrl),
+                          tooltip: 'Contactar por WhatsApp',
+                        ),
+                        const SizedBox(width: 16),
+                        _buildSocialIcon(
+                          icon: Icons.camera_alt,
+                          color: Colors.purple,
+                          onTap: () => _launchUrl(instagramUrl),
+                          tooltip: 'Instagram',
+                        ),
+                        const SizedBox(width: 16),
+                        _buildSocialIcon(
+                          icon: Icons.alternate_email,
+                          color: Colors.blue,
+                          onTap: () => _launchUrl(twitterUrl),
+                          tooltip: 'Twitter/X',
+                        ),
+                        const SizedBox(width: 16),
+                        _buildSocialIcon(
+                          icon: Icons.facebook,
+                          color: Colors.blueAccent,
+                          onTap: () => _launchUrl(facebookUrl),
+                          tooltip: 'Facebook',
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 8),
+                    GestureDetector(
+                      onTap: () => _launchUrl(whatsappUrl),
+                      child: Text(
+                        'Contáctanos: +53 5123 4567',
+                        style: TextStyle(
+                          fontSize: 14,
+                          color: isDarkMode ? AppColors.accent : AppColors.primary,
+                          decoration: TextDecoration.underline,
+                        ),
+                      ),
+                    ),
                   ],
                 ),
               ),
-              
               const SizedBox(height: 40),
-              
+
               // Sección principal de información
               Text(
                 '¿Qué es TaxiCuba?',
@@ -83,9 +143,9 @@ class InfoScreen extends StatelessWidget {
                   color: isDarkMode ? AppColors.white : AppColors.black,
                 ),
               ),
-              
+
               const SizedBox(height: 30),
-              
+
               // Características principales
               Text(
                 'Características principales:',
@@ -96,7 +156,7 @@ class InfoScreen extends StatelessWidget {
                 ),
               ),
               const SizedBox(height: 20),
-              
+
               _buildFeatureItem(
                 context,
                 Icons.location_on,
@@ -139,17 +199,17 @@ class InfoScreen extends StatelessWidget {
                 'Disponibilidad 24/7',
                 'Tu transporte cuando lo necesites, día y noche',
               ),
-              
+
               const SizedBox(height: 40),
-              
+
               // Sección para taxistas
               Container(
                 width: double.infinity,
                 padding: const EdgeInsets.all(24),
                 decoration: BoxDecoration(
                   gradient: LinearGradient(
-                    colors: isDarkMode 
-                        ? [AppColors.primary, AppColors.secondary]
+                    colors: isDarkMode
+                        ? [AppColors.primary.withOpacity(0.9), AppColors.secondary.withOpacity(0.9)]
                         : [AppColors.primary, AppColors.secondary],
                     begin: Alignment.topLeft,
                     end: Alignment.bottomRight,
@@ -193,7 +253,6 @@ class InfoScreen extends StatelessWidget {
                     const SizedBox(height: 24),
                     ElevatedButton(
                       onPressed: () {
-                        // Navegar a la pantalla de login/registro de taxistas
                         AppRoutes.router.go('/login');
                       },
                       style: ElevatedButton.styleFrom(
@@ -226,9 +285,9 @@ class InfoScreen extends StatelessWidget {
                   ],
                 ),
               ),
-              
+
               const SizedBox(height: 40),
-              
+
               // Beneficios para taxistas
               Text(
                 'Beneficios para taxistas:',
@@ -239,7 +298,7 @@ class InfoScreen extends StatelessWidget {
                 ),
               ),
               const SizedBox(height: 16),
-              
+
               _buildBenefitItem(context, '💰', 'Aumenta tus ingresos'),
               _buildBenefitItem(context, '🚗', 'Viajes locales y excursiones'),
               _buildBenefitItem(context, '✈️', 'Traslados aeropuerto'),
@@ -247,9 +306,9 @@ class InfoScreen extends StatelessWidget {
               _buildBenefitItem(context, '📱', 'Gestión fácil desde tu móvil'),
               _buildBenefitItem(context, '⭐', 'Construye tu reputación'),
               _buildBenefitItem(context, '🛡️', 'Pagos seguros garantizados'),
-              
+
               const SizedBox(height: 40),
-              
+
               // Footer
               Center(
                 child: Column(
@@ -282,7 +341,7 @@ class InfoScreen extends StatelessWidget {
 
   Widget _buildFeatureItem(BuildContext context, IconData icon, String title, String description) {
     final isDarkMode = Theme.of(context).brightness == Brightness.dark;
-    
+
     return Padding(
       padding: const EdgeInsets.only(bottom: 16),
       child: Row(
@@ -332,7 +391,7 @@ class InfoScreen extends StatelessWidget {
 
   Widget _buildBenefitItem(BuildContext context, String emoji, String benefit) {
     final isDarkMode = Theme.of(context).brightness == Brightness.dark;
-    
+
     return Padding(
       padding: const EdgeInsets.only(bottom: 12),
       child: Row(
@@ -354,5 +413,30 @@ class InfoScreen extends StatelessWidget {
     );
   }
 
-
+  Widget _buildSocialIcon({
+    required IconData icon,
+    required Color color,
+    required VoidCallback onTap,
+    required String tooltip,
+  }) {
+    return Tooltip(
+      message: tooltip,
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(20),
+        child: Container(
+          padding: const EdgeInsets.all(8),
+          decoration: BoxDecoration(
+            shape: BoxShape.circle,
+            color: color.withOpacity(0.1),
+          ),
+          child: Icon(
+            icon,
+            color: color,
+            size: 28,
+          ),
+        ),
+      ),
+    );
+  }
 }

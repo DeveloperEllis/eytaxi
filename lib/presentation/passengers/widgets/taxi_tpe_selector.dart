@@ -18,7 +18,7 @@ class TaxiTypeSelector extends StatelessWidget {
       builder: (context, constraints) {
         final double buttonWidth = constraints.maxWidth / 2;
         return Container(
-          height: 48,
+          height: 72, // altura ajustada para título + descripción
           padding: const EdgeInsets.all(4),
           decoration: BoxDecoration(
             color: isDarkMode ? AppColors.backgroundDark : AppColors.background,
@@ -35,12 +35,15 @@ class TaxiTypeSelector extends StatelessWidget {
           ),
           child: Stack(
             children: [
+              // Fondo animado que ahora ocupa toda la altura
               AnimatedContainer(
                 duration: const Duration(milliseconds: 300),
                 curve: Curves.easeInOut,
                 width: buttonWidth - 8,
-                height: 40,
-                margin: EdgeInsets.only(left: taxiType == 'colectivo' ? 0 : buttonWidth),
+                height: double.infinity, // 🔹 ocupa todo el alto
+                margin: EdgeInsets.only(
+                  left: taxiType == 'colectivo' ? 0 : buttonWidth,
+                ),
                 decoration: BoxDecoration(
                   color: AppColors.primary,
                   borderRadius: BorderRadius.circular(10),
@@ -55,59 +58,81 @@ class TaxiTypeSelector extends StatelessWidget {
               ),
               Row(
                 children: [
+                  // Botón Colectivo
                   Expanded(
                     child: InkWell(
-                      onTap: () {
-                        onTypeChanged('colectivo');
-                        print('Tapped colectivo');
-                      },
+                      onTap: () => onTypeChanged('colectivo'),
                       borderRadius: BorderRadius.circular(10),
                       splashColor: AppColors.primary.withOpacity(0.2),
                       highlightColor: AppColors.primary.withOpacity(0.1),
-                      child: Container(
-                        height: 40,
-                        alignment: Alignment.center,
-                        child: Text(
-                          'Colectivo',
-                          style: Theme.of(context).textTheme.bodyMedium!.copyWith(
-                                color: taxiType == 'colectivo'
-                                    ? AppColors.white
-                                    : isDarkMode
-                                        ? AppColors.grey
-                                        : AppColors.grey.withOpacity(0.7),
-                                fontWeight: taxiType == 'colectivo'
-                                    ? FontWeight.w600
-                                    : FontWeight.w400,
-                              ),
-                        ),
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Text(
+                            'Colectivo',
+                            style: Theme.of(context).textTheme.bodyMedium!.copyWith(
+                                  color: taxiType == 'colectivo'
+                                      ? AppColors.white
+                                      : isDarkMode
+                                          ? AppColors.grey
+                                          : AppColors.grey.withOpacity(0.7),
+                                  fontWeight: taxiType == 'colectivo'
+                                      ? FontWeight.w600
+                                      : FontWeight.w400,
+                                ),
+                          ),
+                          const SizedBox(height: 2),
+                          Text(
+                            'Viaje compartido con otras personas',
+                            textAlign: TextAlign.center,
+                            style: Theme.of(context).textTheme.labelSmall!.copyWith(
+                                  fontSize: 10,
+                                  height: 1.2,
+                                  color: taxiType == 'colectivo'
+                                      ? AppColors.white.withOpacity(0.9)
+                                      : AppColors.grey.withOpacity(0.6),
+                                ),
+                          ),
+                        ],
                       ),
                     ),
                   ),
+                  // Botón Privado
                   Expanded(
                     child: InkWell(
-                      onTap: () {
-                        onTypeChanged('privado');
-                        print('Tapped privado');
-                      },
+                      onTap: () => onTypeChanged('privado'),
                       borderRadius: BorderRadius.circular(10),
                       splashColor: AppColors.primary.withOpacity(0.2),
                       highlightColor: AppColors.primary.withOpacity(0.1),
-                      child: Container(
-                        height: 40,
-                        alignment: Alignment.center,
-                        child: Text(
-                          'Privado',
-                          style: Theme.of(context).textTheme.bodyMedium!.copyWith(
-                                color: taxiType == 'privado'
-                                    ? AppColors.white
-                                    : isDarkMode
-                                        ? AppColors.grey
-                                        : AppColors.grey.withOpacity(0.7),
-                                fontWeight: taxiType == 'privado'
-                                    ? FontWeight.w600
-                                    : FontWeight.w400,
-                              ),
-                        ),
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Text(
+                            'Privado',
+                            style: Theme.of(context).textTheme.bodyMedium!.copyWith(
+                                  color: taxiType == 'privado'
+                                      ? AppColors.white
+                                      : isDarkMode
+                                          ? AppColors.grey
+                                          : AppColors.grey.withOpacity(0.7),
+                                  fontWeight: taxiType == 'privado'
+                                      ? FontWeight.w600
+                                      : FontWeight.w400,
+                                ),
+                          ),
+                          const SizedBox(height: 2),
+                          Text(
+                            'Viaje solo para usted y sus acompañantes',
+                            textAlign: TextAlign.center,
+                            style: Theme.of(context).textTheme.labelSmall!.copyWith(
+                                  fontSize: 10,
+                                  height: 1.2,
+                                  color: taxiType == 'privado'
+                                      ? AppColors.white.withOpacity(0.9)
+                                      : AppColors.grey.withOpacity(0.6),
+                                ),
+                          ),
+                        ],
                       ),
                     ),
                   ),

@@ -1,5 +1,11 @@
 import 'package:eytaxi/core/constants/app_colors.dart';
+import 'package:eytaxi/core/constants/app_constants.dart';
+import 'package:eytaxi/core/constants/app_routes.dart';
+import 'package:eytaxi/core/services/trip_request__service.dart';
 import 'package:eytaxi/core/utils/regex_utils.dart';
+import 'package:eytaxi/core/widgets/messages/mesages.dart';
+import 'package:eytaxi/models/guest_contact_model.dart';
+import 'package:eytaxi/models/reserva_excusion_model.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
@@ -27,9 +33,13 @@ class _ReservationFormDialogState extends State<ReservationFormDialog> {
   final _direccionController = TextEditingController();
   final _datosExtrasController = TextEditingController();
 
-  DateTime? _selectedDate ;
+  DateTime? _selectedDate;
   ContactMethod _selectedContactMethod = ContactMethod.whatsapp;
   bool _isLoading = false;
+  String _selectedCountryCode = '+53';
+  bool _includeGuide = false; // New state for guide checkbox
+
+  TripRequestService _service = TripRequestService();
 
   @override
   void dispose() {
@@ -75,6 +85,8 @@ class _ReservationFormDialogState extends State<ReservationFormDialog> {
                       _buildContactMethodSection(isDarkMode),
                       const SizedBox(height: 16),
                       _buildContactField(isDarkMode),
+                      const SizedBox(height: 16),
+                      _buildGuideCheckbox(isDarkMode),
                       const SizedBox(height: 16),
                       _buildAddressField(isDarkMode),
                       const SizedBox(height: 16),
@@ -138,7 +150,7 @@ class _ReservationFormDialogState extends State<ReservationFormDialog> {
                 ),
               ),
               Text(
-                '\$${widget.excursion['precio']}',
+                '\$${widget.excursion['precio']}${_includeGuide ? ' + \$12' : ''}',
                 style: TextStyle(
                   fontSize: 16,
                   fontWeight: FontWeight.bold,
@@ -160,7 +172,10 @@ class _ReservationFormDialogState extends State<ReservationFormDialog> {
         const SizedBox(height: 6),
         TextFormField(
           controller: _nombreController,
-          decoration: _getInputDecoration('Ingresa tu nombre completo', isDarkMode),
+          decoration: _getInputDecoration(
+            'Ingresa tu nombre completo',
+            isDarkMode,
+          ),
           validator: (value) {
             if (value == null || value.trim().isEmpty) {
               return 'El nombre es requerido';
@@ -213,17 +228,15 @@ class _ReservationFormDialogState extends State<ReservationFormDialog> {
             width: double.infinity,
             padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 16),
             decoration: BoxDecoration(
-              border: Border.all(color: isDarkMode ? Colors.grey[600]! : Colors.grey[300]!),
+              border: Border.all(
+                color: isDarkMode ? Colors.grey[600]! : Colors.grey[300]!,
+              ),
               borderRadius: BorderRadius.circular(8),
               color: isDarkMode ? Colors.grey[800] : Colors.white,
             ),
             child: Row(
               children: [
-                Icon(
-                  Icons.calendar_today,
-                  size: 20,
-                  color: AppColors.primary,
-                ),
+                Icon(Icons.calendar_today, size: 20, color: AppColors.primary),
                 const SizedBox(width: 12),
                 Text(
                   _selectedDate != null
@@ -231,9 +244,10 @@ class _ReservationFormDialogState extends State<ReservationFormDialog> {
                       : 'Selecciona una fecha',
                   style: TextStyle(
                     fontSize: 16,
-                    color: _selectedDate != null
-                        ? (isDarkMode ? Colors.white : Colors.black87)
-                        : Colors.grey[500],
+                    color:
+                        _selectedDate != null
+                            ? (isDarkMode ? Colors.white : Colors.black87)
+                            : Colors.grey[500],
                   ),
                 ),
               ],
@@ -245,10 +259,7 @@ class _ReservationFormDialogState extends State<ReservationFormDialog> {
             padding: const EdgeInsets.only(top: 6, left: 12),
             child: Text(
               'La fecha es requerida',
-              style: TextStyle(
-                color: Colors.red[700],
-                fontSize: 12,
-              ),
+              style: TextStyle(color: Colors.red[700], fontSize: 12),
             ),
           ),
       ],
@@ -284,7 +295,7 @@ class _ReservationFormDialogState extends State<ReservationFormDialog> {
             Expanded(
               child: _buildContactMethodChip(
                 ContactMethod.phone,
-                'Teléfono',
+                'Teléfono Cuba',
                 Icons.phone,
                 isDarkMode,
               ),
@@ -295,22 +306,36 @@ class _ReservationFormDialogState extends State<ReservationFormDialog> {
     );
   }
 
-  Widget _buildContactMethodChip(ContactMethod method, String label, IconData icon, bool isDarkMode) {
+  Widget _buildContactMethodChip(
+    ContactMethod method,
+    String label,
+    IconData icon,
+    bool isDarkDkMode,
+  ) {
     final isSelected = _selectedContactMethod == method;
     return InkWell(
       onTap: () {
         setState(() {
           _selectedContactMethod = method;
-          _contactoController.clear(); // Limpiar el campo al cambiar método
+          _contactoController.clear();
+          if (method != ContactMethod.whatsapp) {
+            _selectedCountryCode = '+53';
+          }
         });
       },
       child: Container(
         padding: const EdgeInsets.symmetric(vertical: 12),
         decoration: BoxDecoration(
-          color: isSelected ? AppColors.primary : (isDarkMode ? Colors.grey[800] : Colors.grey[100]),
+          color:
+              isSelected
+                  ? AppColors.primary
+                  : (isDarkDkMode ? Colors.grey[800] : Colors.grey[100]),
           borderRadius: BorderRadius.circular(8),
           border: Border.all(
-            color: isSelected ? AppColors.primary : (isDarkMode ? Colors.grey[600]! : Colors.grey[300]!),
+            color:
+                isSelected
+                    ? AppColors.primary
+                    : (isDarkDkMode ? Colors.grey[600]! : Colors.grey[300]!),
           ),
         ),
         child: Column(
@@ -326,7 +351,10 @@ class _ReservationFormDialogState extends State<ReservationFormDialog> {
               style: TextStyle(
                 fontSize: 12,
                 fontWeight: FontWeight.w500,
-                color: isSelected ? Colors.white : (isDarkMode ? Colors.white : Colors.black87),
+                color:
+                    isSelected
+                        ? Colors.white
+                        : (isDarkDkMode ? Colors.white : Colors.black87),
               ),
             ),
           ],
@@ -346,18 +374,23 @@ class _ReservationFormDialogState extends State<ReservationFormDialog> {
         hintText = 'ejemplo@correo.com';
         label = 'Email *';
         keyboardType = TextInputType.emailAddress;
+        inputFormatters = [FilteringTextInputFormatter.deny(RegExp(r'\s'))];
         break;
       case ContactMethod.whatsapp:
-        hintText = '+53 5XXXXXXX';
+        hintText = '5XXXXXXX';
         label = 'Número de WhatsApp *';
         keyboardType = TextInputType.phone;
-        inputFormatters = [FilteringTextInputFormatter.allow(RegExp(r'[0-9+\s-]'))];
+        inputFormatters = [
+          FilteringTextInputFormatter.allow(RegExp(r'[0-9+\s-]')),
+        ];
         break;
       case ContactMethod.phone:
         hintText = '+53 5XXXXXXX';
         label = 'Número de teléfono *';
         keyboardType = TextInputType.phone;
-        inputFormatters = [FilteringTextInputFormatter.allow(RegExp(r'[0-9+\s-]'))];
+        inputFormatters = [
+          FilteringTextInputFormatter.allow(RegExp(r'[0-9+\s-]')),
+        ];
         break;
     }
 
@@ -366,36 +399,92 @@ class _ReservationFormDialogState extends State<ReservationFormDialog> {
       children: [
         _buildFieldLabel(label, isDarkMode),
         const SizedBox(height: 6),
-        TextFormField(
-          controller: _contactoController,
-          keyboardType: keyboardType,
-          inputFormatters: inputFormatters,
-          decoration: _getInputDecoration(hintText, isDarkMode),
-          validator: (value) {
-            if (value == null || value.trim().isEmpty) {
-              return 'Este campo es requerido';
-            }
-            
-            switch (_selectedContactMethod) {
-              case ContactMethod.email:
-                if (!RegexUtils.emailRegex.hasMatch(value)) {
-                  return 'Ingresa un email válido';
-                }
-                break;
-              case ContactMethod.whatsapp:
-              if (!RegexUtils.phoneRegex.hasMatch(value.replaceAll(RegExp(r'[\s-]'), ''))) {
-                  return 'Ingresa un número cubano válido';
-                }
-                break;
-              case ContactMethod.phone:
-                if (!RegexUtils.phoneRegex.hasMatch(value.replaceAll(RegExp(r'[\s-]'), ''))) {
-                  return 'Ingresa un número cubano válido';
-                }
-                break;
-            }
-            return null;
-          },
-        ),
+        _selectedContactMethod == ContactMethod.whatsapp
+            ? Row(
+              children: [
+                Expanded(
+                  flex: 2,
+                  child: DropdownButtonFormField<String>(
+                    value: _selectedCountryCode,
+                    decoration: _getInputDecoration(
+                      'Código',
+                      isDarkMode,
+                    ).copyWith(
+                      contentPadding: const EdgeInsets.symmetric(
+                        horizontal: 12,
+                        vertical: 16,
+                      ),
+                    ),
+                    items:
+                        AppConstants.countryCodes
+                            .map(
+                              (country) => DropdownMenuItem(
+                                value: country['code'],
+                                child: Text(
+                                  '${country['flag']} ${country['code']}',
+                                  style: TextStyle(
+                                    color:
+                                        isDarkMode
+                                            ? Colors.white
+                                            : Colors.black87,
+                                    fontSize: 14,
+                                  ),
+                                ),
+                              ),
+                            )
+                            .toList(),
+                    onChanged: (value) {
+                      setState(() {
+                        _selectedCountryCode = value!;
+                      });
+                    },
+                    validator: (value) {
+                      if (value == null || value.isEmpty) {
+                        return 'Selecciona un código';
+                      }
+                      return null;
+                    },
+                  ),
+                ),
+                const SizedBox(width: 10),
+                Expanded(
+                  flex: 3,
+                  child: TextFormField(
+                    controller: _contactoController,
+                    keyboardType: keyboardType,
+                    inputFormatters: inputFormatters,
+                    decoration: _getInputDecoration(hintText, isDarkMode),
+                    validator: (value) => _validateContact(value),
+                    onChanged:
+                        (value) => setState(() {
+                          _contactoController.text = value.trim();
+                          _contactoController
+                              .selection = TextSelection.fromPosition(
+                            TextPosition(
+                              offset: _contactoController.text.length,
+                            ),
+                          );
+                        }),
+                    autovalidateMode: AutovalidateMode.onUserInteraction,
+                  ),
+                ),
+              ],
+            )
+            : TextFormField(
+              controller: _contactoController,
+              keyboardType: keyboardType,
+              inputFormatters: inputFormatters,
+              decoration: _getInputDecoration(hintText, isDarkMode),
+              validator: (value) => _validateContact(value),
+              onChanged:
+                  (value) => setState(() {
+                    _contactoController.text = value.trim();
+                    _contactoController.selection = TextSelection.fromPosition(
+                      TextPosition(offset: _contactoController.text.length),
+                    );
+                  }),
+              autovalidateMode: AutovalidateMode.onUserInteraction,
+            ),
       ],
     );
   }
@@ -409,7 +498,10 @@ class _ReservationFormDialogState extends State<ReservationFormDialog> {
         TextFormField(
           controller: _direccionController,
           maxLines: 2,
-          decoration: _getInputDecoration('Dirección donde te recogeremos', isDarkMode),
+          decoration: _getInputDecoration(
+            'Dirección donde te recogeremos',
+            isDarkMode,
+          ),
           validator: (value) {
             if (value == null || value.trim().isEmpty) {
               return 'La dirección es requerida';
@@ -442,6 +534,35 @@ class _ReservationFormDialogState extends State<ReservationFormDialog> {
     );
   }
 
+  Widget _buildGuideCheckbox(bool isDarkMode) {
+    return Row(
+      children: [
+        Checkbox(
+          value: _includeGuide,
+          onChanged: (value) {
+            setState(() {
+              _includeGuide = value ?? false;
+            });
+          },
+          activeColor: AppColors.primary,
+          checkColor: Colors.white,
+          side: BorderSide(
+            color: isDarkMode ? Colors.grey[400]! : Colors.grey[600]!,
+          ),
+        ),
+        Expanded(
+          child: Text(
+            'Incluir guía (+12 USD)',
+            style: TextStyle(
+              fontSize: 14,
+              color: isDarkMode ? Colors.white : Colors.black87,
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
   Widget _buildFieldLabel(String text, bool isDarkMode) {
     return Text(
       text,
@@ -459,11 +580,15 @@ class _ReservationFormDialogState extends State<ReservationFormDialog> {
       hintStyle: TextStyle(color: Colors.grey[500], fontSize: 14),
       border: OutlineInputBorder(
         borderRadius: BorderRadius.circular(8),
-        borderSide: BorderSide(color: isDarkMode ? Colors.grey[600]! : Colors.grey[300]!),
+        borderSide: BorderSide(
+          color: isDarkMode ? Colors.grey[600]! : Colors.grey[300]!,
+        ),
       ),
       enabledBorder: OutlineInputBorder(
         borderRadius: BorderRadius.circular(8),
-        borderSide: BorderSide(color: isDarkMode ? Colors.grey[600]! : Colors.grey[300]!),
+        borderSide: BorderSide(
+          color: isDarkMode ? Colors.grey[600]! : Colors.grey[300]!,
+        ),
       ),
       focusedBorder: OutlineInputBorder(
         borderRadius: BorderRadius.circular(8),
@@ -507,22 +632,23 @@ class _ReservationFormDialogState extends State<ReservationFormDialog> {
                 borderRadius: BorderRadius.circular(8),
               ),
             ),
-            child: _isLoading
-                ? const SizedBox(
-                    width: 20,
-                    height: 20,
-                    child: CircularProgressIndicator(
-                      color: Colors.white,
-                      strokeWidth: 2,
+            child:
+                _isLoading
+                    ? const SizedBox(
+                      width: 20,
+                      height: 20,
+                      child: CircularProgressIndicator(
+                        color: Colors.white,
+                        strokeWidth: 2,
+                      ),
+                    )
+                    : const Text(
+                      'Confirmar Reserva',
+                      style: TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w600,
+                      ),
                     ),
-                  )
-                : const Text(
-                    'Confirmar Reserva',
-                    style: TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.w600,
-                    ),
-                  ),
           ),
         ),
       ],
@@ -538,9 +664,9 @@ class _ReservationFormDialogState extends State<ReservationFormDialog> {
       builder: (context, child) {
         return Theme(
           data: Theme.of(context).copyWith(
-            colorScheme: Theme.of(context).colorScheme.copyWith(
-              primary: AppColors.primary,
-            ),
+            colorScheme: Theme.of(
+              context,
+            ).colorScheme.copyWith(primary: AppColors.primary),
           ),
           child: child!,
         );
@@ -552,6 +678,35 @@ class _ReservationFormDialogState extends State<ReservationFormDialog> {
         _selectedDate = picked;
       });
     }
+  }
+
+  String? _validateContact(String? value) {
+    if (value == null || value.trim().isEmpty) {
+      return 'Este campo es requerido';
+    }
+    switch (_selectedContactMethod) {
+      case ContactMethod.email:
+        if (!RegexUtils.emailRegex.hasMatch(value)) {
+          return 'Ingresa un email válido';
+        }
+        break;
+      case ContactMethod.whatsapp:
+        final cleanedValue = value.replaceAll(RegExp(r'[\s-]'), '');
+        if (!RegexUtils.phoneRegex.hasMatch(
+          _selectedCountryCode + cleanedValue,
+        )) {
+          return 'Ingresa un número de WhatsApp válido';
+        }
+        break;
+      case ContactMethod.phone:
+        if (!RegexUtils.phoneRegex.hasMatch(
+          value.replaceAll(RegExp(r'[\s-]'), ''),
+        )) {
+          return 'Ingresa un número cubano válido';
+        }
+        break;
+    }
+    return null;
   }
 
   Future<void> _submitReservation() async {
@@ -571,34 +726,68 @@ class _ReservationFormDialogState extends State<ReservationFormDialog> {
         _isLoading = false;
       });
 
-      Navigator.of(context).pop();
-      
-      widget.onReservationConfirmed?.call();
-      
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: const Text('¡Reserva enviada exitosamente!'),
-          backgroundColor: Colors.green,
-          behavior: SnackBarBehavior.floating,
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-        ),
+      //excursion
+      String cantidad_personas = _cantidadController.text.trim();
+      bool guia = _includeGuide;
+      DateTime fecha = _selectedDate!;
+      double precio =
+          (!_includeGuide)
+              ? widget.excursion['precio']
+              : widget.excursion['precio'] + 12;
+
+      //contact
+      String name = _nombreController.text.trim();
+      String method = _selectedContactMethod.toString();
+      String contacto =
+          _selectedContactMethod == ContactMethod.whatsapp
+              ? '$_selectedCountryCode${_contactoController.text.trim()}'
+              : _contactoController.text.trim();
+      String address = _direccionController.text.trim();
+      String extra_info = _datosExtrasController.text.trim();
+
+      GuestContact guestContact = new GuestContact(
+        name: name,
+        method: method,
+        contact: contacto,
+        address: address,
+        extraInfo: extra_info,
       );
+
+      ReservaExc reservexc = new ReservaExc(
+        precio: precio,
+        exc_id: widget.excursion['id'],
+        cantidad_personas: cantidad_personas,
+        fecha: fecha,
+        incluir_guia: guia,
+      );
+
+      await _service.createExcursionRequest(reservexc, guestContact);
+      Navigator.pop(context);
+
+      widget.onReservationConfirmed?.call();
+      CustomDialog.showSuccessDialog(
+        context,
+        'Reserva enviada exitosamente',
+        'Le contactaremos lo antes posible',
+      );
+
     }
   }
 
   // Método estático para mostrar el dialog
   static Future<void> show(
-    BuildContext context, 
+    BuildContext context,
     Map<String, dynamic> excursion, {
     VoidCallback? onReservationConfirmed,
   }) {
     return showDialog<void>(
       context: context,
       barrierDismissible: false,
-      builder: (context) => ReservationFormDialog(
-        excursion: excursion,
-        onReservationConfirmed: onReservationConfirmed,
-      ),
+      builder:
+          (context) => ReservationFormDialog(
+            excursion: excursion,
+            onReservationConfirmed: onReservationConfirmed,
+          ),
     );
   }
 }

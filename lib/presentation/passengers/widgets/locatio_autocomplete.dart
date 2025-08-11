@@ -4,6 +4,7 @@ import 'package:eytaxi/core/styles/button_style.dart';
 import 'package:eytaxi/core/styles/input_decorations.dart';
 import 'package:eytaxi/core/styles/locations_autocomplete_style.dart';
 import 'package:eytaxi/models/ubicacion_model.dart';
+import 'package:eytaxi/models/user_model.dart';
 import 'package:flutter/material.dart';
 
 class LocationAutocomplete extends StatefulWidget {
@@ -12,6 +13,7 @@ class LocationAutocomplete extends StatefulWidget {
   final Ubicacion? selectedLocation;
   final ValueChanged<Ubicacion?> onSelected;
   final SupabaseService supabaseService;
+  final UserType user;
 
   const LocationAutocomplete({
     super.key,
@@ -20,6 +22,7 @@ class LocationAutocomplete extends StatefulWidget {
     required this.selectedLocation,
     required this.onSelected,
     required this.supabaseService,
+    required this.user,
   });
 
   @override
@@ -56,7 +59,10 @@ class _LocationAutocompleteState extends State<LocationAutocomplete> {
         });
         try {
           final results = await service.fetchUbicaciones(textEditingValue.text);
-          return results;
+          final municipios =
+              results.where((item) => item.tipo == 'municipio').toList();
+              
+          return (widget.user  == UserType.passenger)?results:municipios;
         } catch (e) {
           return [];
         } finally {

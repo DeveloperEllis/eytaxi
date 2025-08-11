@@ -1,3 +1,4 @@
+import 'package:eytaxi/models/ubicacion_model.dart';
 import 'package:eytaxi/models/user_model.dart';
 
 class Driver extends User {
@@ -6,6 +7,9 @@ class Driver extends User {
   final int vehicleCapacity;
   final List<String> routes;
   final bool isAvailable;
+  final int id_municipio_de_origen;
+  final bool viajes_locales;
+  final Ubicacion? origen;
 
   Driver({
     required super.id,
@@ -19,6 +23,9 @@ class Driver extends User {
     required this.vehicleCapacity,
     required this.routes,
     this.isAvailable = true,
+    required this.id_municipio_de_origen,
+    required this.viajes_locales,
+    required this.origen,
   }) : super(userType: UserType.driver);
 
   factory Driver.fromJson(Map<String, dynamic> json) {
@@ -34,6 +41,9 @@ class Driver extends User {
       vehicleCapacity: json['vehicle_capacity'],
       routes: List<String>.from(json['routes']),
       isAvailable: json['is_available'] ?? true,
+      id_municipio_de_origen: json['id_municipio_de_origen'] ?? true,
+      viajes_locales: json['viajes_locales'] ?? true,
+      origen: json['origen'] != null ? Ubicacion.fromJson(json['origen'] as Map<String, dynamic>) : null,
     );
   }
 
@@ -51,6 +61,8 @@ class Driver extends User {
       'vehicle_capacity': vehicleCapacity,
       'routes': routes,
       'is_available': isAvailable,
+      'id_municipio_de_origen': id_municipio_de_origen,
+      'viajes_locales': viajes_locales,
     };
   }
 }
