@@ -40,7 +40,7 @@ class SupabaseApi {
       print(
         'SupabaseApi AuthException: status=${e.statusCode}, message=${e.message}, errorCode=${e.code}',
       );
-      throw e; // Re-lanza AuthException sin envolver
+      rethrow; // Re-lanza AuthException sin envolver
     } catch (e, stackTrace) {
       print('SupabaseApi unexpected error: $e\nStackTrace: $stackTrace');
       rethrow;
@@ -106,7 +106,7 @@ Future<DriverStatus?> IsPending() async {
 }
 
 Future<void> Login(String email, String password, BuildContext context) async {
-if( email != null && email != null ){
+if( email != null ){
   final response = await SupabaseApi().signInWithPassword(email, password);
 }
  AppRoutes.router.go(AppRoutes.driverHome);

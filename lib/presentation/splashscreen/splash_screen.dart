@@ -53,7 +53,7 @@ class _SplashScreenState extends State<SplashScreen>
     const String home = AppRoutes.home;
     try {
       final user = Supabase.instance.client.auth.currentUser;
-      if (user == null) return home;
+      if (user == null) return home; // <-- Redirige a /home si no está logueado
 
       final response = await Supabase.instance.client
           .from('user_profiles')
@@ -84,10 +84,10 @@ class _SplashScreenState extends State<SplashScreen>
         }
       }
 
-      return home; // For passengers
+      return home; // Para pasajeros o cualquier otro caso
     } catch (e) {
       debugPrint('Error in _getUserHomePath: $e');
-      return AppRoutes.login; // Default to login on error
+      return AppRoutes.home; // <-- Siempre /home en caso de error
     }
   }
   void _navigateToHome() async {

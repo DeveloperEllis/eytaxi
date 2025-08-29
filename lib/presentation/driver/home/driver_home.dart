@@ -119,7 +119,7 @@ class _DriverHomeState extends State<DriverHome> with TickerProviderStateMixin {
   @override
   Widget build(BuildContext context) {
     final driverState = Provider.of<ThemeNotifier>(context);
-    final List<Widget> _screens = [
+    final List<Widget> screens = [
       const DriverDashboard(),
       const ConfirmTripsPage(),
       const Center(child: Text('Historial')), // Placeholder
@@ -128,7 +128,7 @@ class _DriverHomeState extends State<DriverHome> with TickerProviderStateMixin {
 
     return Scaffold(
       backgroundColor: Colors.grey[50],
-      body: _screens[_selectedIndex],
+      body: screens[_selectedIndex],
       bottomNavigationBar: _buildBottomNavigationBar(),
       appBar: _buildAppBar(driverState),
     );

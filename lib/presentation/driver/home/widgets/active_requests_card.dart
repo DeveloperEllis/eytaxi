@@ -7,7 +7,7 @@ class ActiveRequestsCard extends StatefulWidget {
   final List<TripRequest> requests;
   final Function(TripRequest) onRequestAccepted;
   final Function(TripRequest) onRequestRejected;
-
+  
   const ActiveRequestsCard({
     super.key,
     required this.requests,
@@ -23,12 +23,19 @@ class _ActiveRequestsCardState extends State<ActiveRequestsCard> {
   final Map<String, bool> _expandedStates = {};
   final TextEditingController _searchController = TextEditingController();
   String _searchQuery = '';
+  bool isLoading = true; // <-- NUEVO
 
   @override
   void initState() {
     super.initState();
     _searchController.addListener(() {
       setState(() => _searchQuery = _searchController.text.toLowerCase());
+    });
+    // Simula carga de datos (reemplaza esto por tu lógica real de carga)
+    Future.delayed(const Duration(seconds: 1), () {
+      setState(() {
+        isLoading = false;
+      });
     });
   }
 
@@ -41,11 +48,14 @@ class _ActiveRequestsCardState extends State<ActiveRequestsCard> {
   List<TripRequest> _filterRequests() {
     if (_searchQuery.isEmpty) return widget.requests;
     return widget.requests.where((request) {
-      final origen = request.origen?.nombre?.toLowerCase() ?? 'desconocido';
-      final destino = request.destino?.nombre?.toLowerCase() ?? 'desconocido';
-      final origen_provincia = request.origen?.provincia?.toLowerCase() ?? 'desconocido';
-      final destino_provincia = request.destino?.provincia?.toLowerCase() ?? 'desconocido';
-      return origen.contains(_searchQuery) || destino.contains(_searchQuery) || origen_provincia.contains(_searchQuery) || destino_provincia.contains(_searchQuery);
+      final origen = request.origen?.nombre.toLowerCase() ?? 'desconocido';
+      final destino = request.destino?.nombre.toLowerCase() ?? 'desconocido';
+      final origenProvincia = request.origen?.provincia.toLowerCase() ?? 'desconocido';
+      final destinoProvincia = request.destino?.provincia.toLowerCase() ?? 'desconocido';
+      return origen.contains(_searchQuery) || 
+             destino.contains(_searchQuery) || 
+             origenProvincia.contains(_searchQuery) || 
+             destinoProvincia.contains(_searchQuery);
     }).toList();
   }
 
@@ -56,11 +66,17 @@ class _ActiveRequestsCardState extends State<ActiveRequestsCard> {
   @override
   Widget build(BuildContext context) {
     final filteredRequests = _filterRequests();
-
     return Column(
       children: [
         _buildSearchBar(),
-        if (filteredRequests.isEmpty)
+        if (isLoading)
+          Padding(
+            padding: const EdgeInsets.all(48),
+            child: Center(
+              child: CircularProgressIndicator(),
+            ),
+          )
+        else if (filteredRequests.isEmpty)
           _buildEmptyState()
         else
           _buildRequestsList(filteredRequests),
@@ -125,32 +141,32 @@ class _ActiveRequestsCardState extends State<ActiveRequestsCard> {
   }
 
   Widget _buildRequestsList(List<TripRequest> filteredRequests) {
-  print('Filtered Requests in _buildRequestsList: ${filteredRequests.map((r) => 'ID=${r.id}, Contact=${r.contact?.address}, ExtraInfo=${r.contact?.extraInfo}').toList()}');
-  return ListView.separated(
-    shrinkWrap: true,
-    physics: const NeverScrollableScrollPhysics(),
-    padding: const EdgeInsets.symmetric(horizontal: 16),
-    itemCount: filteredRequests.length,
-    separatorBuilder: (context, index) => const SizedBox(height: 12),
-    itemBuilder: (context, index) {
-      final request = filteredRequests[index];
-      return _buildRequestCard(request);
-    },
-  );
-}
+    return ListView.separated(
+      shrinkWrap: true,
+      physics: const NeverScrollableScrollPhysics(),
+      padding: const EdgeInsets.symmetric(horizontal: 16),
+      itemCount: filteredRequests.length,
+      separatorBuilder: (context, index) => const SizedBox(height: 12),
+      itemBuilder: (context, index) {
+        final request = filteredRequests[index];
+        return _buildRequestCard(request);
+      },
+    );
+  }
 
   Widget _buildRequestCard(TripRequest request) {
     final isExpanded = _expandedStates[request.id] ?? false;
     final isHighlighted = _searchQuery.isNotEmpty &&
-        (request.origen?.nombre?.toLowerCase().contains(_searchQuery) == true ||
-            request.destino?.nombre?.toLowerCase().contains(_searchQuery) == true 
-            );
+        (request.origen?.nombre.toLowerCase().contains(_searchQuery) == true ||
+         request.destino?.nombre.toLowerCase().contains(_searchQuery) == true);
+    
     return Card(
-      elevation: 0,
+      elevation: isHighlighted ? 4 : 2,
+      shadowColor: isHighlighted ? AppColors.primary.withOpacity(0.3) : Colors.black12,
       shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(16),
         side: BorderSide(
-          color: isHighlighted ? AppColors.primary.withOpacity(0.5) : Colors.grey[200]!,
+          color: isHighlighted ? AppColors.primary.withOpacity(0.7) : Colors.grey[200]!,
           width: isHighlighted ? 1.5 : 1,
         ),
       ),
@@ -159,19 +175,23 @@ class _ActiveRequestsCardState extends State<ActiveRequestsCard> {
         children: [
           InkWell(
             onTap: () => setState(() => _expandedStates[request.id!] = !isExpanded),
-            borderRadius: const BorderRadius.vertical(top: Radius.circular(12)),
+            borderRadius: const BorderRadius.vertical(top: Radius.circular(16)),
             child: Padding(
               padding: const EdgeInsets.all(16),
               child: Column(
                 children: [
                   _buildHeader(request),
-                  const SizedBox(height: 12),
+                  const SizedBox(height: 16),
                   _buildMetadata(request, isExpanded),
                 ],
               ),
             ),
           ),
-          if (isExpanded) _buildDetails(request),
+          AnimatedSize(
+            duration: const Duration(milliseconds: 300),
+            alignment: Alignment.topCenter,
+            child: isExpanded ? _buildDetails(request) : const SizedBox.shrink(),
+          ),
           _buildActions(request),
         ],
       ),
@@ -181,21 +201,34 @@ class _ActiveRequestsCardState extends State<ActiveRequestsCard> {
   Widget _buildHeader(TripRequest request) {
     return Row(
       children: [
-        // Icono tipo taxi
-        Container(
-          width: 40,
-          height: 40,
-          decoration: BoxDecoration(
-            color: _getTaxiTypeColor(request.taxiType).withOpacity(0.1),
-            borderRadius: BorderRadius.circular(8),
-          ),
-          child: Icon(
-            request.taxiType == 'colectivo' ? Icons.group : Icons.directions_car,
-            color: _getTaxiTypeColor(request.taxiType),
-            size: 20,
-          ),
+        // Icono tipo taxi con texto debajo
+        Column(
+          children: [
+            Container(
+              width: 56,
+              height: 56,
+              decoration: BoxDecoration(
+                color: _getTaxiTypeColor(request.taxiType).withOpacity(0.15),
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: Icon(
+                request.taxiType == 'colectivo' ? Icons.group : Icons.directions_car,
+                color: _getTaxiTypeColor(request.taxiType),
+                size: 28,
+              ),
+            ),
+            const SizedBox(height: 6),
+            Text(
+              request.taxiType == 'colectivo' ? 'Colectivo' : 'Privado',
+              style: TextStyle(
+                fontSize: 12,
+                fontWeight: FontWeight.w600,
+                color: _getTaxiTypeColor(request.taxiType),
+              ),
+            ),
+          ],
         ),
-        const SizedBox(width: 12),
+        const SizedBox(width: 16),
         
         // Información principal
         Expanded(
@@ -203,22 +236,23 @@ class _ActiveRequestsCardState extends State<ActiveRequestsCard> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
-                '${request.origen?.nombre ?? 'Origen desconocido'}',
+                request.origen?.nombre ?? 'Origen desconocido',
                 style: const TextStyle(
-                  fontSize: 15,
-                  fontWeight: FontWeight.w600,
+                  fontSize: 16,
+                  fontWeight: FontWeight.w700,
+                  color: Colors.black87,
                 ),
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
               ),
-              const SizedBox(height: 2),
+              const SizedBox(height: 6),
               Row(
                 children: [
-                  Icon(Icons.arrow_downward, size: 14, color: Colors.grey[500]),
-                  const SizedBox(width: 4),
+                  Icon(Icons.arrow_downward, size: 16, color: Colors.grey[500]),
+                  const SizedBox(width: 6),
                   Expanded(
                     child: Text(
-                      '${request.destino?.nombre ?? 'Destino desconocido'}',
+                      request.destino?.nombre ?? 'Destino desconocido',
                       style: TextStyle(
                         fontSize: 14,
                         color: Colors.grey[600],
@@ -235,11 +269,19 @@ class _ActiveRequestsCardState extends State<ActiveRequestsCard> {
         ),
         
         // Precio
-        Text(
-          '\$${request.price?.toStringAsFixed(0) ?? 'N/A'}',
-          style: const TextStyle(
-            fontSize: 20,
-            fontWeight: FontWeight.w700,
+        Container(
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+          decoration: BoxDecoration(
+            color: Colors.green.withOpacity(0.1),
+            borderRadius: BorderRadius.circular(12),
+          ),
+          child: Text(
+            '\$${request.price?.toStringAsFixed(0) ?? 'N/A'}',
+            style: const TextStyle(
+              fontSize: 18,
+              fontWeight: FontWeight.w700,
+              color: Colors.green,
+            ),
           ),
         ),
       ],
@@ -250,88 +292,124 @@ class _ActiveRequestsCardState extends State<ActiveRequestsCard> {
     return Row(
       children: [
         // Personas
-        Icon(Icons.person, size: 14, color: Colors.grey[500]),
-        const SizedBox(width: 4),
-        Text(
-          '${request.cantidadPersonas}',
-          style: TextStyle(fontSize: 13, color: Colors.grey[600]),
+        _buildMetadataChip(
+          icon: Icons.person,
+          text: '${request.cantidadPersonas}',
+          color: Colors.purple,
         ),
         
-        const SizedBox(width: 16),
+        const SizedBox(width: 10),
         
         // Fecha
-        Icon(Icons.schedule, size: 14, color: Colors.grey[500]),
-        const SizedBox(width: 4),
-        Text(
-          DateFormat('dd/MM HH:mm').format(request.tripDate.toLocal()),
-          style: TextStyle(fontSize: 13, color: Colors.grey[600]),
-        ),
-        
-        const SizedBox(width: 16),
-        
-        // Tipo
-        Container(
-          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-          decoration: BoxDecoration(
-            color: _getTaxiTypeColor(request.taxiType).withOpacity(0.1),
-            borderRadius: BorderRadius.circular(4),
-          ),
-          child: Text(
-            request.taxiType == 'colectivo' ? 'Colectivo' : 'Privado',
-            style: TextStyle(
-              fontSize: 11,
-              fontWeight: FontWeight.w600,
-              color: _getTaxiTypeColor(request.taxiType),
-            ),
-          ),
+        _buildMetadataChip(
+          icon: Icons.schedule,
+          text: DateFormat('dd/MM HH:mm').format(request.tripDate.toLocal()),
+          color: Colors.teal,
         ),
         
         const Spacer(),
         
         // Indicador de expansión
-        Icon(
-          isExpanded ? Icons.expand_less : Icons.expand_more,
-          size: 20,
-          color: Colors.grey[500],
+        AnimatedRotation(
+          turns: isExpanded ? 0.5 : 0,
+          duration: const Duration(milliseconds: 300),
+          child: Icon(
+            Icons.keyboard_arrow_down,
+            size: 24,
+            color: Colors.grey[600],
+          ),
         ),
       ],
     );
   }
 
- Widget _buildDetails(TripRequest request) {
-  print('Contact en _buildDetails: ${request.contact}');
-  print('Address en _buildDetails: ${request.contact?.address}');
-  print('ExtraInfo en _buildDetails: ${request.contact?.extraInfo}');
-  return Container(
-    width: double.infinity,
-    padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
-    child: Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Divider(color: Colors.grey[200]),
-        const SizedBox(height: 12),
-        
-        _buildDetailItem(
-          icon: Icons.location_on_outlined,
-          label: 'Dirección',
-          value: request.contact?.address?.isNotEmpty == true ? request.contact!.address! : 'No disponible',
-        ),
-        const SizedBox(height: 12),
-      ],
-    ),
-  );
-}
+  Widget _buildMetadataChip({
+    required IconData icon,
+    required String text,
+    required Color color,
+  }) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
+      decoration: BoxDecoration(
+        color: color.withOpacity(0.1),
+        borderRadius: BorderRadius.circular(20),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(icon, size: 16, color: color),
+          const SizedBox(width: 4),
+          Text(
+            text,
+            style: TextStyle(
+              fontSize: 12,
+              fontWeight: FontWeight.w600,
+              color: color,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildDetails(TripRequest request) {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Divider(color: Colors.grey[200], thickness: 1),
+          const SizedBox(height: 16),
+          
+          // Dirección
+          _buildDetailItem(
+            icon: Icons.location_on_outlined,
+            label: 'Dirección',
+            value: request.contact?.address?.isNotEmpty == true 
+                ? request.contact!.address! 
+                : 'No disponible',
+            iconColor: Colors.red,
+          ),
+          
+          const SizedBox(height: 16),
+          
+          // Información adicional
+          if (request.contact?.extraInfo?.isNotEmpty == true)
+            _buildDetailItem(
+              icon: Icons.info_outline,
+              label: 'Información adicional',
+              value: request.contact!.extraInfo!,
+              iconColor: Colors.blue,
+            ),
+        ],
+      ),
+    );
+  }
 
   Widget _buildDetailItem({
     required IconData icon,
     required String label,
     required String value,
+    Color? iconColor,
   }) {
     return Row(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Icon(icon, size: 16, color: Colors.grey[500]),
-        const SizedBox(width: 8),
+        Container(
+          width: 36,
+          height: 36,
+          decoration: BoxDecoration(
+            color: (iconColor ?? Colors.grey).withOpacity(0.1),
+            borderRadius: BorderRadius.circular(10),
+          ),
+          child: Icon(
+            icon, 
+            size: 20, 
+            color: iconColor ?? Colors.grey[600],
+          ),
+        ),
+        const SizedBox(width: 12),
         Expanded(
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -339,17 +417,18 @@ class _ActiveRequestsCardState extends State<ActiveRequestsCard> {
               Text(
                 label,
                 style: TextStyle(
-                  fontSize: 12,
+                  fontSize: 13,
                   fontWeight: FontWeight.w600,
                   color: Colors.grey[700],
                 ),
               ),
-              const SizedBox(height: 2),
+              const SizedBox(height: 4),
               Text(
                 value,
                 style: const TextStyle(
                   fontSize: 14,
                   fontWeight: FontWeight.w400,
+                  color: Colors.black87,
                 ),
               ),
             ],
@@ -361,50 +440,58 @@ class _ActiveRequestsCardState extends State<ActiveRequestsCard> {
 
   Widget _buildActions(TripRequest request) {
     return Container(
-      padding: const EdgeInsets.all(12),
+      padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: Colors.grey[25],
-        borderRadius: const BorderRadius.vertical(bottom: Radius.circular(12)),
+        color: Colors.grey[50],
+        borderRadius: const BorderRadius.vertical(bottom: Radius.circular(16)),
       ),
       child: Row(
         children: [
           Expanded(
-            child: OutlinedButton(
+            child: OutlinedButton.icon(
               onPressed: () => widget.onRequestRejected(request),
+              icon: const Icon(Icons.close, size: 18),
+              label: const Text('Rechazar'),
               style: OutlinedButton.styleFrom(
-                foregroundColor: Colors.red,
-                side: const BorderSide(color: Colors.red, width: 1),
+                foregroundColor: Colors.red[700],
+                backgroundColor: Colors.red[50],
+                side: BorderSide(color: Colors.red[200]!),
                 shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(8),
+                  borderRadius: BorderRadius.circular(12),
                 ),
-                padding: const EdgeInsets.symmetric(vertical: 12),
-              ),
-              child: const Text(
-                'Rechazar',
-                style: TextStyle(fontWeight: FontWeight.w600),
+                padding: const EdgeInsets.symmetric(vertical: 14),
               ),
             ),
           ),
           const SizedBox(width: 12),
           Expanded(
-            child: ElevatedButton(
+            child: ElevatedButton.icon(
               onPressed: () => widget.onRequestAccepted(request),
+              icon: const Icon(Icons.check, size: 18),
+              label: const Text('Aceptar'),
               style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.green,
+                backgroundColor: Colors.green[600],
                 foregroundColor: Colors.white,
                 elevation: 0,
                 shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(8),
+                  borderRadius: BorderRadius.circular(12),
                 ),
-                padding: const EdgeInsets.symmetric(vertical: 12),
-              ),
-              child: const Text(
-                'Aceptar',
-                style: TextStyle(fontWeight: FontWeight.w600),
+                padding: const EdgeInsets.symmetric(vertical: 14),
               ),
             ),
           ),
         ],
+      ),
+    );
+  }
+
+  Widget _buildLoadingIndicator() {
+    return Padding(
+      padding: const EdgeInsets.all(16),
+      child: Center(
+        child: CircularProgressIndicator(
+          valueColor: AlwaysStoppedAnimation<Color>(AppColors.primary),
+        ),
       ),
     );
   }

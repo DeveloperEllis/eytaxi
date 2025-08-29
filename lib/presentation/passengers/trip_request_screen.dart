@@ -1,4 +1,3 @@
-import 'package:eytaxi/core/constants/app_colors.dart';
 import 'package:eytaxi/presentation/passengers/widgets/taxi_form.dart';
 import 'package:flutter/material.dart';
 

@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/widgets.dart';
 
 class ConfirmTripsPage extends StatefulWidget {
-  const ConfirmTripsPage({Key? key}) : super(key: key);
+  const ConfirmTripsPage({super.key});
 
   @override
   _ConfirmTripsPageState createState() => _ConfirmTripsPageState();

@@ -4,6 +4,7 @@ import 'package:flutter/services.dart';
 import 'package:eytaxi/core/constants/app_colors.dart';
 import 'package:eytaxi/core/styles/button_style.dart';
 import 'package:eytaxi/core/styles/input_decorations.dart';
+import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 
 enum ContactMethod { email, phone, whatsapp }
 
@@ -129,18 +130,21 @@ class _PickupDialogContentState extends State<_PickupDialogContent>
   @override
   Widget build(BuildContext context) {
     final isDarkMode = Theme.of(context).brightness == Brightness.dark;
-    final screenHeight = MediaQuery.of(context).size.height;
-    final screenWidth = MediaQuery.of(context).size.width;
+    final media = MediaQuery.of(context);
+    final double dialogWidth = media.size.width * 0.90;
+    final double dialogHeight = media.size.height * 0.90;
 
     return FadeTransition(
       opacity: _fadeAnimation,
       child: Dialog(
         backgroundColor: Colors.transparent,
+        insetPadding: EdgeInsets.symmetric(
+          horizontal: media.size.width * 0.05,
+          vertical: media.size.height * 0.05,
+        ),
         child: Container(
-          constraints: BoxConstraints(
-            maxHeight: screenHeight * 0.85,
-            maxWidth: screenWidth > 600 ? 450 : screenWidth * 0.9,
-          ),
+          width: dialogWidth,
+          height: dialogHeight,
           decoration: BoxDecoration(
             color: isDarkMode ? AppColors.backgroundDark : Colors.white,
             borderRadius: BorderRadius.circular(20),
@@ -153,7 +157,6 @@ class _PickupDialogContentState extends State<_PickupDialogContent>
             ],
           ),
           child: Column(
-            mainAxisSize: MainAxisSize.min,
             children: [
               _buildHeader(isDarkMode),
               _buildProgressIndicator(),
@@ -625,11 +628,11 @@ class _PickupDialogContentState extends State<_PickupDialogContent>
   IconData _getContactIcon(ContactMethod method) {
     switch (method) {
       case ContactMethod.email:
-        return Icons.email_outlined;
+        return FontAwesomeIcons.envelope;
       case ContactMethod.phone:
-        return Icons.phone_outlined;
+        return FontAwesomeIcons.phoneFlip;
       case ContactMethod.whatsapp:
-        return Icons.message_outlined;
+        return FontAwesomeIcons.whatsapp;
     }
   }
 
@@ -638,7 +641,7 @@ class _PickupDialogContentState extends State<_PickupDialogContent>
       case ContactMethod.email:
         return 'Correo Electrónico';
       case ContactMethod.phone:
-        return 'Llamada Dentro de CUBA';
+        return 'Llamada Dentro de Cuba';
       case ContactMethod.whatsapp:
         return 'WhatsApp';
     }

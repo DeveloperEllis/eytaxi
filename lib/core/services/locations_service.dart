@@ -16,7 +16,7 @@ class LocationsService {
           .from('ubicaciones_cuba')
           .select('id, nombre, codigo, tipo, provincia, region')
           .or(
-            'nombre.ilike.%${sanitizedQuery}%,provincia.ilike.%${sanitizedQuery}%',
+            'nombre.ilike.%$sanitizedQuery%,provincia.ilike.%$sanitizedQuery%',
           );
 
       print('Supabase response for query "$sanitizedQuery": $response');

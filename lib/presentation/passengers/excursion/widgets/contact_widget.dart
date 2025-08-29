@@ -8,6 +8,7 @@ import 'package:eytaxi/models/guest_contact_model.dart';
 import 'package:eytaxi/models/reserva_excusion_model.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 
 enum ContactMethod { email, whatsapp, phone }
 
@@ -39,7 +40,7 @@ class _ReservationFormDialogState extends State<ReservationFormDialog> {
   String _selectedCountryCode = '+53';
   bool _includeGuide = false; // New state for guide checkbox
 
-  TripRequestService _service = TripRequestService();
+  final TripRequestService _service = TripRequestService();
 
   @override
   void dispose() {
@@ -54,22 +55,29 @@ class _ReservationFormDialogState extends State<ReservationFormDialog> {
   @override
   Widget build(BuildContext context) {
     final isDarkMode = Theme.of(context).brightness == Brightness.dark;
+    final media = MediaQuery.of(context);
+    final double dialogWidth = media.size.width * 0.90;
+    final double dialogHeight = media.size.height * 0.90;
 
     return Dialog(
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+      insetPadding: EdgeInsets.symmetric(
+        horizontal: media.size.width * 0.05,
+        vertical: media.size.height * 0.05,
+      ),
       child: Container(
-        constraints: const BoxConstraints(maxHeight: 600, maxWidth: 400),
+        width: dialogWidth,
+        height: dialogHeight,
         padding: const EdgeInsets.all(20),
         decoration: BoxDecoration(
           color: isDarkMode ? Colors.grey[900] : Colors.white,
           borderRadius: BorderRadius.circular(16),
         ),
         child: Column(
-          mainAxisSize: MainAxisSize.min,
           children: [
             _buildHeader(isDarkMode),
             const SizedBox(height: 20),
-            Flexible(
+            Expanded(
               child: Form(
                 key: _formKey,
                 child: SingleChildScrollView(
@@ -278,7 +286,7 @@ class _ReservationFormDialogState extends State<ReservationFormDialog> {
               child: _buildContactMethodChip(
                 ContactMethod.whatsapp,
                 'WhatsApp',
-                Icons.message,
+                FontAwesomeIcons.whatsapp,
                 isDarkMode,
               ),
             ),
@@ -287,7 +295,7 @@ class _ReservationFormDialogState extends State<ReservationFormDialog> {
               child: _buildContactMethodChip(
                 ContactMethod.email,
                 'Email',
-                Icons.email,
+                FontAwesomeIcons.envelope,
                 isDarkMode,
               ),
             ),
@@ -295,8 +303,8 @@ class _ReservationFormDialogState extends State<ReservationFormDialog> {
             Expanded(
               child: _buildContactMethodChip(
                 ContactMethod.phone,
-                'Teléfono Cuba',
-                Icons.phone,
+                'Cuba',
+                FontAwesomeIcons.phone,
                 isDarkMode,
               ),
             ),
@@ -386,7 +394,7 @@ class _ReservationFormDialogState extends State<ReservationFormDialog> {
         break;
       case ContactMethod.phone:
         hintText = '+53 5XXXXXXX';
-        label = 'Número de teléfono *';
+        label = 'Número de teléfono para receibir llamadas *';
         keyboardType = TextInputType.phone;
         inputFormatters = [
           FilteringTextInputFormatter.allow(RegExp(r'[0-9+\s-]')),
@@ -727,7 +735,7 @@ class _ReservationFormDialogState extends State<ReservationFormDialog> {
       });
 
       //excursion
-      String cantidad_personas = _cantidadController.text.trim();
+      String cantidadPersonas = _cantidadController.text.trim();
       bool guia = _includeGuide;
       DateTime fecha = _selectedDate!;
       double precio =
@@ -743,20 +751,20 @@ class _ReservationFormDialogState extends State<ReservationFormDialog> {
               ? '$_selectedCountryCode${_contactoController.text.trim()}'
               : _contactoController.text.trim();
       String address = _direccionController.text.trim();
-      String extra_info = _datosExtrasController.text.trim();
+      String extraInfo = _datosExtrasController.text.trim();
 
-      GuestContact guestContact = new GuestContact(
+      GuestContact guestContact = GuestContact(
         name: name,
         method: method,
         contact: contacto,
         address: address,
-        extraInfo: extra_info,
+        extraInfo: extraInfo,
       );
 
-      ReservaExc reservexc = new ReservaExc(
+      ReservaExc reservexc = ReservaExc(
         precio: precio,
         exc_id: widget.excursion['id'],
-        cantidad_personas: cantidad_personas,
+        cantidad_personas: cantidadPersonas,
         fecha: fecha,
         incluir_guia: guia,
       );

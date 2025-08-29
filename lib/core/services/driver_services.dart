@@ -30,6 +30,17 @@ class DriverServices {
         return [];
       }
 
+      // Obtener las rutas del conductor
+      final driverData = await client
+          .from('drivers')
+          .select('routes')
+          .eq('id', user.id)
+          .single();
+
+      final List<String> driverRoutes = driverData['routes'] != null
+          ? List<String>.from(driverData['routes'])
+          : [];
+
       final response = await client
           .from('trip_requests')
           .select('''
@@ -48,18 +59,19 @@ class DriverServices {
           .eq('driver_id', user.id);
 
       final respondedRequestIds =
-          driverResponses
-              .map((response) => response['request_id'] as String)
-              .toSet();
+          driverResponses.map((response) => response['request_id'] as String).toSet();
 
-      final requests =
-          (response as List<dynamic>)
-              .map((json) {
-                final trip = TripRequest.fromJson(json as Map<String, dynamic>);
-                return trip;
-              })
-              .where((request) => !respondedRequestIds.contains(request.id))
-              .toList();
+      final requests = (response as List<dynamic>)
+          .map((json) => TripRequest.fromJson(json as Map<String, dynamic>))
+          .where((request) {
+            final origenRegion = request.origen?.region.toString().toLowerCase();
+            final destinoRegion = request.destino?.region.toString().toLowerCase();
+            final rutas = driverRoutes.map((r) => r.toLowerCase()).toList();
+            return !respondedRequestIds.contains(request.id) &&
+                ((origenRegion != null && rutas.contains(origenRegion)) ||
+                 (destinoRegion != null && rutas.contains(destinoRegion)));
+          })
+          .toList();
 
       return requests;
     } catch (e) {

@@ -22,6 +22,8 @@ class _DriverDashboardState extends State<DriverDashboard> {
   List<TripRequest> activeRequests = [];
   StreamSubscription<SupabaseStreamEvent>? _subscription;
   ThemeNotifier? _themeNotifier;
+  bool isLoading = false;
+  
 
   @override
   void initState() {
@@ -55,9 +57,14 @@ class _DriverDashboardState extends State<DriverDashboard> {
   }
 
   Future<void> _loadPendingRequests() async {
+    setState(() {
+      isLoading = true;
+    });
+    await _supabaseService.fetchPendingRequests();
     if (!_themeNotifier!.isOnline) {
       setState(() {
         activeRequests = [];
+        isLoading = false;
       });
       return;
     }
@@ -68,6 +75,7 @@ class _DriverDashboardState extends State<DriverDashboard> {
         print('No user authenticated');
         setState(() {
           activeRequests = [];
+          isLoading = false;
         });
         return;
       }
@@ -75,11 +83,15 @@ class _DriverDashboardState extends State<DriverDashboard> {
       final requests = await _supabaseService.fetchPendingRequests();
       setState(() {
         activeRequests = requests;
+        isLoading = false;
         print('Loaded activeRequests: ${activeRequests.map((r) => 'ID=${r.id}, Contact=${r.contact?.address ?? "null"}, ExtraInfo=${r.contact?.extraInfo ?? "null"}').toList()}');
       });
     } catch (e) {
       print('Error loading pending requests: $e');
       if (mounted) {
+        setState(() {
+          isLoading = false;
+        });
         _scaffoldMessengerKey.currentState?.showSnackBar(
           SnackBar(
             content: Text('Error al cargar las solicitudes pendientes: $e'),
@@ -337,23 +349,26 @@ class _DriverDashboardState extends State<DriverDashboard> {
   @override
   Widget build(BuildContext context) {
     final driverState = Provider.of<ThemeNotifier>(context);
-    print('Passing to ActiveRequestsCard: ${activeRequests.map((r) => 'ID=${r.id}, Contact=${r.contact?.address ?? "null"}, ExtraInfo=${r.contact?.extraInfo ?? "null"}').toList()}');
 
     return Scaffold(
       key: _scaffoldMessengerKey,
-      body: activeRequests.isEmpty
+      body: isLoading
           ? const Center(
-              child: Text(
-                'No hay solicitudes pendientes',
-                style: TextStyle(fontSize: 16, color: Colors.grey),
-              ),
+              child: CircularProgressIndicator(),
             )
-          : ListView(
-              padding: const EdgeInsets.only(left: 8, right: 8, top: 5, bottom: 8),
-              children: [
-                _buildRequestsSection(),
-              ],
-            ),
+          : activeRequests.isEmpty
+              ? const Center(
+                  child: Text(
+                    'No hay solicitudes pendientes',
+                    style: TextStyle(fontSize: 16, color: Colors.grey),
+                  ),
+                )
+              : ListView(
+                  padding: const EdgeInsets.only(left: 8, right: 8, top: 5, bottom: 8),
+                  children: [
+                    _buildRequestsSection(),
+                  ],
+                ),
     );
   }
 

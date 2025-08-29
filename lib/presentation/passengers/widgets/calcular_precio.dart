@@ -7,11 +7,11 @@ class CalcularPrecioWidget extends StatelessWidget {
   final double? precio;
 
   const CalcularPrecioWidget({
-    Key? key,
+    super.key,
     required this.distanciaKm,
     required this.tiempoMin,
     required this.precio,
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {

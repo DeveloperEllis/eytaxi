@@ -19,7 +19,7 @@ class ThemeNotifier extends ChangeNotifier {
     _loadFromPrefs();
     Supabase.instance.client.auth.onAuthStateChange.listen((event) {
       final session = event.session;
-      if (session != null && session.user != null) {
+      if (session != null) {
         loadDriverStatus();
         loadDriverName();
         loadDriverRoutes();

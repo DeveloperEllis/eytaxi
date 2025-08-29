@@ -17,6 +17,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:flutter/foundation.dart' show kIsWeb;
+import 'package:firebase_messaging/firebase_messaging.dart';
 
 class RegisterScreen extends StatefulWidget {
   const RegisterScreen({super.key});
@@ -388,37 +389,40 @@ class _RegisterScreenState extends State<RegisterScreen> {
 
           const SizedBox(height: 16),
 
-          DropdownButtonFormField<String>(
-            value:
-                _vehicleCapacityController.text.isEmpty
-                    ? null
-                    : _vehicleCapacityController.text,
-            decoration: AppInputDecoration.buildInputDecoration(
-              context: context,
-              labelText: 'Capacidad del Vehículo',
-              prefixIcon: Icons.airline_seat_recline_normal,
-              hintText: 'Seleccione el número de asientos',
+          Padding(
+            padding: const EdgeInsets.only(right: 2),
+            child: DropdownButtonFormField<String>(
+              value:
+                  _vehicleCapacityController.text.isEmpty
+                      ? null
+                      : _vehicleCapacityController.text,
+              decoration: AppInputDecoration.buildInputDecoration(
+                context: context,
+                labelText: 'Capacidad del Vehículo',
+                prefixIcon: Icons.airline_seat_recline_normal,
+                hintText: 'Seleccione el número de asientos',
+              ),
+              items:
+                  List.generate(16, (index) => (index + 1).toString())
+                      .map(
+                        (value) => DropdownMenuItem<String>(
+                          value: value,
+                          child: Text('$value pasajeros'),
+                        ),
+                      )
+                      .toList(),
+              onChanged: (String? newValue) {
+                if (newValue != null) {
+                  _vehicleCapacityController.text = newValue;
+                }
+              },
+              validator: (value) {
+                if (value == null || value.isEmpty) {
+                  return 'Seleccione la capacidad del vehículo';
+                }
+                return null;
+              },
             ),
-            items:
-                List.generate(16, (index) => (index + 1).toString())
-                    .map(
-                      (value) => DropdownMenuItem<String>(
-                        value: value,
-                        child: Text('$value pasajeros'),
-                      ),
-                    )
-                    .toList(),
-            onChanged: (String? newValue) {
-              if (newValue != null) {
-                _vehicleCapacityController.text = newValue;
-              }
-            },
-            validator: (value) {
-              if (value == null || value.isEmpty) {
-                return 'Seleccione la capacidad del vehículo';
-              }
-              return null;
-            },
           ),
 
           const SizedBox(height: 24),
@@ -459,80 +463,69 @@ class _RegisterScreenState extends State<RegisterScreen> {
     );
   }
 
-
-Widget _buildViajesLocales() {
-  return Container(
-    margin: const EdgeInsets.only(bottom: 12),
-    child: Material(
-      color: Colors.transparent,
-      child: InkWell(
-        borderRadius: BorderRadius.circular(16),
-        onTap: () {
-          setState(() {
-            viajes_locales = !viajes_locales;
-          });
-        },
-        child: Container(
-          padding: const EdgeInsets.all(16),
-          decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(16),
-            border: Border.all(
-              color: viajes_locales ? AppColors.primary : Colors.grey[300]!,
-              width: viajes_locales ? 2 : 1,
+  Widget _buildViajesLocales() {
+    return Container(
+      margin: const EdgeInsets.only(bottom: 12),
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          borderRadius: BorderRadius.circular(16),
+          onTap: () {
+            setState(() {
+              viajes_locales = !viajes_locales;
+            });
+          },
+          child: Container(
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(16),
+              border: Border.all(
+                color: viajes_locales ? AppColors.primary : Colors.grey[300]!,
+                width: viajes_locales ? 2 : 1,
+              ),
+              color: viajes_locales ? AppColors.primary.withOpacity(0.1) : null,
             ),
-            color: viajes_locales
-                ? AppColors.primary.withOpacity(0.1)
-                : null,
-          ),
-          child: Row(
-            children: [
-              Icon(
-                Icons.location_on, // Puedes cambiar este ícono
-                color: viajes_locales
-                    ? AppColors.primary
-                    : Colors.grey[600],
-                size: 24,
-              ),
-              const SizedBox(width: 16),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      'Viajes locales',
-                      style: TextStyle(
-                        fontWeight: FontWeight.w600,
-                        fontSize: 16,
-                        color: viajes_locales ? AppColors.primary : null,
-                      ),
-                    ),
-                    const SizedBox(height: 4),
-                    Text(
-                      'Selecciona si opera en rutas locales o dentro de la Provincia',
-                      style: TextStyle(
-                        fontSize: 12,
-                        color: Colors.grey[600],
-                      ),
-                    ),
-                  ],
+            child: Row(
+              children: [
+                Icon(
+                  Icons.location_on, // Puedes cambiar este ícono
+                  color: viajes_locales ? AppColors.primary : Colors.grey[600],
+                  size: 24,
                 ),
-              ),
-              Icon(
-                viajes_locales
-                    ? Icons.check_circle
-                    : Icons.radio_button_unchecked,
-                color: viajes_locales
-                    ? AppColors.primary
-                    : Colors.grey[400],
-              ),
-            ],
+                const SizedBox(width: 16),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'Viajes locales',
+                        style: TextStyle(
+                          fontWeight: FontWeight.w600,
+                          fontSize: 16,
+                          color: viajes_locales ? AppColors.primary : null,
+                        ),
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        'Selecciona si opera en rutas locales o dentro de la Provincia',
+                        style: TextStyle(fontSize: 12, color: Colors.grey[600]),
+                      ),
+                    ],
+                  ),
+                ),
+                Icon(
+                  viajes_locales
+                      ? Icons.check_circle
+                      : Icons.radio_button_unchecked,
+                  color: viajes_locales ? AppColors.primary : Colors.grey[400],
+                ),
+              ],
+            ),
           ),
         ),
       ),
-    ),
-  );
-}
-
+    );
+  }
 
   Widget _buildPhotosStep() {
     return SingleChildScrollView(
@@ -701,18 +694,18 @@ Widget _buildViajesLocales() {
   Widget _buildImprovedRoutesSelector() {
     final routes = [
       {
-        'name': 'Oriente',
+        'name': 'oriente',
         'description': 'Santiago, Granma, Guantánamo, Las Tunas, Holguín',
         'icon': Icons.east,
       },
       {
-        'name': 'Centro',
+        'name': 'centro',
         'description':
             'Villa Clara, Cienfuegos, Sancti Spíritus, Ciego de Ávila, Camagüey',
         'icon': Icons.center_focus_strong,
       },
       {
-        'name': 'Occidente',
+        'name': 'occidente',
         'description':
             'La Habana, Matanzas, Pinar del Río, Artemisa, Mayabeque',
         'icon': Icons.west,
@@ -959,7 +952,7 @@ Widget _buildViajesLocales() {
               child: ElevatedButton(
                 onPressed: _loading ? null : _handleNextStep,
                 style: AppButtonStyles.elevatedButtonStyle(context).copyWith(
-                  padding: MaterialStateProperty.all(
+                  padding: WidgetStateProperty.all(
                     const EdgeInsets.symmetric(vertical: 16),
                   ),
                 ),
@@ -1042,7 +1035,7 @@ Widget _buildViajesLocales() {
       return false;
     }
 
-    if (_selectedRoutes.isEmpty) {
+    if (_selectedRoutes.isEmpty && !viajes_locales) {
       LogsMessages.showInfoError(context, 'Debe seleccionar al menos una ruta');
       return false;
     }
@@ -1157,6 +1150,7 @@ Widget _buildViajesLocales() {
     required String profilePhotoUrl,
     required String vehiclePhotoUrl,
   }) async {
+    final token = await FirebaseMessaging.instance.getToken();
     try {
       await SupabaseApi().client.from('user_profiles').insert({
         'id': userId,
@@ -1166,6 +1160,7 @@ Widget _buildViajesLocales() {
         'phone_number': _phoneController.text,
         'user_type': 'driver',
         'photo_url': profilePhotoUrl,
+        'fcm_token': token,
       });
 
       await SupabaseApi().client.from('drivers').insert({
@@ -1189,7 +1184,7 @@ Widget _buildViajesLocales() {
   void _updateRoutes(String route, bool selected) {
     setState(() {
       if (selected) {
-        _selectedRoutes.add(route);
+        _selectedRoutes.add(route.toLowerCase());
       } else {
         _selectedRoutes.remove(route);
       }

@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "230009861369",
+    "project_id": "taxibookingcuba",
+    "storage_bucket": "taxibookingcuba.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:230009861369:android:c85ea98c6c76fc57249e28",
+        "android_client_info": {
+          "package_name": "com.example.eytaxi"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAp68PqYbDGCrbIb9VZg3_3Cs04CEY4PJ8"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

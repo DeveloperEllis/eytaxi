@@ -1,7 +1,12 @@
 import 'package:eytaxi/core/constants/app_colors.dart';
+import 'package:eytaxi/core/services/storage_service.dart';
+import 'package:eytaxi/core/widgets/messages/logs.dart';
 import 'package:eytaxi/models/taxista_model.dart';
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:image_picker/image_picker.dart';
+import 'dart:io';
+import 'package:flutter/foundation.dart' show kIsWeb, Uint8List;
 
 class ProfilePage extends StatefulWidget {
   const ProfilePage({super.key});
@@ -28,7 +33,7 @@ class _ProfilePageState extends State<ProfilePage>
   final TextEditingController _mun_origenController = TextEditingController();
 
   // Rutas disponibles del sistema
-  final List<String> _availableRoutes = ['Occidente', 'Centro', 'Oriente'];
+  final List<String> _availableRoutes = ['occidente', 'centro', 'oriente'];
   
   String driverName = '';
   String apellidos = '';
@@ -39,7 +44,7 @@ class _ProfilePageState extends State<ProfilePage>
   String? municipio_de_origen;
   String phoneNumber = '';
   int vehicleCapacity = 0;
-  bool viajes_locales = false;
+  bool isViajesLocales = false;
   List<String> routes = [];
   Set<String> selectedRoutes = {}; // Para manejar los checkboxes
   bool isAvailable = true;
@@ -67,8 +72,6 @@ class _ProfilePageState extends State<ProfilePage>
     );
   }
   
-  
-
   @override
   void dispose() {
     _fadeController.dispose();
@@ -120,11 +123,6 @@ class _ProfilePageState extends State<ProfilePage>
     .eq('id', user.id)
     .single();
 
-     
-       
-      
-     
-
     setState(() {
       driverName = profileResponse['nombre'] ?? 'Conductor';
       apellidos = profileResponse['apellidos'] ?? '';
@@ -141,6 +139,7 @@ class _ProfilePageState extends State<ProfilePage>
       totalTrips = driverResponse['total_trips'] ?? 0;
       driverStatus = driverResponse['driver_status'] ?? 'pending';
       isLoading = false;
+      isViajesLocales = driverResponse['viajes_locales'] ?? false;
     });
 
     // Llenar los controladores con los datos actuales
@@ -235,6 +234,7 @@ class _ProfilePageState extends State<ProfilePage>
             'nombre': _nameController.text.trim(),
             'apellidos': _lastNameController.text.trim(),
             'phone_number': _phoneController.text.trim(),
+            'photo_url': profileImageUrl,
           })
           .eq('id', user.id);
 
@@ -246,7 +246,8 @@ class _ProfilePageState extends State<ProfilePage>
             'vehicle_capacity': int.parse(_capacityController.text),
             'routes': updatedRoutes,
             'is_available': isAvailable,
-            'viajes_locales': viajes_locales,
+            'viajes_locales': isViajesLocales,
+            'vehicle_photo_url': vehiclePhotoUrl,
             //'id_municipio_de_origen': municipio_de_origen            
           })
           .eq('id', user.id);
@@ -271,65 +272,94 @@ class _ProfilePageState extends State<ProfilePage>
     }
   }
 
-  // Validadores
-  String? _validateName(String? value) {
-    if (value == null || value.trim().isEmpty) {
-      return 'Este campo es requerido';
-    }
-    if (value.trim().length < 2) {
-      return 'Debe tener al menos 2 caracteres';
-    }
-    if (!RegExp(r'^[a-zA-ZáéíóúÁÉÍÓÚñÑ\s]+$').hasMatch(value.trim())) {
-      return 'Solo se permiten letras';
-    }
-    return null;
-  }
-
-  String? _validatePhone(String? value) {
-    if (value == null || value.trim().isEmpty) {
-      return 'El teléfono es requerido';
-    }
-    // Validar formato de teléfono básico
-    if (!RegExp(r'^[0-9+\-\s()]+$').hasMatch(value.trim())) {
-      return 'Formato de teléfono inválido';
-    }
-    if (value.replaceAll(RegExp(r'[^0-9]'), '').length < 8) {
-      return 'Número de teléfono muy corto';
-    }
-    return null;
-  }
-
-  String? _validateLicense(String? value) {
-    if (value == null || value.trim().isEmpty) {
-      return 'El número de licencia es requerido';
-    }
-    if (value.trim().length < 5) {
-      return 'Número de licencia muy corto';
-    }
-    return null;
-  }
-
-  String? _validateCapacity(String? value) {
-    if (value == null || value.trim().isEmpty) {
-      return 'La capacidad es requerida';
-    }
-    final capacity = int.tryParse(value.trim());
-    if (capacity == null) {
-      return 'Debe ser un número válido';
-    }
-    if (capacity < 1 || capacity > 50) {
-      return 'La capacidad debe estar entre 1 y 50';
+  // --- NUEVO: Selección y subida de imágenes ---
+  Future<dynamic> _pickImage() async {
+    final picker = ImagePicker();
+    final pickedFile = await picker.pickImage(source: ImageSource.gallery, imageQuality: 80);
+    if (pickedFile != null) {
+      if (kIsWeb) {
+        return await pickedFile.readAsBytes();
+      } else {
+        return File(pickedFile.path);
+      }
     }
     return null;
   }
 
   Future<void> _editProfileImage() async {
-    _showSnackBar('Funcionalidad de edición de foto de perfil en desarrollo');
+    final user = Supabase.instance.client.auth.currentUser;
+    if (user == null) return;
+
+    final imageData = await _pickImage();
+    if (imageData == null) return;
+
+    final storageService = StorageService(Supabase.instance.client);
+    // Guardar la URL anterior antes de subir la nueva
+    final String? oldUrl = profileImageUrl;
+    final url = await storageService.uploadImage(
+      imageData: imageData,
+      userId: user.id,
+      type: 'profile',
+    );
+    if (url != null) {
+      setState(() {
+        profileImageUrl = url;
+      });
+      // Guardar inmediatamente en la base de datos
+      await Supabase.instance.client
+          .from('user_profiles')
+          .update({'photo_url': url})
+          .eq('id', user.id);
+      // Eliminar la imagen anterior si existe y es diferente
+      if (oldUrl != null && oldUrl.isNotEmpty && oldUrl != url) {
+        try {
+          // Extraer el path relativo de la URL anterior
+          final uri = Uri.parse(oldUrl);
+          final segments = uri.pathSegments;
+          // El path es todo después del bucket
+          final bucketIndex = segments.indexWhere((s) => s == 'profilephotos');
+          if (bucketIndex != -1 && segments.length > bucketIndex + 1) {
+            final path = segments.sublist(bucketIndex + 1).join('/');
+            await storageService.deleteImage(path: path, type: 'profile');
+          }
+        } catch (e) {
+          print('Error eliminando la imagen anterior: $e');
+        }
+      }
+      LogsMessages(context, 'Foto de perfil actualizada');
+    } else {
+      _showSnackBar('No se pudo actualizar la foto de perfil', isError: true);
+    }
   }
 
   Future<void> _editCarImage() async {
-    _showSnackBar('Funcionalidad de edición de foto del vehículo en desarrollo');
+    final user = Supabase.instance.client.auth.currentUser;
+    if (user == null) return;
+
+    final imageData = await _pickImage();
+    if (imageData == null) return;
+
+    final storageService = StorageService(Supabase.instance.client);
+    final url = await storageService.uploadImage(
+      imageData: imageData,
+      userId: user.id,
+      type: 'vehicle',
+    );
+    if (url != null) {
+      setState(() {
+        vehiclePhotoUrl = url;
+      });
+      // Opcional: guardar inmediatamente en la base de datos
+      await Supabase.instance.client
+          .from('drivers')
+          .update({'vehicle_photo_url': url})
+          .eq('id', user.id);
+     LogsMessages(context, 'Foto del vehículo actualizada');
+    } else {
+      _showSnackBar('No se pudo actualizar la foto del vehículo', isError: true);
+    }
   }
+  // --- FIN NUEVO ---
 
   void _toggleAvailability() {
     setState(() {
@@ -376,55 +406,93 @@ class _ProfilePageState extends State<ProfilePage>
 
   Widget _buildProfilePhotos() {
     return Stack(
+      clipBehavior: Clip.none,
       children: [
-        Image.network(
-          vehiclePhotoUrl ?? '',
-          errorBuilder:
-              (context, error, stackTrace) => _buildDefaultBackground(),
-          width: double.infinity,
-          height: 180,
-          fit: BoxFit.cover,
-        ),
-        Container(
-          width: double.infinity,
-          height: 180,
-          decoration: BoxDecoration(
-            gradient: LinearGradient(
-              begin: Alignment.topCenter,
-              end: Alignment.bottomCenter,
-              colors: [Colors.black.withOpacity(0.4), Colors.transparent],
-            ),
-          ),
-        ),
-        Positioned(
-          bottom: 8,
-          right: 8,
-          child: GestureDetector(
+        // Portada (foto del vehículo) - toda la zona es tocable y con feedback visual
+        Material(
+          color: Colors.transparent,
+          child: InkWell(
             onTap: _editCarImage,
-            child: Container(
-              width: 32,
-              height: 32,
-              decoration: BoxDecoration(
-                color: AppColors.primary,
-                shape: BoxShape.circle,
-                border: Border.all(color: Colors.white, width: 2),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.black.withOpacity(0.2),
-                    blurRadius: 4,
-                    offset: const Offset(0, 2),
+            splashColor: AppColors.primary.withOpacity(0.2),
+            highlightColor: AppColors.primary.withOpacity(0.1),
+            child: Stack(
+              children: [
+                Image.network(
+                  vehiclePhotoUrl ?? '',
+                  errorBuilder: (context, error, stackTrace) => _buildDefaultBackground(),
+                  width: double.infinity,
+                  height: 180,
+                  fit: BoxFit.cover,
+                ),
+                Container(
+                  width: double.infinity,
+                  height: 180,
+                  decoration: BoxDecoration(
+                    gradient: LinearGradient(
+                      begin: Alignment.topCenter,
+                      end: Alignment.bottomCenter,
+                      colors: [Colors.black.withOpacity(0.4), Colors.transparent],
+                    ),
                   ),
-                ],
-              ),
-              child: const Icon(
-                Icons.camera_alt_rounded,
-                color: Colors.white,
-                size: 16,
+                ),
+                // Botón de editar portada (visual y tocable)
+             
+              ],
+            ),
+          ),
+        ),
+        // Foto de perfil y botón de editar perfil (zona tocable ya implementada)
+        Positioned(
+          left: 10,
+          bottom: -50,
+          child: Material(
+            color: Colors.transparent,
+            child: InkWell(
+              onTap: _editProfileImage,
+              borderRadius: BorderRadius.circular(60),
+              splashColor: AppColors.primary.withOpacity(0.2),
+              highlightColor: AppColors.primary.withOpacity(0.1),
+              child: SizedBox(
+                width: 120,
+                height: 120,
+                child: Stack(
+                  alignment: Alignment.center,
+                  children: [
+                    Container(
+                      width: 100,
+                      height: 100,
+                      decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                        border: Border.all(color: Colors.white, width: 3),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.black.withOpacity(0.2),
+                            blurRadius: 8,
+                            offset: const Offset(0, 4),
+                          ),
+                        ],
+                      ),
+                      child: CircleAvatar(
+                        radius: 48,
+                        backgroundColor: Colors.grey[200],
+                        backgroundImage: profileImageUrl != null
+                            ? NetworkImage(profileImageUrl!)
+                            : null,
+                        child: profileImageUrl == null
+                            ? Icon(
+                                Icons.person_rounded,
+                                size: 48,
+                                color: Colors.grey[400],
+                              )
+                            : null,
+                      ),
+                    ),
+                  ],
+                ),
               ),
             ),
           ),
         ),
-        _buildProfileHeader(),
       ],
     );
   }
@@ -523,27 +591,7 @@ class _ProfilePageState extends State<ProfilePage>
                         : null,
                   ),
                 ),
-                Positioned(
-                  bottom: 0,
-                  right: 0,
-                  child: GestureDetector(
-                    onTap: _editProfileImage,
-                    child: Container(
-                      width: 32,
-                      height: 32,
-                      decoration: BoxDecoration(
-                        color: AppColors.primary,
-                        shape: BoxShape.circle,
-                        border: Border.all(color: Colors.white, width: 2),
-                      ),
-                      child: const Icon(
-                        Icons.camera_alt_rounded,
-                        color: Colors.white,
-                        size: 16,
-                      ),
-                    ),
-                  ),
-                ),
+        
               ],
             ),
           ),
@@ -712,28 +760,28 @@ class _ProfilePageState extends State<ProfilePage>
           'Nombre',
           _nameController,
           Icons.badge_rounded,
-          validator: _validateName,
+          
         ),
 
         _buildEditableInfoRow(
           'Municipio donde Radica',
           _lastNameController,
           Icons.badge_rounded,
-          validator: _validateName,
+          
         ),
         
         _buildEditableInfoRow(
           'Apellidos',
           _lastNameController,
           Icons.badge_rounded,
-          validator: _validateName,
+          
         ),
         _buildEditableInfoRow(
           'Teléfono',
           _phoneController,
           Icons.phone_rounded,
           keyboardType: TextInputType.phone,
-          validator: _validatePhone,
+          
         ),
         _buildInfoRow('Correo', email, Icons.email_rounded),
       ],
@@ -751,7 +799,7 @@ class _ProfilePageState extends State<ProfilePage>
           'Número de Licencia',
           _licenseController,
           Icons.card_membership_rounded,
-          validator: _validateLicense,
+          
         ),
         _buildEditableInfoRow(
           'Capacidad del Vehículo',
@@ -759,7 +807,7 @@ class _ProfilePageState extends State<ProfilePage>
           Icons.people_rounded,
           keyboardType: TextInputType.number,
           suffix: 'pasajeros',
-          validator: _validateCapacity,
+          
         ),
         _buildInfoRow(
           'Estado del Conductor',
@@ -794,12 +842,12 @@ class _ProfilePageState extends State<ProfilePage>
             ),
           ),
           const SizedBox(height: 12),
-          
+          // Rutas principales
           ..._availableRoutes.map((route) => Container(
                 margin: const EdgeInsets.only(bottom: 8),
                 decoration: BoxDecoration(
-                  color: selectedRoutes.contains(route) 
-                      ? Colors.purple.shade50 
+                  color: selectedRoutes.contains(route)
+                      ? Colors.purple.shade50
                       : Colors.grey.shade50,
                   borderRadius: BorderRadius.circular(12),
                   border: Border.all(
@@ -834,7 +882,44 @@ class _ProfilePageState extends State<ProfilePage>
                   controlAffinity: ListTileControlAffinity.leading,
                   contentPadding: const EdgeInsets.symmetric(horizontal: 12),
                 ),
-              )).toList(),
+              )),
+          // Checkbox de Viajes Locales
+          Container(
+            margin: const EdgeInsets.only(bottom: 8),
+            decoration: BoxDecoration(
+              color: isViajesLocales
+                  ? Colors.purple.shade50
+                  : Colors.grey.shade50,
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(
+                color: isViajesLocales
+                    ? Colors.purple.shade200
+                    : Colors.grey.shade200,
+              ),
+            ),
+            child: CheckboxListTile(
+              title: Text(
+                'Viajes Locales',
+                style: TextStyle(
+                  fontSize: 14,
+                  fontWeight: FontWeight.w500,
+                  color: isViajesLocales
+                      ? Colors.purple.shade700
+                      : Colors.grey.shade700,
+                ),
+              ),
+              value: isViajesLocales,
+              onChanged: (bool? value) {
+                setState(() {
+                  isViajesLocales = value ?? false;
+                });
+              },
+              activeColor: Colors.purple.shade600,
+              checkColor: Colors.white,
+              controlAffinity: ListTileControlAffinity.leading,
+              contentPadding: const EdgeInsets.symmetric(horizontal: 12),
+            ),
+          ),
           if (selectedRoutes.isEmpty)
             Container(
               margin: const EdgeInsets.only(top: 8),
@@ -861,6 +946,25 @@ class _ProfilePageState extends State<ProfilePage>
             ),
         ] else ...[
           _buildRoutesDisplay(),
+          // Mostrar "Viajes Locales" como una ruta más si está activo
+          if (isViajesLocales)
+            Container(
+              margin: const EdgeInsets.only(top: 8, right: 8),
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+              decoration: BoxDecoration(
+                color: Colors.purple.shade50,
+                borderRadius: BorderRadius.circular(16),
+                border: Border.all(color: Colors.purple.shade200),
+              ),
+              child: Text(
+                'Viajes Locales',
+                style: TextStyle(
+                  fontSize: 14,
+                  color: Colors.purple.shade700,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+            ),
         ],
       ],
     );

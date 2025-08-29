@@ -1,6 +1,5 @@
 import 'package:eytaxi/core/services/locations_service.dart';
 import 'package:eytaxi/core/services/supabase_service.dart';
-import 'package:eytaxi/core/styles/button_style.dart';
 import 'package:eytaxi/core/styles/input_decorations.dart';
 import 'package:eytaxi/core/styles/locations_autocomplete_style.dart';
 import 'package:eytaxi/models/ubicacion_model.dart';

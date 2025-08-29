@@ -23,7 +23,6 @@ class AppTheme {
       primary: AppColors.primary,
       secondary: AppColors.secondary,
       surface: AppColors.white,
-      background: AppColors.background,
     ),
   );
 
@@ -47,8 +46,7 @@ class AppTheme {
   colorScheme: ColorScheme.dark(
     primary: AppColors.primary,
     secondary: AppColors.secondary,
-    surface: Colors.grey[900]!, // <- corrección aquí también
-    background: Colors.black,
+    surface: Colors.grey[900]!,
   ),
 );
 

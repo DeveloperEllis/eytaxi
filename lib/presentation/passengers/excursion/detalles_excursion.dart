@@ -286,6 +286,13 @@ class ExcursionDetallePage extends StatelessWidget {
   void _showReservationDialog(BuildContext context) {
     showDialog(
       context: context,
-      builder: (context) => ReservationFormDialog(excursion: excursion));
+      builder: (context) => Center(
+      child: ConstrainedBox(
+        constraints: BoxConstraints(
+          maxWidth: MediaQuery.of(context).size.width * 0.9, // 90% del ancho de pantalla
+        ),
+        child: ReservationFormDialog(excursion: excursion),
+      ),
+    ),    );
   }
 }

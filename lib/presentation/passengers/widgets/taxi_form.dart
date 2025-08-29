@@ -1,4 +1,3 @@
-import 'dart:developer';
 import 'package:eytaxi/core/constants/app_colors.dart';
 import 'package:eytaxi/core/enum/Trip_status.dart';
 import 'package:eytaxi/core/services/supabase_service.dart';
@@ -15,7 +14,6 @@ import 'package:eytaxi/presentation/passengers/widgets/calcular_precio.dart';
 import 'package:eytaxi/presentation/passengers/widgets/locatio_autocomplete.dart';
 import 'package:eytaxi/presentation/passengers/widgets/taxi_tpe_selector.dart';
 import 'package:flutter/material.dart';
-import 'package:supabase_flutter/supabase_flutter.dart';
 
 class TaxiForm extends StatefulWidget {
   const TaxiForm({super.key});

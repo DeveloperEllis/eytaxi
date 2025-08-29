@@ -20,7 +20,7 @@ class _LoginScreenState extends State<LoginScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final _isDarkMode = Theme.of(context).brightness == Brightness.dark;
+    final isDarkMode = Theme.of(context).brightness == Brightness.dark;
     return Scaffold(
       appBar: AppBar(
         backgroundColor: Colors.transparent,
@@ -29,7 +29,7 @@ class _LoginScreenState extends State<LoginScreen> {
         }, icon: Icon(Icons.arrow_back_ios_new_outlined)
         ),
       ),
-      backgroundColor: _isDarkMode? AppColors.backgroundDark: AppColors.background,
+      backgroundColor: isDarkMode? AppColors.backgroundDark: AppColors.background,
       body: Center(
         child: SingleChildScrollView(
           child: Card(

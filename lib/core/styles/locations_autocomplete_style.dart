@@ -37,7 +37,7 @@ class LocationAutocompleteStyles {
 
   // Ícono para las opciones basado en el tipo de ubicación
   static IconData getIconForUbicacion(Ubicacion ubicacion) {
-    final lowerTipo = ubicacion.tipo?.toLowerCase() ?? 'ciudad';
+    final lowerTipo = ubicacion.tipo.toLowerCase() ?? 'ciudad';
     if (lowerTipo == 'aeropuerto') {
       return Icons.flight;
     } else if (lowerTipo == 'cayo') {

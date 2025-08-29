@@ -1,4 +1,5 @@
 import 'package:eytaxi/core/services/theme_notifier.dart';
+import 'package:eytaxi/presentation/admin/admin_dashboard.dart';
 import 'package:eytaxi/presentation/auth/login_screen.dart';
 import 'package:eytaxi/presentation/auth/register_screen.dart';
 import 'package:eytaxi/presentation/common/home_screen.dart';
@@ -25,25 +26,71 @@ class AppRoutes {
   static const String driverProfile = '/driver/profile';
   static const String pendingdriver = '/driver/pending';
   static const String rejectedDriver = '/driver/rejected';
-
+  // Administrador
+  static const String admin = '/admin';
   static final GoRouter router = GoRouter(
     initialLocation: splash,
-    routes: [
+    // redirect: (context, state) {
+    //   final user = Supabase.instance.client.auth.currentUser;
 
+    //   // Si estoy en splash, no redirijo todavía
+    //   if (state.matchedLocation == splash) {
+    //     return null;
+    //   }
+
+    //   // Usuario no logueado → solo puede entrar a login/register
+    //   if (user == null) {
+    //     final isAuthPage =
+    //         state.matchedLocation == login || state.matchedLocation == register;
+    //     return isAuthPage ? null : home;
+    //   }
+
+    //   // Si el usuario está logueado y quiere ir a login/register → mándalo a home
+    //   if (user != null &&
+    //       (state.matchedLocation == login ||
+    //           state.matchedLocation == register)) {
+    //     return home;
+    //   }
+
+    //   // Aquí puedes verificar el rol o estado del conductor desde la base de datos
+    //   // Ejemplo (pseudo):
+    //   // final role = await getRole(user.id);
+    //   // if (role == 'pending') return pendingDriver;
+    //   // if (role == 'rejected') return rejectedDriver;
+
+    //   return null; // No redirigir
+    // },
+    routes: [
       GoRoute(path: splash, builder: (context, state) => SplashScreen()),
       GoRoute(path: home, builder: (context, state) => HomeScreen()),
 
       GoRoute(path: login, builder: (context, state) => const LoginScreen()),
-      GoRoute(path: register, builder: (context, state) => const RegisterScreen()),
-      
-      // Nuevas rutas para conductor
-      GoRoute(path: driverHome, builder: (context, state)=> const DriverHome()),
-      GoRoute(path: pendingdriver, builder: (context, state) => const PendingDriverScreen()),
-      GoRoute(path: rejectedDriver, builder: (context, state) => const RejectedDriverScreen()),
-      
       GoRoute(
         path: register,
         builder: (context, state) => const RegisterScreen(),
+      ),
+
+      // Nuevas rutas para conductor
+      GoRoute(
+        path: driverHome,
+        builder: (context, state) => const DriverHome(),
+      ),
+      GoRoute(
+        path: pendingdriver,
+        builder: (context, state) => const PendingDriverScreen(),
+      ),
+      GoRoute(
+        path: rejectedDriver,
+        builder: (context, state) => const RejectedDriverScreen(),
+      ),
+
+      GoRoute(
+        path: register,
+        builder: (context, state) => const RegisterScreen(),
+      ),
+      GoRoute(
+        path: admin,
+        builder: (context, state) => const AdminDashboard(),
       ),
 
       // Agrega más rutas aquí según lo necesites
