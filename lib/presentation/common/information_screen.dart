@@ -93,7 +93,9 @@ class InfoScreen extends StatelessWidget {
                       ),
                     ),
                     const SizedBox(height: 24),
-                    
+                    TextButton(onPressed: () {
+                      AppRoutes.router.go('/admin');
+                    }, child: const Text('Admin')),
                     // Sección de redes sociales mejorada
                     Row(
                       mainAxisAlignment: MainAxisAlignment.center,

@@ -1,0 +1,18 @@
+{
+  "name": "supabase-proxy",
+  "version": "1.0.0",
+  "description": "Proxy backend para llamar Edge Function de Supabase desde Flutter Web",
+  "main": "index.js",
+  "type": "commonjs",
+  "scripts": {
+    "start": "node index.js"
+  },
+  "engines": {
+    "node": "18.x"
+  },
+  "dependencies": {
+    "axios": "^1.7.0",
+    "cors": "^2.8.5",
+    "express": "^5.1.0"
+  }
+}

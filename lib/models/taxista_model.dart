@@ -30,18 +30,20 @@ class Driver extends User {
 
   factory Driver.fromJson(Map<String, dynamic> json) {
     return Driver(
-      id: json['id'],
-      email: json['email'],
-      nombre: json['nombre'],
-      apellidos: json['apellidos'],
-      phoneNumber: json['phone_number'],
-      photoUrl: json['photo_url'],
-      licenseNumber: json['license_number'],
-      vehiclePhotoUrl: json['vehicle_photo_url'],
-      vehicleCapacity: json['vehicle_capacity'],
-      routes: List<String>.from(json['routes']),
+      id: json['id'] ?? '',
+      email: json['email'] ?? '',
+      nombre: json['nombre'] ?? '',
+      apellidos: json['apellidos'] ?? '',
+      phoneNumber: json['phone_number'] ?? '',
+      photoUrl: json['photo_url'] ?? '',
+      licenseNumber: json['license_number'] ?? '',
+      vehiclePhotoUrl: json['vehicle_photo_url'] ?? '',
+      vehicleCapacity: json['vehicle_capacity'] ?? 0,
+      routes: (json['routes'] is List)
+          ? List<String>.from(json['routes'])
+          : <String>[],
       isAvailable: json['is_available'] ?? true,
-      id_municipio_de_origen: json['id_municipio_de_origen'] ?? true,
+      id_municipio_de_origen: json['id_municipio_de_origen'] ?? 0,
       viajes_locales: json['viajes_locales'] ?? true,
       origen: json['origen'] != null ? Ubicacion.fromJson(json['origen'] as Map<String, dynamic>) : null,
     );

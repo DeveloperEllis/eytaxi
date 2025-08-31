@@ -3,6 +3,7 @@ import 'package:eytaxi/core/constants/fcmtoken.dart';
 import 'package:eytaxi/core/constants/supabaseApi.dart';
 import 'package:eytaxi/core/services/theme_notifier.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
@@ -12,28 +13,30 @@ import 'package:firebase_core/firebase_core.dart';
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
-  await Firebase.initializeApp(
-    options: const FirebaseOptions(
-      apiKey: "AIzaSyB7S5IpWuSN9GUGWEmpLJI6oZv8NbmEElM",
-  authDomain: "taxibookingcuba.firebaseapp.com",
-  projectId: "taxibookingcuba",
-  storageBucket: "taxibookingcuba.firebasestorage.app",
-  messagingSenderId: "230009861369",
-  appId: "1:230009861369:web:2f6d7bfe7a6caacb249e28",
-  measurementId: "G-EE8XPE8X3Y",
-    ),
-  );
-  FirebaseMessaging messaging = FirebaseMessaging.instance;
-  await Fcmtoken().setupFCM();
+  // Inicializa Firebase solo si no existe ninguna app
+  if (kIsWeb) {
+    await Firebase.initializeApp(
+      options: const FirebaseOptions(
+        apiKey: "AIzaSyB7S5IpWuSN9GUGWEmpLJI6oZv8NbmEElM",
+        authDomain: "taxibookingcuba.firebaseapp.com",
+        projectId: "taxibookingcuba",
+        storageBucket: "taxibookingcuba.appspot.com",
+        messagingSenderId: "230009861369",
+        appId: "1:230009861369:web:2f6d7bfe7a6caacb249e28",
+        measurementId: "G-EE8XPE8X3Y",
+      ),
+    );
+  }else{
+    await Firebase.initializeApp();
+    await Fcmtoken().setupFCM();
+  }
+  
 
   // Inicializar easy_localization
   await EasyLocalization.ensureInitialized();
 
   // Inicializar Supabase
-  await Supabase.initialize(
-    url: SupabaseApi.url,
-    anonKey: SupabaseApi.anonkey,
-  );  
+  await Supabase.initialize(url: SupabaseApi.url, anonKey: SupabaseApi.anonkey);
 
   runApp(
     EasyLocalization(
@@ -44,9 +47,11 @@ Future<void> main() async {
       path: 'assets/translations', // Carpeta de traducciones
       fallbackLocale: const Locale('es'),
       child: ChangeNotifierProvider(
-        create: (_) => ThemeNotifier()
-          ..loadDriverStatus()
-          ..loadDriverName(),
+        create:
+            (_) =>
+                ThemeNotifier()
+                  ..loadDriverStatus()
+                  ..loadDriverName(),
         child: const MyApp(),
       ),
     ),
@@ -73,7 +78,4 @@ class MyApp extends StatelessWidget {
       locale: context.locale,
     );
   }
-  
 }
-
-

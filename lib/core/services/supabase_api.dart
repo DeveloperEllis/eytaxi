@@ -1,5 +1,6 @@
 import 'package:eytaxi/core/constants/app_routes.dart';
 import 'package:eytaxi/core/enum/Driver_status_enum.dart';
+import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
@@ -106,8 +107,20 @@ Future<DriverStatus?> IsPending() async {
 }
 
 Future<void> Login(String email, String password, BuildContext context) async {
-if( email != null ){
-  final response = await SupabaseApi().signInWithPassword(email, password);
-}
- AppRoutes.router.go(AppRoutes.driverHome);
+  FirebaseMessaging messaging = FirebaseMessaging.instance;
+  await SupabaseApi().signInWithPassword(email, password);
+  String? token = await messaging.getToken();
+  final user = Supabase.instance.client.auth.currentUser;
+  if (user != null && token != null) {
+    // Actualizar el campo fcmtoken en user_profiles
+    final response = await Supabase.instance.client
+        .from('user_profiles')
+        .update({'fcm_token': token})
+        .eq('id', user.id);
+    if (response != null) {
+      print('FCM token updated for user ${user.id}: $token');
+    }
+  }
+  
+  AppRoutes.router.go(AppRoutes.driverHome);
 }
