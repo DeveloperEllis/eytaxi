@@ -1,28 +1,34 @@
-import 'package:eytaxi/models/ubicacion_model.dart';
-import 'package:eytaxi/models/user_model.dart';
+import 'dart:developer';
+import 'package:eytaxi/data/models/ubicacion_model.dart';
+import 'package:eytaxi/data/models/user_model.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 class LocationsService {
   Future<List<Ubicacion>> fetchUbicaciones(String query) async {
     try {
       if (query.length < 2) {
-        print('Input too short: $query');
+        log('Input too short: $query');
         return [];
       }
 
-      final sanitizedQuery = query.trim().toLowerCase();
+      final sanitizedQuery = _sanitizeQuery(query);
 
-      final response = await Supabase.instance.client
-          .from('ubicaciones_cuba')
-          .select('id, nombre, codigo, tipo, provincia, region')
-          .or(
-            'nombre.ilike.%$sanitizedQuery%,provincia.ilike.%$sanitizedQuery%',
-          );
+      // 🔹 Usamos un RPC para poder aplicar unaccent directamente en SQL
+      final response = await Supabase.instance.client.rpc(
+        'search_ubicaciones',
+        params: {'search_text': sanitizedQuery},
+      );
 
-      print('Supabase response for query "$sanitizedQuery": $response');
+      log('Supabase response for query "$sanitizedQuery": $response');
 
-      if (response.isEmpty) {
-        print('No results found for query: $sanitizedQuery');
+      if (response == null || (response is List && response.isEmpty)) {
+        log('No results found for query: $sanitizedQuery');
+        return [];
+      }
+
+      if (response is! List) {
+        log('Unexpected response format: $response');
+        throw Exception('Invalid response format');
       }
 
       return response
@@ -30,16 +36,21 @@ class LocationsService {
             try {
               return Ubicacion.fromJson(json);
             } catch (e) {
-              print('Error parsing JSON: $json, error: $e');
+              log('Error parsing JSON: $json, error: $e');
               return null;
             }
           })
           .where((ubicacion) => ubicacion != null)
           .cast<Ubicacion>()
           .toList();
-    } catch (e) {
-      print('Error fetching ubicaciones: $e');
-      return [];
+    } catch (e, stackTrace) {
+      log('Error fetching ubicaciones: $e', stackTrace: stackTrace);
+      throw Exception('Failed to fetch locations');
     }
+  }
+
+  String _sanitizeQuery(String query) {
+    // quitamos tildes en DB, no aquí
+    return query.trim().toLowerCase();
   }
 }

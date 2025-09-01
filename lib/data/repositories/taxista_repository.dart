@@ -1,5 +1,5 @@
 import 'package:eytaxi/data/sources/supabase_taxista_source.dart';
-import 'package:eytaxi/models/taxista_model.dart';
+import 'package:eytaxi/data/models/driver_model.dart';
 
 class TaxistaRepository {
 	final SupabaseTaxistaSource _source = SupabaseTaxistaSource();

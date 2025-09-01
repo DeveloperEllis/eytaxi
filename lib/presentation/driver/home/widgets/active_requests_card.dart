@@ -1,5 +1,5 @@
 import 'package:eytaxi/core/constants/app_colors.dart';
-import 'package:eytaxi/models/trip_request_model.dart';
+import 'package:eytaxi/features/trip_request/data/models/trip_request_model.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 

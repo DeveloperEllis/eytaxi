@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:eytaxi/core/constants/app_colors.dart';
-import 'package:eytaxi/models/ubicacion_model.dart';
+import 'package:eytaxi/data/models/ubicacion_model.dart';
 
 class LocationAutocompleteStyles {
   // Decoración del contenedor de opciones (Autocomplete options view)

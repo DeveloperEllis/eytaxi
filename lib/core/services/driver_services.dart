@@ -1,6 +1,6 @@
 import 'dart:convert';
 import 'package:connectivity_plus/connectivity_plus.dart';
-import 'package:eytaxi/models/trip_request_model.dart';
+import 'package:eytaxi/features/trip_request/data/models/trip_request_model.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 

@@ -1,11 +1,11 @@
 import 'package:eytaxi/data/repositories/taxista_repository.dart';
-import 'package:eytaxi/models/taxista_model.dart';
+import 'package:eytaxi/data/models/driver_model.dart';
+import 'package:eytaxi/features/trip_request/data/models/trip_request_model.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:eytaxi/core/constants/app_colors.dart';
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
-import 'package:eytaxi/models/trip_request_model.dart';
 
 class PendingRequestsPage extends StatefulWidget {
   const PendingRequestsPage({super.key});
@@ -155,8 +155,7 @@ class _PendingRequestsPageState extends State<PendingRequestsPage> {
                                             onPressed:
                                                 () => setState(
                                                   () =>
-                                                      expandedStates[driver
-                                                              .id] =
+                                                      expandedStates[driver.id ?? ''] =
                                                           !isExpanded,
                                                 ),
                                           ),

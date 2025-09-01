@@ -1,4 +1,4 @@
-import 'package:eytaxi/models/taxista_model.dart';
+import 'package:eytaxi/data/models/driver_model.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 // Función temporal para probar la obtención de user_profiles desde consola
 

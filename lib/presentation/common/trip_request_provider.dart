@@ -1,10 +1,14 @@
-import 'package:eytaxi/core/services/trip_request__service.dart';
-import 'package:eytaxi/models/trip_request_model.dart';
-import 'package:eytaxi/models/ubicacion_model.dart';
+import 'package:eytaxi/data/models/ubicacion_model.dart';
+import 'package:eytaxi/features/trip_request/data/datasources/trip_request_remote_datasource.dart';
+import 'package:eytaxi/features/trip_request/data/models/trip_request_model.dart';
+import 'package:eytaxi/features/trip_request/data/repositories/trip_request_service.dart';
 import 'package:flutter/material.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 
 class TripRequestProvider extends ChangeNotifier {
-  TripRequestService service = TripRequestService();
+  final TripRequestService _service = TripRequestService(
+    TripRequestRemoteDataSource(Supabase.instance.client),
+  );
   TripRequest? _trip;
 
   TripRequest? get trip => _trip;
@@ -93,7 +97,7 @@ class TripRequestProvider extends ChangeNotifier {
     loading = true;
     notifyListeners();
 
-    final data = await service.calculateReservationDetails(
+    final data = await _service.calculateReservationDetails(
       origen!.id,
       destino!.id,
     );

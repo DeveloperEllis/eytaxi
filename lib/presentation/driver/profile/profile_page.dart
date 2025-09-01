@@ -1,7 +1,7 @@
 import 'package:eytaxi/core/constants/app_colors.dart';
 import 'package:eytaxi/core/services/storage_service.dart';
 import 'package:eytaxi/core/widgets/messages/logs.dart';
-import 'package:eytaxi/models/taxista_model.dart';
+import 'package:eytaxi/data/models/driver_model.dart';
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:image_picker/image_picker.dart';

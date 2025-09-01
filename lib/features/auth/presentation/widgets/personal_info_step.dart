@@ -1,0 +1,208 @@
+import 'package:flutter/material.dart';
+import 'package:eytaxi/core/styles/input_decorations.dart';
+import 'package:eytaxi/core/constants/app_colors.dart';
+import 'package:eytaxi/core/utils/regex_utils.dart';
+
+class PersonalInfoStep extends StatelessWidget {
+  final GlobalKey<FormState> formKey;
+  final TextEditingController nombreController;
+  final TextEditingController apellidosController;
+  final TextEditingController emailController;
+  final TextEditingController phoneController;
+  final TextEditingController passwordController;
+  final TextEditingController confirmPasswordController;
+  final bool obscurePassword;
+  final bool obscureConfirmPassword;
+  final VoidCallback onTogglePasswordVisibility;
+  final VoidCallback onToggleConfirmPasswordVisibility;
+  final String? Function(String?) validatePassword;
+  final void Function(String) onNameChanged;
+  final void Function(String) onEmailChanged;
+
+  const PersonalInfoStep({
+    super.key,
+    required this.formKey,
+    required this.nombreController,
+    required this.apellidosController,
+    required this.emailController,
+    required this.phoneController,
+    required this.passwordController,
+    required this.confirmPasswordController,
+    required this.obscurePassword,
+    required this.obscureConfirmPassword,
+    required this.onTogglePasswordVisibility,
+    required this.onToggleConfirmPasswordVisibility,
+    required this.validatePassword,
+    required this.onNameChanged,
+    required this.onEmailChanged,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    bool isDarkMode = Theme.of(context).brightness == Brightness.dark;
+
+    return SingleChildScrollView(
+      padding: const EdgeInsets.symmetric(horizontal: 20),
+      child: Form(
+        key: formKey,
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const SizedBox(height: 20),
+            Row(
+              children: [
+                Icon(Icons.person_outline, color: AppColors.primary, size: 24),
+                const SizedBox(width: 8),
+                const Text(
+                  'Datos Personales',
+                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600),
+                ),
+              ],
+            ),
+            const SizedBox(height: 16),
+            TextFormField(
+              controller: nombreController,
+              decoration: AppInputDecoration.buildInputDecoration(
+                context: context,
+                labelText: 'Nombre',
+                prefixIcon: Icons.person_outline,
+              ),
+              onChanged: onNameChanged,
+              validator: (value) =>
+                  value == null || value.isEmpty ? 'Ingrese su nombre' : null,
+            ),
+            const SizedBox(height: 16),
+            TextFormField(
+              controller: apellidosController,
+              decoration: AppInputDecoration.buildInputDecoration(
+                context: context,
+                labelText: 'Apellidos',
+                prefixIcon: Icons.person,
+              ),
+              validator: (value) =>
+                  value == null || value.isEmpty ? 'Ingrese sus apellidos' : null,
+            ),
+            const SizedBox(height: 16),
+            TextFormField(
+              controller: emailController,
+              decoration: AppInputDecoration.buildInputDecoration(
+                context: context,
+                labelText: 'Correo Electrónico',
+                prefixIcon: Icons.email_outlined,
+              ),
+              keyboardType: TextInputType.emailAddress,
+              onChanged: onEmailChanged,
+              validator: (value) {
+                if (value == null || value.isEmpty) {
+                  return 'Ingrese su correo';
+                } else if (!RegexUtils.isValidEmail(value)) {
+                  return 'Ingrese un correo válido';
+                }
+                return null;
+              },
+            ),
+            const SizedBox(height: 16),
+            Row(
+              children: [
+                Container(
+                  width: 80,
+                  height: 56,
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(16),
+                    color: isDarkMode ? Colors.grey[800] : Colors.grey[100],
+                    border: Border.all(
+                      color: isDarkMode ? Colors.grey[600]! : Colors.grey[300]!,
+                      width: 1.0,
+                    ),
+                  ),
+                  child: const Center(
+                    child: Text(
+                      '🇨🇺 +53',
+                      style: TextStyle(fontSize: 14, fontWeight: FontWeight.w500),
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: TextFormField(
+                    controller: phoneController,
+                    keyboardType: TextInputType.phone,
+                    decoration: AppInputDecoration.buildInputDecoration(
+                      context: context,
+                      labelText: 'Número de Teléfono',
+                      prefixIcon: Icons.phone_outlined,
+                      hintText: '12345678',
+                    ),
+                    validator: (value) {
+                      if (value == null || value.isEmpty) {
+                        return 'Ingrese su teléfono';
+                      } else if (!RegexUtils.isValidPhone(value)) {
+                        return 'Ingrese un número válido';
+                      }
+                      return null;
+                    },
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 24),
+            Row(
+              children: [
+                Icon(Icons.lock_outline, color: AppColors.primary, size: 24),
+                const SizedBox(width: 8),
+                const Text(
+                  'Contraseña',
+                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600),
+                ),
+              ],
+            ),
+            const SizedBox(height: 16),
+            TextFormField(
+              controller: passwordController,
+              obscureText: obscurePassword,
+              decoration: AppInputDecoration.buildInputDecoration(
+                context: context,
+                labelText: 'Contraseña',
+                prefixIcon: Icons.lock_outline,
+                suffixIcon: IconButton(
+                  icon: Icon(
+                    obscurePassword ? Icons.visibility_off : Icons.visibility,
+                    color: AppColors.primary,
+                  ),
+                  onPressed: onTogglePasswordVisibility,
+                ),
+              ),
+              validator: validatePassword,
+            ),
+            const SizedBox(height: 16),
+            TextFormField(
+              controller: confirmPasswordController,
+              obscureText: obscureConfirmPassword,
+              decoration: AppInputDecoration.buildInputDecoration(
+                context: context,
+                labelText: 'Confirmar Contraseña',
+                prefixIcon: Icons.lock,
+                suffixIcon: IconButton(
+                  icon: Icon(
+                    obscureConfirmPassword ? Icons.visibility_off : Icons.visibility,
+                    color: AppColors.primary,
+                  ),
+                  onPressed: onToggleConfirmPasswordVisibility,
+                ),
+              ),
+              validator: (value) {
+                if (value == null || value.isEmpty) {
+                  return 'Confirme su contraseña';
+                }
+                // La comparación real debe hacerse en el widget padre
+                return null;
+              },
+            ),
+            const SizedBox(height: 20),
+            // Puedes agregar aquí los requisitos de contraseña si lo deseas
+          ],
+        ),
+      ),
+    );
+  }
+}

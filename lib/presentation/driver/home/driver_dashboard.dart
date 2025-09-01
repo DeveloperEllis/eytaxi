@@ -1,9 +1,9 @@
 import 'dart:async';
 import 'package:eytaxi/core/services/driver_services.dart';
 import 'package:eytaxi/core/services/theme_notifier.dart';
-import 'package:eytaxi/models/guest_contact_model.dart';
-import 'package:eytaxi/models/trip_request_model.dart';
-import 'package:eytaxi/models/ubicacion_model.dart';
+import 'package:eytaxi/data/models/guest_contact_model.dart';
+import 'package:eytaxi/data/models/ubicacion_model.dart';
+import 'package:eytaxi/features/trip_request/data/models/trip_request_model.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';

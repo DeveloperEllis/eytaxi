@@ -1,30 +1,12 @@
-import '../../core/services/supabase_service.dart';
-import '../../models/guest_contact_model.dart';
 
-class GuestContactRepository {
-  final SupabaseService _supabaseService = SupabaseService();
+import 'package:eytaxi/data/sources/guest_remote_datasource.dart';
+import 'package:eytaxi/data/models/guest_contact_model.dart';
 
-  Future<String> createGuestContact(GuestContact contact) async {
-    final response = await _supabaseService.client
-        .from('guest_contacts')
-        .insert(contact.toJson())
-        .select()
-        .single();
+class ExcursionRepository {
+  final GuestContactRemoteDataSource remoteDataSource;
+  ExcursionRepository(this.remoteDataSource);
 
-    if (response['id'] == null) {
-      throw Exception('Error al crear el contacto.');
-    }
-
-    return response['id'];
-  }
-
-  Future<GuestContact> getGuestContactById(String id) async {
-    final response = await _supabaseService.client
-        .from('guest_contacts')
-        .select()
-        .eq('id', id)
-        .single();
-
-    return GuestContact.fromJson(response);
+  Future<void> createExcursionReservation(GuestContact contact) async {
+    await remoteDataSource.createGuestContact(contact);
   }
 }
