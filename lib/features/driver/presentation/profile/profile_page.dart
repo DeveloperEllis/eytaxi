@@ -3,6 +3,7 @@ import 'package:eytaxi/core/constants/app_colors.dart';
 import 'package:eytaxi/core/services/storage_service.dart';
 import 'package:eytaxi/data/models/ubicacion_model.dart';
 import 'package:eytaxi/data/models/user_model.dart';
+import 'package:eytaxi/features/auth/utils/register_validators.dart';
 import 'package:eytaxi/features/driver/data/datasources/driver_profile_remote_datasource.dart';
 import 'package:eytaxi/features/driver/data/repositories/driver_profile_repository_impl.dart';
 import 'package:eytaxi/features/driver/presentation/profile/driver_profile_view_model.dart';
@@ -23,6 +24,9 @@ class ProfilePage extends StatefulWidget {
 class _ProfilePageState extends State<ProfilePage> {
   late final DriverProfileViewModel _vm;
   bool _isEditing = false;
+
+  // Form key para validaciones
+  final _formKey = GlobalKey<FormState>();
 
   // Controllers para los campos editables
   late final TextEditingController _nombreController;
@@ -244,16 +248,18 @@ class _ProfilePageState extends State<ProfilePage> {
       );
     }
 
-    return CustomScrollView(
-      slivers: [
-        // Header with cover photo and profile photo
-        _buildProfileHeader(model),
+    return Form(
+      key: _formKey,
+      child: CustomScrollView(
+        slivers: [
+          // Header with cover photo and profile photo
+          _buildProfileHeader(model),
 
-        // Profile info and other content
-        SliverToBoxAdapter(
-          child: Padding(
-            padding: const EdgeInsets.all(16),
-            child: Column(
+          // Profile info and other content
+          SliverToBoxAdapter(
+            child: Padding(
+              padding: const EdgeInsets.all(16),
+              child: Column(
               children: [
                 const SizedBox(height: 10), // Space for profile photo
                 _buildUserInfo(model),
@@ -265,6 +271,7 @@ class _ProfilePageState extends State<ProfilePage> {
           ),
         ),
       ],
+      ),
     );
   }
 
@@ -444,12 +451,14 @@ class _ProfilePageState extends State<ProfilePage> {
               label: 'Nombre',
               controller: _nombreController,
               icon: Icons.person,
+              validator: (value) => RegisterValidators.validateNonEmpty(value, 'nombre'),
             ),
             const SizedBox(height: 16),
             _buildEditableField(
               label: 'Apellidos',
               controller: _apellidosController,
               icon: Icons.person_outline,
+              validator: (value) => RegisterValidators.validateNonEmpty(value, 'apellidos'),
             ),
             const SizedBox(height: 16),
           ] else ...[
@@ -487,6 +496,7 @@ class _ProfilePageState extends State<ProfilePage> {
               controller: _phoneController,
               icon: Icons.phone,
               keyboardType: TextInputType.phone,
+              validator: RegisterValidators.validatePhone,
             ),
             const SizedBox(height: 16),
           ] else if (_phoneController.text.isNotEmpty) ...[
@@ -516,6 +526,7 @@ class _ProfilePageState extends State<ProfilePage> {
                 label: 'Número de licencia',
                 controller: _licenseController,
                 icon: Icons.credit_card,
+                validator: (value) => RegisterValidators.validateNonEmpty(value, 'número de licencia'),
               ),
               const SizedBox(height: 16),
               _buildCiudadOrigenField(),
@@ -565,7 +576,7 @@ class _ProfilePageState extends State<ProfilePage> {
               if (model.driver!.origen != null) ...[
                 _buildInfoRow(
                   icon: Icons.home_work,
-                  label: 'Ciudad de Residencia',
+                  label: 'Ciudad de residencia',
                   value:
                       '${model.driver!.origen!.nombre} (${model.driver!.origen!.codigo})',
                 ),
@@ -610,10 +621,12 @@ class _ProfilePageState extends State<ProfilePage> {
     required TextEditingController controller,
     required IconData icon,
     TextInputType keyboardType = TextInputType.text,
+    String? Function(String?)? validator,
   }) {
     return TextFormField(
       controller: controller,
       keyboardType: keyboardType,
+      validator: validator,
       decoration: InputDecoration(
         labelText: label,
         prefixIcon: Icon(icon, color: AppColors.primary),
@@ -628,6 +641,14 @@ class _ProfilePageState extends State<ProfilePage> {
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
           borderSide: BorderSide(color: AppColors.primary, width: 2),
+        ),
+        errorBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(12),
+          borderSide: const BorderSide(color: Colors.red, width: 2),
+        ),
+        focusedErrorBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(12),
+          borderSide: const BorderSide(color: Colors.red, width: 2),
         ),
         filled: true,
         fillColor: Colors.grey.shade50,
@@ -836,7 +857,54 @@ class _ProfilePageState extends State<ProfilePage> {
     );
   }
 
+  String? _validateAdditionalFields() {
+    // Validar información del conductor si existe
+    if (_vm.driver != null) {
+      // Validar capacidad del vehículo
+      if (_selectedCapacity == null || _selectedCapacity! <= 0) {
+        return 'Seleccione la capacidad del vehículo';
+      }
+
+      // Validar rutas y viajes locales
+      if (_selectedRoutes.isEmpty && !_viajesLocales) {
+        return 'Seleccione al menos una ruta o active la opción de viajes locales';
+      }
+
+      // Validar ciudad de origen
+      if (_selectedCiudadOrigen == null) {
+        return 'Seleccione su ciudad de origen';
+      }
+    }
+
+    return null; // Todo válido
+  }
+
   Future<void> _saveChanges(DriverProfileViewModel model) async {
+    // Validar formulario antes de guardar
+    if (!_formKey.currentState!.validate()) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Por favor, corrija los errores en el formulario'),
+          backgroundColor: Colors.red,
+        ),
+      );
+      return; // No continuar si hay errores de validación
+    }
+
+    // Validar campos adicionales que no están en el formulario
+    final validationError = _validateAdditionalFields();
+    if (validationError != null) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(validationError),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+      return; // No continuar si hay errores de validación
+    }
+
     // Mostrar indicador de carga
     showDialog(
       context: context,

@@ -45,14 +45,17 @@ class RegisterValidators {
   }
 
   static String? validatePhone(String? value) {
-    if (value == null || value.isEmpty) {
-      return 'Ingrese su número de teléfono';
-    }
-    if (!RegExp(r'^\+?[0-9]{10,15}$').hasMatch(value)) {
-      return 'Ingrese un número de teléfono válido';
-    }
-    return null;
+  if (value == null || value.trim().isEmpty) {
+    return 'Ingrese su número de teléfono';
   }
+
+  // Verificar que tenga exactamente 8 dígitos numéricos
+  if (!RegExp(r'^[0-9]{8}$').hasMatch(value)) {
+    return 'El número debe contener exactamente 8 dígitos';
+  }
+
+  return null;
+}
 
   static String? validateVehicleCapacity(String? value) {
     if (value == null || value.isEmpty) {

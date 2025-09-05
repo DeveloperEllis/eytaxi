@@ -1,3 +1,4 @@
+import 'package:eytaxi/core/constants/app_colors.dart';
 import 'package:eytaxi/core/services/locations_service.dart';
 import 'package:eytaxi/core/styles/input_decorations.dart';
 import 'package:eytaxi/core/styles/locations_autocomplete_style.dart';
@@ -10,7 +11,7 @@ class LocationAutocomplete extends StatefulWidget {
   final String labelText;
   final Ubicacion? selectedLocation;
   final ValueChanged<Ubicacion?> onSelected;
-  final UserType ?user;
+  final UserType? user;
 
   const LocationAutocomplete({
     super.key,
@@ -56,22 +57,24 @@ class _LocationAutocompleteState extends State<LocationAutocomplete> {
     return Autocomplete<Ubicacion>(
       optionsBuilder: (TextEditingValue textEditingValue) async {
         if (textEditingValue.text.length < 2) {
-          _isLoadingNotifier.value = false; // Desactiva el estado si el texto es muy corto
+          _isLoadingNotifier.value =
+              false; // Desactiva el estado si el texto es muy corto
           return [];
         }
         _isLoadingNotifier.value = true; // Activa el estado de carga al inicio
         try {
           final results = await service.fetchUbicaciones(textEditingValue.text);
-          final municipios = results.where((item) => item.tipo == 'municipio').toList();
+          final municipios =
+              results.where((item) => item.tipo == 'municipio').toList();
           return (widget.user == UserType.passenger) ? results : municipios;
         } finally {
           _isLoadingNotifier.value = false; // Desactiva el estado al finalizar
         }
       },
-    displayStringForOption:
-      (Ubicacion option) => '${option.nombre} (${option.codigo})',
+      displayStringForOption:
+          (Ubicacion option) => '${option.nombre} (${option.codigo})',
       onSelected: (Ubicacion selection) {
-  widget.controller.text = '${selection.nombre} (${selection.codigo})';
+        widget.controller.text = '${selection.nombre} (${selection.codigo})';
         widget.onSelected(selection);
       },
       fieldViewBuilder: (
@@ -146,17 +149,25 @@ class _LocationAutocompleteState extends State<LocationAutocomplete> {
                 }
               },
             ),
+          ).copyWith(
+            filled: true,
+            fillColor:
+                widget.user == UserType.driver
+                    ? Colors.grey.shade50 // 👈 Fondo diferente para drivers
+                    : AppColors.borderInput, // 👈 Fondo normal para otros usuarios
           ),
           onChanged: (value) {
-      if (widget.selectedLocation != null &&
-        value !=
-          '${widget.selectedLocation!.nombre} (${widget.selectedLocation!.codigo})') {
+            if (widget.selectedLocation != null &&
+                value !=
+                    '${widget.selectedLocation!.nombre} (${widget.selectedLocation!.codigo})') {
               widget.onSelected(null);
             }
           },
-          validator: (value) => value == null || value.isEmpty
-              ? 'Ingrese ${widget.labelText}'
-              : null,
+          validator:
+              (value) =>
+                  value == null || value.isEmpty
+                      ? 'Ingrese ${widget.labelText}'
+                      : null,
           onFieldSubmitted: (String value) {
             onFieldSubmitted();
           },
