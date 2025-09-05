@@ -50,6 +50,9 @@ class _ProfilePageState extends State<ProfilePage> {
   // Rutas con checkboxes
   final List<String> _availableRoutes = ['oriente', 'occidente', 'centro'];
   final Set<String> _selectedRoutes = {};
+  
+  // Variable separada para viajes locales
+  bool _viajesLocales = false;
 
   @override
   void initState() {
@@ -109,6 +112,9 @@ class _ProfilePageState extends State<ProfilePage> {
       // Actualizar rutas seleccionadas
       _selectedRoutes.clear();
       _selectedRoutes.addAll(model.driver!.routes);
+      
+      // Actualizar viajes locales
+      _viajesLocales = model.driver!.viajes_locales;
     }
   }
 
@@ -521,7 +527,15 @@ class _ProfilePageState extends State<ProfilePage> {
                   label: 'Rutas',
                   value: model.driver!.routes.join(', '),
                 ),
+                const SizedBox(height: 8),
               ],
+
+              // Mostrar viajes locales
+              _buildInfoRow(
+                icon: Icons.location_on,
+                label: 'Viajes locales',
+                value: model.driver!.viajes_locales ? 'Sí' : 'No',
+              ),
             ],
           ],
         ],
@@ -666,35 +680,78 @@ class _ProfilePageState extends State<ProfilePage> {
           ),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
-            children:
-                _availableRoutes.map((route) {
-                  return CheckboxListTile(
-                    title: Text(
-                      route,
-                      style: const TextStyle(
+            children: [
+              // Rutas principales (Oriente, Occidente, Centro)
+              ..._availableRoutes.map((route) {
+                return CheckboxListTile(
+                  title: Text(
+                    route.toUpperCase(),
+                    style: const TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
+                  value: _selectedRoutes.contains(route),
+                  onChanged: (bool? value) {
+                    setState(() {
+                      if (value == true) {
+                        _selectedRoutes.add(route);
+                      } else {
+                        _selectedRoutes.remove(route);
+                      }
+                      // Actualizar el controller para mantener compatibilidad
+                      _routesController.text = _selectedRoutes.join(', ');
+                    });
+                  },
+                  activeColor: AppColors.primary,
+                  checkColor: Colors.white,
+                  controlAffinity: ListTileControlAffinity.leading,
+                  contentPadding: EdgeInsets.zero,
+                  dense: true,
+                );
+              }),
+              
+              // Separador visual
+              if (_availableRoutes.isNotEmpty) ...[
+                const SizedBox(height: 8),
+                Divider(color: Colors.grey.shade300, thickness: 1),
+                const SizedBox(height: 8),
+              ],
+              
+              // Checkbox para Viajes Locales
+              CheckboxListTile(
+                title: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Text(
+                      'VIAJES LOCALES',
+                      style: TextStyle(
                         fontSize: 16,
                         fontWeight: FontWeight.w500,
                       ),
                     ),
-                    value: _selectedRoutes.contains(route),
-                    onChanged: (bool? value) {
-                      setState(() {
-                        if (value == true) {
-                          _selectedRoutes.add(route);
-                        } else {
-                          _selectedRoutes.remove(route);
-                        }
-                        // Actualizar el controller para mantener compatibilidad
-                        _routesController.text = _selectedRoutes.join(', ');
-                      });
-                    },
-                    activeColor: AppColors.primary,
-                    checkColor: Colors.white,
-                    controlAffinity: ListTileControlAffinity.leading,
-                    contentPadding: EdgeInsets.zero,
-                    dense: true,
-                  );
-                }).toList(),
+                    Text(
+                      'Rutas locales dentro de la provincia',
+                      style: TextStyle(
+                        fontSize: 12,
+                        color: Colors.grey.shade600,
+                      ),
+                    ),
+                  ],
+                ),
+                value: _viajesLocales,
+                onChanged: (bool? value) {
+                  setState(() {
+                    _viajesLocales = value ?? false;
+                  });
+                },
+                activeColor: Colors.green,
+                checkColor: Colors.white,
+                controlAffinity: ListTileControlAffinity.leading,
+                contentPadding: EdgeInsets.zero,
+                dense: true,
+              ),
+            ],
           ),
         ),
         if (_selectedRoutes.isNotEmpty) ...[
@@ -770,6 +827,7 @@ class _ProfilePageState extends State<ProfilePage> {
           licenseNumber: _licenseController.text.trim(),
           vehicleCapacity: _selectedCapacity,
           routes: routes,
+          viajesLocales: _viajesLocales,
         );
       }
 
