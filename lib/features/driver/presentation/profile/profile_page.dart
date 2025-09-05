@@ -1,9 +1,12 @@
 import 'dart:io';
 import 'package:eytaxi/core/constants/app_colors.dart';
 import 'package:eytaxi/core/services/storage_service.dart';
+import 'package:eytaxi/data/models/ubicacion_model.dart';
+import 'package:eytaxi/data/models/user_model.dart';
 import 'package:eytaxi/features/driver/data/datasources/driver_profile_remote_datasource.dart';
 import 'package:eytaxi/features/driver/data/repositories/driver_profile_repository_impl.dart';
 import 'package:eytaxi/features/driver/presentation/profile/driver_profile_view_model.dart';
+import 'package:eytaxi/features/trip_request/presentation/pages/widgets/location_autocomplete.dart';
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
@@ -28,6 +31,10 @@ class _ProfilePageState extends State<ProfilePage> {
   late final TextEditingController _licenseController;
   late final TextEditingController _capacityController;
   late final TextEditingController _routesController;
+  late final TextEditingController _ciudadOrigenController;
+
+  // Variables para la ciudad de origen
+  Ubicacion? _selectedCiudadOrigen;
 
   // Dropdown para capacidad
   int? _selectedCapacity;
@@ -50,7 +57,7 @@ class _ProfilePageState extends State<ProfilePage> {
   // Rutas con checkboxes
   final List<String> _availableRoutes = ['oriente', 'occidente', 'centro'];
   final Set<String> _selectedRoutes = {};
-  
+
   // Variable separada para viajes locales
   bool _viajesLocales = false;
 
@@ -65,6 +72,7 @@ class _ProfilePageState extends State<ProfilePage> {
     _licenseController = TextEditingController();
     _capacityController = TextEditingController();
     _routesController = TextEditingController();
+    _ciudadOrigenController = TextEditingController();
 
     final user = Supabase.instance.client.auth.currentUser;
     final repo = DriverProfileRepositoryImpl(
@@ -91,6 +99,7 @@ class _ProfilePageState extends State<ProfilePage> {
     _licenseController.dispose();
     _capacityController.dispose();
     _routesController.dispose();
+    _ciudadOrigenController.dispose();
     super.dispose();
   }
 
@@ -112,9 +121,21 @@ class _ProfilePageState extends State<ProfilePage> {
       // Actualizar rutas seleccionadas
       _selectedRoutes.clear();
       _selectedRoutes.addAll(model.driver!.routes);
-      
+
       // Actualizar viajes locales
       _viajesLocales = model.driver!.viajes_locales;
+
+      // Actualizar ciudad de origen
+      _selectedCiudadOrigen = model.driver!.origen;
+      if (_selectedCiudadOrigen != null) {
+        final ciudadText = '${_selectedCiudadOrigen!.nombre} (${_selectedCiudadOrigen!.codigo})';
+        _ciudadOrigenController.text = ciudadText;
+        print('DEBUG: Ciudad de origen cargada: $ciudadText');
+        print('DEBUG: Ubicacion objeto: $_selectedCiudadOrigen');
+      } else {
+        _ciudadOrigenController.text = '';
+        print('DEBUG: Ciudad de origen es nula');
+      }
     }
   }
 
@@ -134,44 +155,44 @@ class _ProfilePageState extends State<ProfilePage> {
                 !model.loading && model.error == null
                     ? _isEditing
                         ? Row(
-                            mainAxisAlignment: MainAxisAlignment.end,
-                            children: [
-                              FloatingActionButton.extended(
-                                onPressed: () => _saveChanges(model),
-                                icon: const Icon(Icons.save),
-                                label: const Text('Guardar'),
-                                backgroundColor: AppColors.primary,
-                                foregroundColor: Colors.white,
-                                heroTag: "save",
-                              ),
-                              const SizedBox(width: 10),
-                              FloatingActionButton.extended(
-                                onPressed: () {
-                                  setState(() {
-                                    _isEditing = false;
-                                  });
-                                  _updateControllers(model);
-                                },
-                                icon: const Icon(Icons.close),
-                                label: const Text('Cancelar'),
-                                backgroundColor: Colors.red,
-                                foregroundColor: Colors.white,
-                                heroTag: "cancel",
-                              ),
-                            ],
-                          )
+                          mainAxisAlignment: MainAxisAlignment.end,
+                          children: [
+                            FloatingActionButton.extended(
+                              onPressed: () => _saveChanges(model),
+                              icon: const Icon(Icons.save),
+                              label: const Text('Guardar'),
+                              backgroundColor: AppColors.primary,
+                              foregroundColor: Colors.white,
+                              heroTag: "save",
+                            ),
+                            const SizedBox(width: 10),
+                            FloatingActionButton.extended(
+                              onPressed: () {
+                                setState(() {
+                                  _isEditing = false;
+                                });
+                                _updateControllers(model);
+                              },
+                              icon: const Icon(Icons.close),
+                              label: const Text('Cancelar'),
+                              backgroundColor: Colors.red,
+                              foregroundColor: Colors.white,
+                              heroTag: "cancel",
+                            ),
+                          ],
+                        )
                         : FloatingActionButton.extended(
-                            onPressed: () {
-                              setState(() {
-                                _isEditing = true;
-                              });
-                            },
-                            icon: const Icon(Icons.edit),
-                            label: const Text('Editar'),
-                            backgroundColor: AppColors.primary,
-                            foregroundColor: Colors.white,
-                            heroTag: "edit",
-                          )
+                          onPressed: () {
+                            setState(() {
+                              _isEditing = true;
+                            });
+                          },
+                          icon: const Icon(Icons.edit),
+                          label: const Text('Editar'),
+                          backgroundColor: AppColors.primary,
+                          foregroundColor: Colors.white,
+                          heroTag: "edit",
+                        )
                     : null,
           );
         },
@@ -497,6 +518,8 @@ class _ProfilePageState extends State<ProfilePage> {
                 icon: Icons.credit_card,
               ),
               const SizedBox(height: 16),
+              _buildCiudadOrigenField(),
+              const SizedBox(height: 16),
               _buildCapacityDropdown(),
               const SizedBox(height: 16),
               _buildRoutesDropdown(),
@@ -536,6 +559,17 @@ class _ProfilePageState extends State<ProfilePage> {
                 label: 'Viajes locales',
                 value: model.driver!.viajes_locales ? 'Sí' : 'No',
               ),
+              const SizedBox(height: 8),
+
+              // Mostrar ciudad de origen
+              if (model.driver!.origen != null) ...[
+                _buildInfoRow(
+                  icon: Icons.home_work,
+                  label: 'Ciudad de Residencia',
+                  value:
+                      '${model.driver!.origen!.nombre} (${model.driver!.origen!.codigo})',
+                ),
+              ],
             ],
           ],
         ],
@@ -710,14 +744,14 @@ class _ProfilePageState extends State<ProfilePage> {
                   dense: true,
                 );
               }),
-              
+
               // Separador visual
               if (_availableRoutes.isNotEmpty) ...[
                 const SizedBox(height: 8),
                 Divider(color: Colors.grey.shade300, thickness: 1),
                 const SizedBox(height: 8),
               ],
-              
+
               // Checkbox para Viajes Locales
               CheckboxListTile(
                 title: Column(
@@ -788,6 +822,20 @@ class _ProfilePageState extends State<ProfilePage> {
     );
   }
 
+  Widget _buildCiudadOrigenField() {
+    return LocationAutocomplete(
+      controller: _ciudadOrigenController,
+      labelText: 'Selecciona tu ciudad de residencia',
+      selectedLocation: _selectedCiudadOrigen,
+      onSelected: (Ubicacion? selected) {
+        setState(() {
+          _selectedCiudadOrigen = selected;
+        });
+      },
+      user: UserType.driver,
+    );
+  }
+
   Future<void> _saveChanges(DriverProfileViewModel model) async {
     // Mostrar indicador de carga
     showDialog(
@@ -828,6 +876,7 @@ class _ProfilePageState extends State<ProfilePage> {
           vehicleCapacity: _selectedCapacity,
           routes: routes,
           viajesLocales: _viajesLocales,
+          idMunicipioDeOrigen: _selectedCiudadOrigen?.id,
         );
       }
 

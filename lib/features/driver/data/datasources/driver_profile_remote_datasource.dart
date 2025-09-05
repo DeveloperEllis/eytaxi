@@ -29,19 +29,19 @@ class DriverProfileRemoteDataSource {
           ...Map<String, dynamic>.from(up),
         };
         
-        // TODO: Obtener información del municipio de origen cuando la tabla ubicaciones esté disponible
-        // final municipioId = drvRes['id_municipio_de_origen'] as int?;
-        // if (municipioId != null && municipioId > 0) {
-        //   final municipioRes = await client
-        //       .from('ubicaciones')
-        //       .select('id, nombre, codigo, tipo')
-        //       .eq('id', municipioId)
-        //       .maybeSingle();
-        //       
-        //   if (municipioRes != null) {
-        //     merged['origen'] = municipioRes;
-        //   }
-        // }
+        // Obtener información del municipio de origen
+        final municipioId = drvRes['id_municipio_de_origen'] as int?;
+        if (municipioId != null && municipioId > 0) {
+          final municipioRes = await client
+              .from('ubicaciones_cuba')
+              .select('id, nombre, codigo, region, tipo, provincia')
+              .eq('id', municipioId)
+              .maybeSingle();
+              
+          if (municipioRes != null) {
+            merged['origen'] = municipioRes;
+          }
+        }
         
         driver = Driver.fromJson(merged);
       }
