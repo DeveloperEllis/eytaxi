@@ -20,29 +20,43 @@ class ProfilePage extends StatefulWidget {
 class _ProfilePageState extends State<ProfilePage> {
   late final DriverProfileViewModel _vm;
   bool _isEditing = false;
-  
+
   // Controllers para los campos editables
   late final TextEditingController _nombreController;
   late final TextEditingController _apellidosController;
   late final TextEditingController _phoneController;
   late final TextEditingController _licenseController;
   late final TextEditingController _capacityController;
-  
+
   // Dropdown para capacidad
   int? _selectedCapacity;
-  final List<int> _capacityOptions = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 12, 15, 20];
-  
+  final List<int> _capacityOptions = [
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7,
+    8,
+    9,
+    10,
+    12,
+    15,
+    20,
+  ];
+
   @override
   void initState() {
     super.initState();
-    
+
     // Inicializar controllers
     _nombreController = TextEditingController();
     _apellidosController = TextEditingController();
     _phoneController = TextEditingController();
     _licenseController = TextEditingController();
     _capacityController = TextEditingController();
-    
+
     final user = Supabase.instance.client.auth.currentUser;
     final repo = DriverProfileRepositoryImpl(
       DriverProfileRemoteDataSource(Supabase.instance.client),
@@ -53,7 +67,7 @@ class _ProfilePageState extends State<ProfilePage> {
       storage: storage,
       userId: user?.id ?? '',
     );
-    
+
     // Cargar datos después de que el widget se haya construido
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _vm.load();
@@ -75,11 +89,14 @@ class _ProfilePageState extends State<ProfilePage> {
     _nombreController.text = up['nombre'] as String? ?? '';
     _apellidosController.text = up['apellidos'] as String? ?? '';
     _phoneController.text = up['phone_number'] as String? ?? '';
-    
+
     if (model.driver != null) {
       _licenseController.text = model.driver!.licenseNumber;
       _capacityController.text = model.driver!.vehicleCapacity.toString();
-      _selectedCapacity = model.driver!.vehicleCapacity > 0 ? model.driver!.vehicleCapacity : null;
+      _selectedCapacity =
+          model.driver!.vehicleCapacity > 0
+              ? model.driver!.vehicleCapacity
+              : null;
     }
   }
 
@@ -91,27 +108,28 @@ class _ProfilePageState extends State<ProfilePage> {
         builder: (context, model, _) {
           return Scaffold(
             backgroundColor: Colors.grey.shade100,
-            body: model.loading
-                ? const Center(
-                    child: CircularProgressIndicator(),
-                  )
-                : _buildProfileContent(model),
-            floatingActionButton: !model.loading && model.error == null
-                ? FloatingActionButton.extended(
-                    onPressed: () {
-                      setState(() {
-                        _isEditing = !_isEditing;
-                      });
-                      if (!_isEditing) {
-                        _updateControllers(model);
-                      }
-                    },
-                    icon: Icon(_isEditing ? Icons.close : Icons.edit),
-                    label: Text(_isEditing ? 'Cancelar' : 'Editar'),
-                    backgroundColor: _isEditing ? Colors.red : AppColors.primary,
-                    foregroundColor: Colors.white,
-                  )
-                : null,
+            body:
+                model.loading
+                    ? const Center(child: CircularProgressIndicator())
+                    : _buildProfileContent(model),
+            floatingActionButton:
+                !model.loading && model.error == null
+                    ? FloatingActionButton.extended(
+                      onPressed: () {
+                        setState(() {
+                          _isEditing = !_isEditing;
+                        });
+                        if (!_isEditing) {
+                          _updateControllers(model);
+                        }
+                      },
+                      icon: Icon(_isEditing ? Icons.close : Icons.edit),
+                      label: Text(_isEditing ? 'Cancelar' : 'Editar'),
+                      backgroundColor:
+                          _isEditing ? Colors.red : AppColors.primary,
+                      foregroundColor: Colors.white,
+                    )
+                    : null,
           );
         },
       ),
@@ -124,11 +142,7 @@ class _ProfilePageState extends State<ProfilePage> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(
-              Icons.error_outline,
-              size: 64,
-              color: Colors.red.shade400,
-            ),
+            Icon(Icons.error_outline, size: 64, color: Colors.red.shade400),
             const SizedBox(height: 16),
             Text(
               'Error al cargar el perfil',
@@ -142,10 +156,7 @@ class _ProfilePageState extends State<ProfilePage> {
             Text(
               model.error!,
               textAlign: TextAlign.center,
-              style: TextStyle(
-                fontSize: 16,
-                color: Colors.grey.shade600,
-              ),
+              style: TextStyle(fontSize: 16, color: Colors.grey.shade600),
             ),
             const SizedBox(height: 24),
             ElevatedButton.icon(
@@ -158,7 +169,10 @@ class _ProfilePageState extends State<ProfilePage> {
               style: ElevatedButton.styleFrom(
                 backgroundColor: AppColors.primary,
                 foregroundColor: Colors.white,
-                padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 24,
+                  vertical: 12,
+                ),
               ),
             ),
           ],
@@ -170,26 +184,17 @@ class _ProfilePageState extends State<ProfilePage> {
       slivers: [
         // Header with cover photo and profile photo
         _buildProfileHeader(model),
-        
+
         // Profile info and other content
         SliverToBoxAdapter(
           child: Padding(
             padding: const EdgeInsets.all(16),
             child: Column(
               children: [
-                const SizedBox(height: 80), // Space for profile photo
+                const SizedBox(height: 10), // Space for profile photo
                 _buildUserInfo(model),
                 const SizedBox(height: 20),
                 // Botón para recargar datos
-                ElevatedButton.icon(
-                  onPressed: () => model.load(),
-                  icon: const Icon(Icons.refresh),
-                  label: const Text('Actualizar datos'),
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: AppColors.primary,
-                    foregroundColor: Colors.white,
-                  ),
-                ),
                 const SizedBox(height: 20),
               ],
             ),
@@ -214,7 +219,7 @@ class _ProfilePageState extends State<ProfilePage> {
           children: [
             // Foto del vehículo como fondo (cover photo)
             _buildCoverPhoto(vehiclePhotoUrl, model),
-            
+
             // Foto de perfil superpuesta
             Positioned(
               bottom: 20,
@@ -227,7 +232,10 @@ class _ProfilePageState extends State<ProfilePage> {
     );
   }
 
-  Widget _buildCoverPhoto(String? vehiclePhotoUrl, DriverProfileViewModel model) {
+  Widget _buildCoverPhoto(
+    String? vehiclePhotoUrl,
+    DriverProfileViewModel model,
+  ) {
     return GestureDetector(
       onTap: () => _pickAndUploadVehiclePhoto(model, ImageSource.gallery),
       child: Container(
@@ -235,76 +243,81 @@ class _ProfilePageState extends State<ProfilePage> {
         height: double.infinity,
         decoration: BoxDecoration(
           color: Colors.grey.shade300,
-          image: vehiclePhotoUrl != null
-              ? DecorationImage(
-                  image: NetworkImage(vehiclePhotoUrl),
-                  fit: BoxFit.cover,
-                )
-              : null,
+          image:
+              vehiclePhotoUrl != null
+                  ? DecorationImage(
+                    image: NetworkImage(vehiclePhotoUrl),
+                    fit: BoxFit.cover,
+                  )
+                  : null,
         ),
-        child: vehiclePhotoUrl == null
-            ? Container(
-                decoration: BoxDecoration(
-                  gradient: LinearGradient(
-                    begin: Alignment.topCenter,
-                    end: Alignment.bottomCenter,
-                    colors: [
-                      AppColors.primary.withOpacity(0.7),
-                      AppColors.primary.withOpacity(0.9),
-                    ],
+        child:
+            vehiclePhotoUrl == null
+                ? Container(
+                  decoration: BoxDecoration(
+                    gradient: LinearGradient(
+                      begin: Alignment.topCenter,
+                      end: Alignment.bottomCenter,
+                      colors: [
+                        AppColors.primary.withOpacity(0.7),
+                        AppColors.primary.withOpacity(0.9),
+                      ],
+                    ),
                   ),
-                ),
-                child: const Center(
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Icon(
-                        Icons.directions_car,
-                        size: 48,
-                        color: Colors.white,
-                      ),
-                      SizedBox(height: 8),
-                      Text(
-                        'Toca para agregar foto del vehículo',
-                        style: TextStyle(
+                  child: const Center(
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Icon(
+                          Icons.directions_car,
+                          size: 48,
                           color: Colors.white,
-                          fontSize: 16,
-                          fontWeight: FontWeight.w500,
                         ),
-                        textAlign: TextAlign.center,
+                        SizedBox(height: 8),
+                        Text(
+                          'Toca para agregar foto del vehículo',
+                          style: TextStyle(
+                            color: Colors.white,
+                            fontSize: 16,
+                            fontWeight: FontWeight.w500,
+                          ),
+                          textAlign: TextAlign.center,
+                        ),
+                      ],
+                    ),
+                  ),
+                )
+                : Container(
+                  decoration: BoxDecoration(
+                    gradient: LinearGradient(
+                      begin: Alignment.topCenter,
+                      end: Alignment.bottomCenter,
+                      colors: [
+                        Colors.transparent,
+                        Colors.black.withOpacity(0.3),
+                      ],
+                    ),
+                  ),
+                  child: const Align(
+                    alignment: Alignment.topRight,
+                    child: Padding(
+                      padding: EdgeInsets.all(16),
+                      child: Icon(
+                        Icons.camera_alt,
+                        color: Colors.white,
+                        size: 24,
                       ),
-                    ],
-                  ),
-                ),
-              )
-            : Container(
-                decoration: BoxDecoration(
-                  gradient: LinearGradient(
-                    begin: Alignment.topCenter,
-                    end: Alignment.bottomCenter,
-                    colors: [
-                      Colors.transparent,
-                      Colors.black.withOpacity(0.3),
-                    ],
-                  ),
-                ),
-                child: const Align(
-                  alignment: Alignment.topRight,
-                  child: Padding(
-                    padding: EdgeInsets.all(16),
-                    child: Icon(
-                      Icons.camera_alt,
-                      color: Colors.white,
-                      size: 24,
                     ),
                   ),
                 ),
-              ),
       ),
     );
   }
 
-  Widget _buildProfilePhoto(String? profilePhotoUrl, DriverProfileViewModel model) {
+  Widget _buildProfilePhoto(
+    String? profilePhotoUrl,
+    DriverProfileViewModel model,
+  ) {
     return GestureDetector(
       onTap: () => _pickAndUploadProfilePhoto(model, ImageSource.gallery),
       child: Container(
@@ -312,10 +325,7 @@ class _ProfilePageState extends State<ProfilePage> {
         height: 120,
         decoration: BoxDecoration(
           shape: BoxShape.circle,
-          border: Border.all(
-            color: Colors.white,
-            width: 4,
-          ),
+          border: Border.all(color: Colors.white, width: 4),
           boxShadow: [
             BoxShadow(
               color: Colors.black.withOpacity(0.2),
@@ -327,16 +337,12 @@ class _ProfilePageState extends State<ProfilePage> {
         child: CircleAvatar(
           radius: 56,
           backgroundColor: Colors.grey.shade300,
-          backgroundImage: profilePhotoUrl != null
-              ? NetworkImage(profilePhotoUrl)
-              : null,
-          child: profilePhotoUrl == null
-              ? const Icon(
-                  Icons.person,
-                  size: 50,
-                  color: Colors.grey,
-                )
-              : null,
+          backgroundImage:
+              profilePhotoUrl != null ? NetworkImage(profilePhotoUrl) : null,
+          child:
+              profilePhotoUrl == null
+                  ? const Icon(Icons.person, size: 50, color: Colors.grey)
+                  : null,
         ),
       ),
     );
@@ -347,7 +353,7 @@ class _ProfilePageState extends State<ProfilePage> {
     if (!_isEditing) {
       _updateControllers(model);
     }
-    
+
     final up = model.userProfile ?? {};
     final email = up['email'] as String? ?? '';
 
@@ -386,7 +392,7 @@ class _ProfilePageState extends State<ProfilePage> {
             ),
             const SizedBox(height: 16),
           ],
-          
+
           // Nombre y apellidos
           if (_isEditing) ...[
             _buildEditableField(
@@ -403,8 +409,11 @@ class _ProfilePageState extends State<ProfilePage> {
             const SizedBox(height: 16),
           ] else ...[
             Text(
-              '${_nombreController.text} ${_apellidosController.text}'.trim().isNotEmpty 
-                  ? '${_nombreController.text} ${_apellidosController.text}'.trim()
+              '${_nombreController.text} ${_apellidosController.text}'
+                      .trim()
+                      .isNotEmpty
+                  ? '${_nombreController.text} ${_apellidosController.text}'
+                      .trim()
                   : 'Usuario sin nombre',
               style: const TextStyle(
                 fontSize: 28,
@@ -415,20 +424,17 @@ class _ProfilePageState extends State<ProfilePage> {
             ),
             const SizedBox(height: 8),
           ],
-          
+
           // Email (no editable - solo mostrar cuando no esté editando)
           if (!_isEditing && email.isNotEmpty) ...[
             Text(
               email,
-              style: TextStyle(
-                fontSize: 16,
-                color: Colors.grey.shade600,
-              ),
+              style: TextStyle(fontSize: 16, color: Colors.grey.shade600),
               textAlign: TextAlign.center,
             ),
             const SizedBox(height: 8),
           ],
-          
+
           // Teléfono
           if (_isEditing) ...[
             _buildEditableField(
@@ -442,70 +448,22 @@ class _ProfilePageState extends State<ProfilePage> {
             Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                Icon(
-                  Icons.phone,
-                  size: 16,
-                  color: Colors.grey.shade600,
-                ),
+                Icon(Icons.phone, size: 16, color: Colors.grey.shade600),
                 const SizedBox(width: 4),
                 Text(
                   _phoneController.text,
-                  style: TextStyle(
-                    fontSize: 16,
-                    color: Colors.grey.shade600,
-                  ),
+                  style: TextStyle(fontSize: 16, color: Colors.grey.shade600),
                 ),
               ],
             ),
             const SizedBox(height: 12),
           ],
-          
+
           // Estado del conductor (solo mostrar cuando no esté editando)
           if (!_isEditing && model.driver != null) ...[
-            GestureDetector(
-              onTap: () => _toggleAvailability(model),
-              child: Container(
-                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                decoration: BoxDecoration(
-                  color: model.driver!.isAvailable 
-                      ? Colors.green.withOpacity(0.1) 
-                      : Colors.red.withOpacity(0.1),
-                  borderRadius: BorderRadius.circular(25),
-                  border: Border.all(
-                    color: model.driver!.isAvailable ? Colors.green : Colors.red,
-                    width: 1,
-                  ),
-                ),
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Icon(
-                      model.driver!.isAvailable ? Icons.check_circle : Icons.cancel,
-                      color: model.driver!.isAvailable ? Colors.green : Colors.red,
-                      size: 18,
-                    ),
-                    const SizedBox(width: 6),
-                    Text(
-                      model.driver!.isAvailable ? 'Disponible' : 'No disponible',
-                      style: TextStyle(
-                        color: model.driver!.isAvailable ? Colors.green : Colors.red,
-                        fontWeight: FontWeight.w600,
-                        fontSize: 14,
-                      ),
-                    ),
-                    const SizedBox(width: 6),
-                    Icon(
-                      Icons.touch_app,
-                      size: 14,
-                      color: model.driver!.isAvailable ? Colors.green : Colors.red,
-                    ),
-                  ],
-                ),
-              ),
-            ),
             const SizedBox(height: 12),
           ],
-            
+
           // Información adicional del conductor
           if (model.driver != null) ...[
             if (_isEditing) ...[
@@ -526,8 +484,9 @@ class _ProfilePageState extends State<ProfilePage> {
                 ),
                 const SizedBox(height: 8),
               ],
-              
-              if (_capacityController.text.isNotEmpty && _capacityController.text != '0') ...[
+
+              if (_capacityController.text.isNotEmpty &&
+                  _capacityController.text != '0') ...[
                 _buildInfoRow(
                   icon: Icons.people,
                   label: 'Capacidad',
@@ -535,7 +494,7 @@ class _ProfilePageState extends State<ProfilePage> {
                 ),
                 const SizedBox(height: 8),
               ],
-              
+
               if (model.driver!.routes.isNotEmpty) ...[
                 _buildInfoRow(
                   icon: Icons.route,
@@ -557,11 +516,7 @@ class _ProfilePageState extends State<ProfilePage> {
   }) {
     return Row(
       children: [
-        Icon(
-          icon,
-          size: 18,
-          color: AppColors.primary,
-        ),
+        Icon(icon, size: 18, color: AppColors.primary),
         const SizedBox(width: 8),
         Text(
           '$label: ',
@@ -574,10 +529,7 @@ class _ProfilePageState extends State<ProfilePage> {
         Expanded(
           child: Text(
             value,
-            style: TextStyle(
-              fontSize: 14,
-              color: Colors.grey.shade700,
-            ),
+            style: TextStyle(fontSize: 14, color: Colors.grey.shade700),
             overflow: TextOverflow.ellipsis,
           ),
         ),
@@ -611,7 +563,10 @@ class _ProfilePageState extends State<ProfilePage> {
         ),
         filled: true,
         fillColor: Colors.grey.shade50,
-        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+        contentPadding: const EdgeInsets.symmetric(
+          horizontal: 16,
+          vertical: 12,
+        ),
       ),
     );
   }
@@ -636,15 +591,21 @@ class _ProfilePageState extends State<ProfilePage> {
         ),
         filled: true,
         fillColor: Colors.grey.shade50,
-        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+        contentPadding: const EdgeInsets.symmetric(
+          horizontal: 16,
+          vertical: 12,
+        ),
       ),
       hint: const Text('Selecciona la capacidad'),
-      items: _capacityOptions.map((int capacity) {
-        return DropdownMenuItem<int>(
-          value: capacity,
-          child: Text('$capacity ${capacity == 1 ? 'pasajero' : 'pasajeros'}'),
-        );
-      }).toList(),
+      items:
+          _capacityOptions.map((int capacity) {
+            return DropdownMenuItem<int>(
+              value: capacity,
+              child: Text(
+                '$capacity ${capacity == 1 ? 'pasajero' : 'pasajeros'}',
+              ),
+            );
+          }).toList(),
       onChanged: (int? newValue) {
         setState(() {
           _selectedCapacity = newValue;
@@ -661,16 +622,17 @@ class _ProfilePageState extends State<ProfilePage> {
     showDialog(
       context: context,
       barrierDismissible: false,
-      builder: (context) => const AlertDialog(
-        content: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            CircularProgressIndicator(),
-            SizedBox(width: 16),
-            Text('Guardando cambios...'),
-          ],
-        ),
-      ),
+      builder:
+          (context) => const AlertDialog(
+            content: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                CircularProgressIndicator(),
+                SizedBox(width: 16),
+                Text('Guardando cambios...'),
+              ],
+            ),
+          ),
     );
 
     try {
@@ -699,7 +661,7 @@ class _ProfilePageState extends State<ProfilePage> {
         setState(() {
           _isEditing = false;
         });
-        
+
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(
@@ -732,62 +694,12 @@ class _ProfilePageState extends State<ProfilePage> {
     }
   }
 
-  Future<void> _toggleAvailability(DriverProfileViewModel model) async {
-    if (model.driver == null) return;
-    
-    final newAvailability = !model.driver!.isAvailable;
-    
-    // Mostrar diálogo de confirmación
-    final confirmed = await showDialog<bool>(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Cambiar disponibilidad'),
-        content: Text(
-          newAvailability 
-              ? '¿Deseas estar disponible para recibir viajes?' 
-              : '¿Deseas dejar de estar disponible para viajes?'
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(context).pop(false),
-            child: const Text('Cancelar'),
-          ),
-          ElevatedButton(
-            onPressed: () => Navigator.of(context).pop(true),
-            style: ElevatedButton.styleFrom(
-              backgroundColor: newAvailability ? Colors.green : Colors.red,
-              foregroundColor: Colors.white,
-            ),
-            child: Text(newAvailability ? 'Estar disponible' : 'No disponible'),
-          ),
-        ],
-      ),
-    );
-
-    if (confirmed != true) return;
-
-    // Actualizar disponibilidad
-    final success = await model.updateDriverInfo(
-      isAvailable: newAvailability,
-    );
-
-    if (mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(
-            success 
-                ? (newAvailability ? 'Ahora estás disponible para viajes' : 'Ya no estás disponible para viajes')
-                : 'Error al cambiar la disponibilidad'
-          ),
-          backgroundColor: success ? Colors.green : Colors.red,
-        ),
-      );
-    }
-  }
-
-  Future<void> _pickAndUploadProfilePhoto(DriverProfileViewModel model, ImageSource source) async {
+  Future<void> _pickAndUploadProfilePhoto(
+    DriverProfileViewModel model,
+    ImageSource source,
+  ) async {
     final picker = ImagePicker();
-    
+
     try {
       final pickedFile = await picker.pickImage(
         source: source,
@@ -795,7 +707,7 @@ class _ProfilePageState extends State<ProfilePage> {
         maxWidth: 1024,
         maxHeight: 1024,
       );
-      
+
       if (pickedFile == null) return;
 
       // Mostrar indicador de carga
@@ -803,21 +715,22 @@ class _ProfilePageState extends State<ProfilePage> {
         showDialog(
           context: context,
           barrierDismissible: false,
-          builder: (context) => const AlertDialog(
-            content: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                CircularProgressIndicator(),
-                SizedBox(width: 16),
-                Text('Subiendo foto de perfil...'),
-              ],
-            ),
-          ),
+          builder:
+              (context) => const AlertDialog(
+                content: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    CircularProgressIndicator(),
+                    SizedBox(width: 16),
+                    Text('Subiendo foto de perfil...'),
+                  ],
+                ),
+              ),
         );
       }
 
       bool success = false;
-      
+
       if (kIsWeb) {
         final bytes = await pickedFile.readAsBytes();
         success = await model.changePhoto(webBytes: bytes);
@@ -831,7 +744,7 @@ class _ProfilePageState extends State<ProfilePage> {
       }
 
       if (!mounted) return;
-      
+
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(
@@ -853,9 +766,12 @@ class _ProfilePageState extends State<ProfilePage> {
     }
   }
 
-  Future<void> _pickAndUploadVehiclePhoto(DriverProfileViewModel model, ImageSource source) async {
+  Future<void> _pickAndUploadVehiclePhoto(
+    DriverProfileViewModel model,
+    ImageSource source,
+  ) async {
     final picker = ImagePicker();
-    
+
     try {
       final pickedFile = await picker.pickImage(
         source: source,
@@ -863,7 +779,7 @@ class _ProfilePageState extends State<ProfilePage> {
         maxWidth: 1024,
         maxHeight: 1024,
       );
-      
+
       if (pickedFile == null) return;
 
       // Mostrar indicador de carga
@@ -871,21 +787,22 @@ class _ProfilePageState extends State<ProfilePage> {
         showDialog(
           context: context,
           barrierDismissible: false,
-          builder: (context) => const AlertDialog(
-            content: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                CircularProgressIndicator(),
-                SizedBox(width: 16),
-                Text('Subiendo foto del vehículo...'),
-              ],
-            ),
-          ),
+          builder:
+              (context) => const AlertDialog(
+                content: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    CircularProgressIndicator(),
+                    SizedBox(width: 16),
+                    Text('Subiendo foto del vehículo...'),
+                  ],
+                ),
+              ),
         );
       }
 
       bool success = false;
-      
+
       if (kIsWeb) {
         final bytes = await pickedFile.readAsBytes();
         success = await model.changeVehiclePhoto(webBytes: bytes);
@@ -899,7 +816,7 @@ class _ProfilePageState extends State<ProfilePage> {
       }
 
       if (!mounted) return;
-      
+
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(
