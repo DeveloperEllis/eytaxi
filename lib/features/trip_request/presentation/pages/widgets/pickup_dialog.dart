@@ -6,20 +6,28 @@ import 'package:eytaxi/core/styles/button_style.dart';
 import 'package:eytaxi/core/styles/input_decorations.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 
-enum ContactMethod { email, phone, whatsapp }
+enum ContactMethod { phone, whatsapp }
 
 class PickupDialog {
   Future<Map<String, String>?> show(BuildContext context) async {
     return showDialog<Map<String, String>>(
       context: context,
       barrierDismissible: false,
-      builder: (context) => FadeTransition(
-        opacity: CurvedAnimation(
-          parent: ModalRoute.of(context)!.animation!,
-          curve: Curves.easeInOut,
-        ),
-        child: _PickupDialogContent(),
-      ),
+      useSafeArea: false, // Mantener tamaño fijo sin respetar SafeArea
+      builder: (context) {
+        final route = ModalRoute.of(context)!;
+        // Ignorar viewInsets (teclado) para que el diálogo no se encoja
+        return MediaQuery(
+          data: MediaQuery.of(context).copyWith(viewInsets: EdgeInsets.zero),
+          child: FadeTransition(
+            opacity: CurvedAnimation(
+              parent: route.animation!,
+              curve: Curves.easeInOut,
+            ),
+            child: _PickupDialogContent(),
+          ),
+        );
+      },
     );
   }
 }
@@ -627,8 +635,6 @@ class _PickupDialogContentState extends State<_PickupDialogContent>
 
   IconData _getContactIcon(ContactMethod method) {
     switch (method) {
-      case ContactMethod.email:
-        return FontAwesomeIcons.envelope;
       case ContactMethod.phone:
         return FontAwesomeIcons.phoneFlip;
       case ContactMethod.whatsapp:
@@ -638,8 +644,6 @@ class _PickupDialogContentState extends State<_PickupDialogContent>
 
   String _getContactLabel(ContactMethod method) {
     switch (method) {
-      case ContactMethod.email:
-        return 'Correo Electrónico';
       case ContactMethod.phone:
         return 'Llamada Dentro de Cuba';
       case ContactMethod.whatsapp:
@@ -649,8 +653,6 @@ class _PickupDialogContentState extends State<_PickupDialogContent>
 
   String _getContactInputLabel(ContactMethod method) {
     switch (method) {
-      case ContactMethod.email:
-        return 'correo@ejemplo.com';
       case ContactMethod.phone:
         return 'Número cubano';
       case ContactMethod.whatsapp:
@@ -660,8 +662,6 @@ class _PickupDialogContentState extends State<_PickupDialogContent>
 
   TextInputType _getKeyboardType(ContactMethod method) {
     switch (method) {
-      case ContactMethod.email:
-        return TextInputType.emailAddress;
       case ContactMethod.phone:
       case ContactMethod.whatsapp:
         return TextInputType.phone;
@@ -670,10 +670,6 @@ class _PickupDialogContentState extends State<_PickupDialogContent>
 
   List<TextInputFormatter> _getInputFormatters(ContactMethod method) {
     switch (method) {
-      case ContactMethod.email:
-        return [
-          FilteringTextInputFormatter.deny(RegExp(r'\s')),
-        ];
       case ContactMethod.phone:
         return [
           FilteringTextInputFormatter.allow(RegExp(r'[0-9+\-\s\(\)]')),
@@ -691,11 +687,7 @@ class _PickupDialogContentState extends State<_PickupDialogContent>
     if (value == null || value.trim().isEmpty) {
       return 'Este campo es requerido';
     }
-    if (_selectedContactMethod == ContactMethod.email) {
-      if (!RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$').hasMatch(value)) {
-        return 'Ingrese un correo electrónico válido';
-      }
-    } else if (_selectedContactMethod == ContactMethod.phone) {
+     else if (_selectedContactMethod == ContactMethod.phone) {
       final cleanedValue = value.replaceAll(RegExp(r'[^0-9]'), '');
       if (!RegExp(r'^\d{8}$').hasMatch(cleanedValue)) {
         return 'Ingrese un número de teléfono válido (8 dígitos, sin +53)';

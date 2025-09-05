@@ -1,10 +1,13 @@
 import 'package:eytaxi/core/constants/app_colors.dart';
 import 'package:eytaxi/core/constants/app_routes.dart';
+import 'package:eytaxi/core/widgets/messages/logs.dart';
 import 'package:eytaxi/features/auth/data/datasources/auth_remote_datasource.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:eytaxi/core/styles/button_style.dart';
 import 'package:eytaxi/core/styles/input_decorations.dart';
 import 'package:eytaxi/features/auth/data/repositories/auth_repositories.dart';
 import 'package:flutter/material.dart';
+import 'package:eytaxi/features/auth/presentation/login/widgets/forgot_pasword.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -18,8 +21,10 @@ class _LoginScreenState extends State<LoginScreen> {
   String _email = '';
   String _password = '';
   bool _loading = false;
+  bool _obscurePassword = true;
   late AuthRepositoryImpl _authRepository;
 
+ 
   @override
   void initState() {
     super.initState();
@@ -63,13 +68,15 @@ class _LoginScreenState extends State<LoginScreen> {
                         color: AppColors.primary,
                       ),
                     ),
-                    const SizedBox(height: 28),
+                    
+                    const SizedBox(height: 16),
                     TextFormField(
                       decoration: AppInputDecoration.buildInputDecoration(context: context,
                         labelText: 'Email',
                         prefixIcon: Icons.email_outlined,
                       ),
                       keyboardType: TextInputType.emailAddress,
+                      textInputAction: TextInputAction.next,
                       onChanged: (value) => _email = value,
                       validator:
                           (value) =>
@@ -79,11 +86,19 @@ class _LoginScreenState extends State<LoginScreen> {
                     ),
                     const SizedBox(height: 18),
                     TextFormField(
-                      decoration: AppInputDecoration.buildInputDecoration(context: context,
+                      decoration: AppInputDecoration.buildInputDecoration(
+                        context: context,
                         labelText: 'Contraseña',
                         prefixIcon: Icons.lock_outline,
+                        suffixIcon: IconButton(
+                          icon: Icon(
+                            _obscurePassword ? Icons.visibility_off : Icons.visibility,
+                            color: AppColors.primary,
+                          ),
+                          onPressed: () => setState(() => _obscurePassword = !_obscurePassword),
+                        ),
                       ),
-                      obscureText: true,
+                      obscureText: _obscurePassword,
                       onChanged: (value) => _password = value,
                       validator:
                           (value) =>
@@ -91,27 +106,46 @@ class _LoginScreenState extends State<LoginScreen> {
                                   ? 'Ingrese su contraseña'
                                   : null,
                     ),
-                    const SizedBox(height: 28),
+                    const SizedBox(height: 2),
+                    const Align(
+                      alignment: Alignment.centerRight,
+                      child: ForgotPasswordButton(),
+                    ),
+                    const SizedBox(height: 10),
                     SizedBox(
                       width: double.infinity,
                       child: ElevatedButton(
-                        onPressed:
-                            _loading
-                                ? null
-                                : () async {
-                                  if (_formKey.currentState!.validate()) {
-                                    try {
-                                      setState(() => _loading = true);
-                                       _authRepository.signInWithPassword(_email, _password);
-                                    } catch (e) {
-                                      ScaffoldMessenger.of(context).showSnackBar(
-                                        SnackBar(content: Text('Error: ${e.toString()}')),
-                                      );
-                                    } finally {
-                                      setState(() => _loading = false);
+                        onPressed: _loading
+                            ? null
+                            : () async {
+                                if (_formKey.currentState!.validate()) {
+                                  setState(() => _loading = true);
+                                  try {
+                                    await _authRepository.signInWithPassword(_email, _password);
+                                    // Si llega aquí sin excepción, login exitoso
+                                    AppRoutes.router.go(AppRoutes.driverHome);
+                                  } on AuthException catch (e) {
+                                    String message = 'Error al iniciar sesión.';
+                                    final msg = e.message.toLowerCase();
+                                    if (msg.contains('invalid login credentials')) {
+                                      message = 'Correo o contraseña incorrectos.';
+                                    } else if (msg.contains('failed to fetch') || msg.contains('network') || msg.contains('connection')) {
+                                      message = 'No se pudo conectar al servidor. Verifica tu conexión a internet.';
+                                    } else if (e.message.isNotEmpty && !msg.contains('clientexception')) {
+                                      message = e.message;
+                                    } else {
+                                      message = 'Ocurrió un error inesperado. Intenta nuevamente.';
                                     }
+                                    LogsMessages.showInfoError(context, message);
+                                  } catch (e) {
+                                    ScaffoldMessenger.of(context).showSnackBar(
+                                      const SnackBar(content: Text('Ocurrió un error inesperado. Intenta nuevamente.')),
+                                    );
+                                  } finally {
+                                    setState(() => _loading = false);
                                   }
-                                },
+                                }
+                              },
                         style: AppButtonStyles.elevatedButtonStyle(context),
                         child:
                             _loading

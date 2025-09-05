@@ -7,7 +7,7 @@ class ActiveRequestsCard extends StatefulWidget {
   final List<TripRequest> requests;
   final Function(TripRequest) onRequestAccepted;
   final Function(TripRequest) onRequestRejected;
-  
+
   const ActiveRequestsCard({
     super.key,
     required this.requests,
@@ -33,9 +33,11 @@ class _ActiveRequestsCardState extends State<ActiveRequestsCard> {
     });
     // Simula carga de datos (reemplaza esto por tu lógica real de carga)
     Future.delayed(const Duration(seconds: 1), () {
-      setState(() {
-        isLoading = false;
-      });
+      if (mounted) {
+        setState(() {
+          isLoading = false;
+        });
+      }
     });
   }
 
@@ -50,12 +52,14 @@ class _ActiveRequestsCardState extends State<ActiveRequestsCard> {
     return widget.requests.where((request) {
       final origen = request.origen?.nombre.toLowerCase() ?? 'desconocido';
       final destino = request.destino?.nombre.toLowerCase() ?? 'desconocido';
-      final origenProvincia = request.origen?.provincia.toLowerCase() ?? 'desconocido';
-      final destinoProvincia = request.destino?.provincia.toLowerCase() ?? 'desconocido';
-      return origen.contains(_searchQuery) || 
-             destino.contains(_searchQuery) || 
-             origenProvincia.contains(_searchQuery) || 
-             destinoProvincia.contains(_searchQuery);
+      final origenProvincia =
+          request.origen?.provincia.toLowerCase() ?? 'desconocido';
+      final destinoProvincia =
+          request.destino?.provincia.toLowerCase() ?? 'desconocido';
+      return origen.contains(_searchQuery) ||
+          destino.contains(_searchQuery) ||
+          origenProvincia.contains(_searchQuery) ||
+          destinoProvincia.contains(_searchQuery);
     }).toList();
   }
 
@@ -72,9 +76,7 @@ class _ActiveRequestsCardState extends State<ActiveRequestsCard> {
         if (isLoading)
           Padding(
             padding: const EdgeInsets.all(48),
-            child: Center(
-              child: CircularProgressIndicator(),
-            ),
+            child: Center(child: CircularProgressIndicator()),
           )
         else if (filteredRequests.isEmpty)
           _buildEmptyState()
@@ -92,15 +94,19 @@ class _ActiveRequestsCardState extends State<ActiveRequestsCard> {
         decoration: InputDecoration(
           hintText: 'Buscar por origen o destino...',
           prefixIcon: const Icon(Icons.search, size: 20),
-          suffixIcon: _searchQuery.isNotEmpty
-              ? IconButton(
-                  icon: const Icon(Icons.clear, size: 18),
-                  onPressed: () => _searchController.clear(),
-                )
-              : null,
+          suffixIcon:
+              _searchQuery.isNotEmpty
+                  ? IconButton(
+                    icon: const Icon(Icons.clear, size: 18),
+                    onPressed: () => _searchController.clear(),
+                  )
+                  : null,
           filled: true,
           fillColor: Colors.grey[50],
-          contentPadding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
+          contentPadding: const EdgeInsets.symmetric(
+            vertical: 12,
+            horizontal: 16,
+          ),
           border: OutlineInputBorder(
             borderRadius: BorderRadius.circular(12),
             borderSide: BorderSide.none,
@@ -155,43 +161,41 @@ class _ActiveRequestsCardState extends State<ActiveRequestsCard> {
   }
 
   Widget _buildRequestCard(TripRequest request) {
-    final isExpanded = _expandedStates[request.id] ?? false;
-    final isHighlighted = _searchQuery.isNotEmpty &&
+  
+    final isHighlighted =
+        _searchQuery.isNotEmpty &&
         (request.origen?.nombre.toLowerCase().contains(_searchQuery) == true ||
-         request.destino?.nombre.toLowerCase().contains(_searchQuery) == true);
-    
+            request.destino?.nombre.toLowerCase().contains(_searchQuery) ==
+                true);
+
     return Card(
       elevation: isHighlighted ? 4 : 2,
-      shadowColor: isHighlighted ? AppColors.primary.withOpacity(0.3) : Colors.black12,
+      shadowColor:
+          isHighlighted ? AppColors.primary.withOpacity(0.3) : Colors.black12,
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(16),
         side: BorderSide(
-          color: isHighlighted ? AppColors.primary.withOpacity(0.7) : Colors.grey[200]!,
+          color:
+              isHighlighted
+                  ? AppColors.primary.withOpacity(0.7)
+                  : Colors.grey[200]!,
           width: isHighlighted ? 1.5 : 1,
         ),
       ),
       color: isHighlighted ? AppColors.primary.withOpacity(0.05) : Colors.white,
       child: Column(
         children: [
-          InkWell(
-            onTap: () => setState(() => _expandedStates[request.id!] = !isExpanded),
-            borderRadius: const BorderRadius.vertical(top: Radius.circular(16)),
-            child: Padding(
-              padding: const EdgeInsets.all(16),
-              child: Column(
-                children: [
-                  _buildHeader(request),
-                  const SizedBox(height: 16),
-                  _buildMetadata(request, isExpanded),
-                ],
-              ),
+          Padding(
+            padding: const EdgeInsets.all(16),
+            child: Column(
+              children: [
+                _buildHeader(request),
+                const SizedBox(height: 16),
+                _buildMetadata(request),
+              ],
             ),
           ),
-          AnimatedSize(
-            duration: const Duration(milliseconds: 300),
-            alignment: Alignment.topCenter,
-            child: isExpanded ? _buildDetails(request) : const SizedBox.shrink(),
-          ),
+
           _buildActions(request),
         ],
       ),
@@ -212,7 +216,9 @@ class _ActiveRequestsCardState extends State<ActiveRequestsCard> {
                 borderRadius: BorderRadius.circular(12),
               ),
               child: Icon(
-                request.taxiType == 'colectivo' ? Icons.group : Icons.directions_car,
+                request.taxiType == 'colectivo'
+                    ? Icons.group
+                    : Icons.directions_car,
                 color: _getTaxiTypeColor(request.taxiType),
                 size: 28,
               ),
@@ -229,7 +235,7 @@ class _ActiveRequestsCardState extends State<ActiveRequestsCard> {
           ],
         ),
         const SizedBox(width: 16),
-        
+
         // Información principal
         Expanded(
           child: Column(
@@ -267,7 +273,7 @@ class _ActiveRequestsCardState extends State<ActiveRequestsCard> {
             ],
           ),
         ),
-        
+
         // Precio
         Container(
           padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
@@ -288,7 +294,7 @@ class _ActiveRequestsCardState extends State<ActiveRequestsCard> {
     );
   }
 
-  Widget _buildMetadata(TripRequest request, bool isExpanded) {
+  Widget _buildMetadata(TripRequest request) {
     return Row(
       children: [
         // Personas
@@ -297,28 +303,18 @@ class _ActiveRequestsCardState extends State<ActiveRequestsCard> {
           text: '${request.cantidadPersonas}',
           color: Colors.purple,
         ),
-        
+
         const SizedBox(width: 10),
-        
+
         // Fecha
         _buildMetadataChip(
           icon: Icons.schedule,
           text: DateFormat('dd/MM HH:mm').format(request.tripDate.toLocal()),
           color: Colors.teal,
         ),
-        
+
         const Spacer(),
-        
-        // Indicador de expansión
-        AnimatedRotation(
-          turns: isExpanded ? 0.5 : 0,
-          duration: const Duration(milliseconds: 300),
-          child: Icon(
-            Icons.keyboard_arrow_down,
-            size: 24,
-            color: Colors.grey[600],
-          ),
-        ),
+       
       ],
     );
   }
@@ -352,41 +348,6 @@ class _ActiveRequestsCardState extends State<ActiveRequestsCard> {
     );
   }
 
-  Widget _buildDetails(TripRequest request) {
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Divider(color: Colors.grey[200], thickness: 1),
-          const SizedBox(height: 16),
-          
-          // Dirección
-          _buildDetailItem(
-            icon: Icons.location_on_outlined,
-            label: 'Dirección',
-            value: request.contact?.address?.isNotEmpty == true 
-                ? request.contact!.address! 
-                : 'No disponible',
-            iconColor: Colors.red,
-          ),
-          
-          const SizedBox(height: 16),
-          
-          // Información adicional
-          if (request.contact?.extraInfo?.isNotEmpty == true)
-            _buildDetailItem(
-              icon: Icons.info_outline,
-              label: 'Información adicional',
-              value: request.contact!.extraInfo!,
-              iconColor: Colors.blue,
-            ),
-        ],
-      ),
-    );
-  }
-
   Widget _buildDetailItem({
     required IconData icon,
     required String label,
@@ -403,11 +364,7 @@ class _ActiveRequestsCardState extends State<ActiveRequestsCard> {
             color: (iconColor ?? Colors.grey).withOpacity(0.1),
             borderRadius: BorderRadius.circular(10),
           ),
-          child: Icon(
-            icon, 
-            size: 20, 
-            color: iconColor ?? Colors.grey[600],
-          ),
+          child: Icon(icon, size: 20, color: iconColor ?? Colors.grey[600]),
         ),
         const SizedBox(width: 12),
         Expanded(
@@ -485,14 +442,5 @@ class _ActiveRequestsCardState extends State<ActiveRequestsCard> {
     );
   }
 
-  Widget _buildLoadingIndicator() {
-    return Padding(
-      padding: const EdgeInsets.all(16),
-      child: Center(
-        child: CircularProgressIndicator(
-          valueColor: AlwaysStoppedAnimation<Color>(AppColors.primary),
-        ),
-      ),
-    );
-  }
+  // removed unused _buildLoadingIndicator
 }

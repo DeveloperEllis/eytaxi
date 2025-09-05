@@ -1,6 +1,5 @@
 import 'package:eytaxi/core/constants/app_colors.dart';
 import 'package:eytaxi/core/enum/Trip_status.dart';
-import 'package:eytaxi/core/services/supabase_service.dart';
 import 'package:eytaxi/core/styles/button_style.dart';
 import 'package:eytaxi/core/styles/input_decorations.dart';
 import 'package:eytaxi/core/widgets/messages/mesages.dart';
@@ -27,7 +26,6 @@ class TaxiForm extends StatefulWidget {
 
 class _TaxiFormState extends State<TaxiForm> {
   final _formKey = GlobalKey<FormState>();
-  final SupabaseService _supabaseService = SupabaseService();
   final TripRequestService _service = TripRequestService(
     TripRequestRemoteDataSource(Supabase.instance.client),
   );

@@ -1,11 +1,11 @@
 import 'package:eytaxi/core/services/theme_notifier.dart';
 import 'package:eytaxi/presentation/admin/admin_dashboard.dart';
-import 'package:eytaxi/features/auth/login_screen.dart';
-import 'package:eytaxi/features/auth/presentation/register_screen.dart';
+import 'package:eytaxi/features/auth/presentation/login/login_screen.dart';
+import 'package:eytaxi/features/auth/presentation/registro/register_screen.dart';
 import 'package:eytaxi/features/home/presentation/pages/home_screen.dart';
-import 'package:eytaxi/presentation/driver/home/driver_home.dart';
-import 'package:eytaxi/presentation/driver/status/pending_driver_screen.dart';
-import 'package:eytaxi/presentation/driver/status/rejected_driver_screen.dart';
+import 'package:eytaxi/features/driver/presentation/home/driver_home.dart';
+import 'package:eytaxi/features/driver/presentation/status/pending_driver_screen.dart';
+import 'package:eytaxi/features/driver/presentation/status/rejected_driver_screen.dart';
 import 'package:eytaxi/presentation/splashscreen/splash_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';

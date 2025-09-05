@@ -25,7 +25,7 @@ class Driver extends User {
     this.isAvailable = true,
     required this.id_municipio_de_origen,
     required this.viajes_locales,
-    required this.origen,
+    this.origen,
   }) : super(userType: UserType.driver);
 
   factory Driver.fromJson(Map<String, dynamic> json) {

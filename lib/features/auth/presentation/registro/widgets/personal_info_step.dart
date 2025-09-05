@@ -16,6 +16,7 @@ class PersonalInfoStep extends StatelessWidget {
   final VoidCallback onTogglePasswordVisibility;
   final VoidCallback onToggleConfirmPasswordVisibility;
   final String? Function(String?) validatePassword;
+  final String? Function(String?) validateConfirmPassword;
   final void Function(String) onNameChanged;
   final void Function(String) onEmailChanged;
 
@@ -34,7 +35,8 @@ class PersonalInfoStep extends StatelessWidget {
     required this.onToggleConfirmPasswordVisibility,
     required this.validatePassword,
     required this.onNameChanged,
-    required this.onEmailChanged,
+  required this.onEmailChanged,
+  required this.validateConfirmPassword,
   });
 
   @override
@@ -190,13 +192,7 @@ class PersonalInfoStep extends StatelessWidget {
                   onPressed: onToggleConfirmPasswordVisibility,
                 ),
               ),
-              validator: (value) {
-                if (value == null || value.isEmpty) {
-                  return 'Confirme su contraseña';
-                }
-                // La comparación real debe hacerse en el widget padre
-                return null;
-              },
+              validator: validateConfirmPassword,
             ),
             const SizedBox(height: 20),
             // Puedes agregar aquí los requisitos de contraseña si lo deseas

@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/widgets.dart';
 
 class ConfirmTripsPage extends StatefulWidget {
   const ConfirmTripsPage({super.key});
@@ -7,6 +6,7 @@ class ConfirmTripsPage extends StatefulWidget {
   @override
   _ConfirmTripsPageState createState() => _ConfirmTripsPageState();
 }
+
 class _ConfirmTripsPageState extends State<ConfirmTripsPage> {
   @override
   Widget build(BuildContext context) {

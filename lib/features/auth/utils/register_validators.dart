@@ -1,7 +1,5 @@
 import 'dart:typed_data';
 
-import 'package:eytaxi/core/widgets/messages/logs.dart';
-import 'package:flutter/material.dart';
 
 class RegisterValidators {
   static String? validatePassword(String? value) {

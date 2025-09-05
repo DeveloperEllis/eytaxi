@@ -1,5 +1,4 @@
 import 'package:eytaxi/core/services/locations_service.dart';
-import 'package:eytaxi/core/services/supabase_service.dart';
 import 'package:eytaxi/core/styles/input_decorations.dart';
 import 'package:eytaxi/core/styles/locations_autocomplete_style.dart';
 import 'package:eytaxi/data/models/ubicacion_model.dart';
@@ -29,22 +28,26 @@ class LocationAutocomplete extends StatefulWidget {
 class _LocationAutocompleteState extends State<LocationAutocomplete> {
   final ValueNotifier<bool> _isLoadingNotifier = ValueNotifier(false);
   LocationsService service = LocationsService();
-  late TextEditingController _textController;
+  // Mantener referencias para sincronizar el controlador interno con el externo
+  TextEditingController? _fieldController;
+  VoidCallback? _widgetCtrlListener;
+  VoidCallback? _fieldCtrlListener;
 
   @override
   void initState() {
     super.initState();
-    _textController = TextEditingController();
-    widget.controller.addListener(() {
-      if (widget.controller.text != _textController.text) {
-        _textController.text = widget.controller.text;
-      }
-    });
   }
 
   @override
   void dispose() {
-    widget.controller.removeListener(() {});
+    if (_widgetCtrlListener != null) {
+      widget.controller.removeListener(_widgetCtrlListener!);
+      _widgetCtrlListener = null;
+    }
+    if (_fieldController != null && _fieldCtrlListener != null) {
+      _fieldController!.removeListener(_fieldCtrlListener!);
+      _fieldCtrlListener = null;
+    }
     super.dispose();
   }
 
@@ -65,11 +68,10 @@ class _LocationAutocompleteState extends State<LocationAutocomplete> {
           _isLoadingNotifier.value = false; // Desactiva el estado al finalizar
         }
       },
-      displayStringForOption:
-          (Ubicacion option) => '${option.nombre} (${option.codigo ?? 'N/A'})',
+    displayStringForOption:
+      (Ubicacion option) => '${option.nombre} (${option.codigo})',
       onSelected: (Ubicacion selection) {
-        widget.controller.text =
-            '${selection.nombre} (${selection.codigo ?? 'N/A'})';
+  widget.controller.text = '${selection.nombre} (${selection.codigo})';
         widget.onSelected(selection);
       },
       fieldViewBuilder: (
@@ -78,17 +80,42 @@ class _LocationAutocompleteState extends State<LocationAutocomplete> {
         FocusNode focusNode,
         VoidCallback onFieldSubmitted,
       ) {
-        if (widget.controller.text.isNotEmpty &&
-            textEditingController.text.isEmpty) {
-          WidgetsBinding.instance.addPostFrameCallback((_) {
-            textEditingController.text = widget.controller.text;
-          });
-        }
-        textEditingController.addListener(() {
-          if (widget.controller.text != textEditingController.text) {
-            widget.controller.text = textEditingController.text;
+        // Gestionar cambios de controlador interno entre rebuilds
+        if (_fieldController != textEditingController) {
+          // Quitar listeners previos si existían
+          if (_widgetCtrlListener != null) {
+            widget.controller.removeListener(_widgetCtrlListener!);
+            _widgetCtrlListener = null;
           }
-        });
+          if (_fieldController != null && _fieldCtrlListener != null) {
+            _fieldController!.removeListener(_fieldCtrlListener!);
+            _fieldCtrlListener = null;
+          }
+
+          _fieldController = textEditingController;
+
+          // Sincronizar inicial: copiar valor externo al campo visible
+          if (widget.controller.text != _fieldController!.text) {
+            _fieldController!.text = widget.controller.text;
+          }
+
+          // Listener: externo -> interno
+          _widgetCtrlListener = () {
+            if (!mounted || _fieldController == null) return;
+            if (widget.controller.text != _fieldController!.text) {
+              _fieldController!.text = widget.controller.text;
+            }
+          };
+          widget.controller.addListener(_widgetCtrlListener!);
+
+          // Listener: interno -> externo
+          _fieldCtrlListener = () {
+            if (widget.controller.text != _fieldController!.text) {
+              widget.controller.text = _fieldController!.text;
+            }
+          };
+          _fieldController!.addListener(_fieldCtrlListener!);
+        }
         return TextFormField(
           controller: textEditingController,
           focusNode: focusNode,
@@ -121,9 +148,9 @@ class _LocationAutocompleteState extends State<LocationAutocomplete> {
             ),
           ),
           onChanged: (value) {
-            if (widget.selectedLocation != null &&
-                value !=
-                    '${widget.selectedLocation!.nombre} (${widget.selectedLocation!.codigo ?? 'N/A'})') {
+      if (widget.selectedLocation != null &&
+        value !=
+          '${widget.selectedLocation!.nombre} (${widget.selectedLocation!.codigo})') {
               widget.onSelected(null);
             }
           },
@@ -175,7 +202,7 @@ class _LocationAutocompleteState extends State<LocationAutocomplete> {
                       ),
                     ),
                     subtitle: Text(
-                      '${option.tipo ?? 'N/A'} · ${option.provincia ?? 'N/A'}',
+                      '${option.tipo} · ${option.provincia}',
                       style: LocationAutocompleteStyles.optionSubtitleStyle(
                         context,
                       ),

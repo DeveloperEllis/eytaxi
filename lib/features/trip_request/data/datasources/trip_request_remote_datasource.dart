@@ -9,19 +9,22 @@ class TripRequestRemoteDataSource {
 
   Future<TripRequest> createTripRequest(TripRequest request, GuestContact contact) async {
     // Insertar el contacto del invitado
+    
     final contactResponse = await client
         .from('guest_contacts')
         .insert(contact.toJson())
         .select()
         .single();
     final contactId = contactResponse['id'];
+ 
+  // Insertar la solicitud de viaje y devolver la fila creada
+  final tripRow = await client
+    .from('trip_requests')
+    .insert(request.toJson(contactId: contactId))
+    .select()
+    .single();
 
-    // Insertar la solicitud de viaje
-   return await client
-        .from('trip_requests')
-        .insert({
-          ...request.toJson(contactId: contactId),
-        });
+  return TripRequest.fromJson(tripRow);
   }
 
   Future<List<TripRequest>> getRequestsByUser(String userId) async {

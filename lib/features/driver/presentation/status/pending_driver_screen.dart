@@ -12,7 +12,7 @@ class PendingDriverScreen extends StatelessWidget {
     final theme = Theme.of(context);
 
     return Scaffold(
-      backgroundColor: AppColors.background, // Usa un color de fondo suave
+      backgroundColor: AppColors.background,
       body: SafeArea(
         child: Center(
           child: Padding(

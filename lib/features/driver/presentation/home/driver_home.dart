@@ -2,9 +2,9 @@ import 'dart:async';
 import 'package:eytaxi/core/constants/app_colors.dart';
 import 'package:eytaxi/core/services/theme_notifier.dart';
 import 'package:eytaxi/core/widgets/messages/logs.dart';
-import 'package:eytaxi/presentation/driver/confirm_trips/confirm_trips_page.dart';
-import 'package:eytaxi/presentation/driver/home/driver_dashboard.dart';
-import 'package:eytaxi/presentation/driver/profile/profile_page.dart';
+import 'package:eytaxi/features/driver/presentation/confirm_trips/confirm_trips_page.dart';
+import 'package:eytaxi/features/driver/presentation/home/driver_dashboard.dart';
+import 'package:eytaxi/features/driver/presentation/profile/profile_page.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
@@ -35,7 +35,6 @@ class _DriverHomeState extends State<DriverHome> with TickerProviderStateMixin {
       curve: Curves.easeInOut,
     );
 
-    // Sincronizar animación con el estado inicial de isOnline
     final driverState = Provider.of<ThemeNotifier>(context, listen: false);
     if (driverState.isOnline) {
       _statusAnimationController.forward();
@@ -122,8 +121,8 @@ class _DriverHomeState extends State<DriverHome> with TickerProviderStateMixin {
     final List<Widget> screens = [
       const DriverDashboard(),
       const ConfirmTripsPage(),
-      const Center(child: Text('Historial')), // Placeholder
-      const ProfilePage(), // Placeholder
+      const Center(child: Text('Historial')),
+      const ProfilePage(),
     ];
 
     return Scaffold(

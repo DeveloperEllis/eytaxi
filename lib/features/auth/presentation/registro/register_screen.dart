@@ -3,6 +3,7 @@ import 'dart:typed_data';
 import 'package:eytaxi/core/constants/app_colors.dart';
 import 'package:eytaxi/core/constants/app_routes.dart';
 import 'package:eytaxi/core/services/storage_service.dart';
+import 'package:eytaxi/core/widgets/messages/mesages.dart';
 import 'package:eytaxi/data/models/driver_model.dart';
 import 'package:eytaxi/data/models/user_model.dart';
 import 'package:eytaxi/features/auth/data/datasources/auth_remote_datasource.dart';
@@ -12,13 +13,12 @@ import 'package:eytaxi/data/models/ubicacion_model.dart';
 import 'package:eytaxi/features/auth/data/repositories/auth_repositories.dart';
 import 'package:eytaxi/features/auth/domain/usecases/register_driver_usecase.dart';
 import 'package:eytaxi/features/auth/utils/register_validators.dart';
-import 'package:eytaxi/features/auth/presentation/widgets/driver_info_step.dart';
-import 'package:eytaxi/features/auth/presentation/widgets/improved_routes_selector.dart';
-import 'package:eytaxi/features/auth/presentation/widgets/personal_info_step.dart';
-import 'package:eytaxi/features/auth/presentation/widgets/photos_step.dart';
-import 'package:eytaxi/features/auth/presentation/widgets/register_navigation_buttons.dart';
-import 'package:eytaxi/features/auth/presentation/widgets/register_progress_indicator.dart';
-import 'package:eytaxi/features/auth/presentation/widgets/register_success_dialog.dart';
+import 'package:eytaxi/features/auth/presentation/registro/widgets/driver_info_step.dart';
+import 'package:eytaxi/features/auth/presentation/registro/widgets/improved_routes_selector.dart';
+import 'package:eytaxi/features/auth/presentation/registro/widgets/personal_info_step.dart';
+import 'package:eytaxi/features/auth/presentation/registro/widgets/photos_step.dart';
+import 'package:eytaxi/features/auth/presentation/registro/widgets/register_navigation_buttons.dart';
+import 'package:eytaxi/features/auth/presentation/registro/widgets/register_progress_indicator.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:image_picker/image_picker.dart';
@@ -148,6 +148,11 @@ class _RegisterScreenState extends State<RegisterScreen> {
                   validatePassword: RegisterValidators.validatePassword,
                   onNameChanged: (value) => _name = value,
                   onEmailChanged: (value) => _email = value,
+                  validateConfirmPassword:
+                      (value) => RegisterValidators.validateConfirmPassword(
+                        value,
+                        _passwordController.text,
+                      ),
                 ),
                 DriverInfoStep(
                   licenseController: _licenseController,
@@ -293,16 +298,25 @@ class _RegisterScreenState extends State<RegisterScreen> {
       if (error != null) {
         LogsMessages.showInfoError(context, error);
       } else {
-        showSuccessDialog(
-          context,
-          title: '¡Registro exitoso!',
-          message:
-              'Tu solicitud está en revisión.\nTe notificaremos cuando esté lista.',
-          onContinue: () {
-            // Navega a la pantalla principal, login, etc.
-          },
-        );
-        AppRoutes.router.go(AppRoutes.home);
+        // Mostrar el diálogo de éxito primero
+        if (mounted) {
+          await showDialog(
+            context: context,
+            barrierDismissible: false,
+            builder: (BuildContext context) {
+              return CustomDialog(
+                title: 'Éxito',
+                message: 'Su solicitud está pendiente a revisión, le notificaremos',
+                buttonText: 'Ok',
+                onPressed: () {
+                  Navigator.of(context).pop();
+                },
+              );
+            },
+          );
+          // Navegar al home después de cerrar el diálogo
+          AppRoutes.router.go(AppRoutes.home);
+        }
       }
     } catch (e) {
       LogsMessages.showInfoError(context, e.toString());

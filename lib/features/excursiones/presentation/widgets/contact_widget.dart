@@ -12,7 +12,7 @@ import 'package:flutter/services.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
-enum ContactMethod { email, whatsapp, phone }
+enum ContactMethod {  whatsapp, phone }
 
 class ReservationFormDialog extends StatefulWidget {
   final Map<String, dynamic> excursion;
@@ -303,15 +303,6 @@ class _ReservationFormDialogState extends State<ReservationFormDialog> {
             const SizedBox(width: 8),
             Expanded(
               child: _buildContactMethodChip(
-                ContactMethod.email,
-                'Email',
-                FontAwesomeIcons.envelope,
-                isDarkMode,
-              ),
-            ),
-            const SizedBox(width: 8),
-            Expanded(
-              child: _buildContactMethodChip(
                 ContactMethod.phone,
                 'Cuba',
                 FontAwesomeIcons.phone,
@@ -388,12 +379,6 @@ class _ReservationFormDialogState extends State<ReservationFormDialog> {
     List<TextInputFormatter> inputFormatters = [];
 
     switch (_selectedContactMethod) {
-      case ContactMethod.email:
-        hintText = 'ejemplo@correo.com';
-        label = 'Email *';
-        keyboardType = TextInputType.emailAddress;
-        inputFormatters = [FilteringTextInputFormatter.deny(RegExp(r'\s'))];
-        break;
       case ContactMethod.whatsapp:
         hintText = '5XXXXXXX';
         label = 'Número de WhatsApp *';
@@ -703,11 +688,6 @@ class _ReservationFormDialogState extends State<ReservationFormDialog> {
       return 'Este campo es requerido';
     }
     switch (_selectedContactMethod) {
-      case ContactMethod.email:
-        if (!RegexUtils.emailRegex.hasMatch(value)) {
-          return 'Ingresa un email válido';
-        }
-        break;
       case ContactMethod.whatsapp:
         final cleanedValue = value.replaceAll(RegExp(r'[\s-]'), '');
         if (!RegexUtils.phoneRegex.hasMatch(

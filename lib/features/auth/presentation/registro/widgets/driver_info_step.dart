@@ -60,7 +60,7 @@ class DriverInfoStep extends StatelessWidget {
             labelText: 'Municipio de Origen',
             selectedLocation: municipio,
             onSelected: onMunicipioSelected,
-            user:  UserType.passenger,
+            user:  UserType.driver,
             // Pasa aquí tu servicio y tipo de usuario si es necesario
           ),
 
@@ -90,25 +90,30 @@ class DriverInfoStep extends StatelessWidget {
           Padding(
             padding: const EdgeInsets.only(right: 2),
             child: DropdownButtonFormField<String>(
-              value:
-                  vehicleCapacityController.text.isEmpty
-                      ? null
-                      : vehicleCapacityController.text,
+              value: vehicleCapacityController.text.isEmpty
+                  ? null
+                  : vehicleCapacityController.text,
               decoration: AppInputDecoration.buildInputDecoration(
                 context: context,
                 labelText: 'Capacidad del Vehículo',
                 prefixIcon: Icons.airline_seat_recline_normal,
-                hintText: 'Seleccione el número de asientos',
               ),
-              items:
-                  List.generate(16, (index) => (index + 1).toString())
-                      .map(
-                        (value) => DropdownMenuItem<String>(
-                          value: value,
-                          child: Text('$value pasajeros'),
-                        ),
-                      )
-                      .toList(),
+              isExpanded: true,
+              hint: const Text(
+                'Seleccione asientos',
+                overflow: TextOverflow.ellipsis,
+              ),
+              items: List.generate(16, (index) => (index + 1).toString())
+                  .map(
+                    (value) => DropdownMenuItem<String>(
+                      value: value,
+                      child: Text(
+                        '$value pasajeros',
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ),
+                  )
+                  .toList(),
               onChanged: (String? newValue) {
                 if (newValue != null) {
                   vehicleCapacityController.text = newValue;
@@ -205,7 +210,7 @@ class DriverInfoStep extends StatelessWidget {
           // Selector de rutas
           buildImprovedRoutesSelector(),
 
-          const SizedBox(height: 40),
+          const SizedBox(height: 16),
         ],
       ),
     );
