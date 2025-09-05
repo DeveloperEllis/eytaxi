@@ -27,6 +27,7 @@ class _ProfilePageState extends State<ProfilePage> {
   late final TextEditingController _phoneController;
   late final TextEditingController _licenseController;
   late final TextEditingController _capacityController;
+  late final TextEditingController _routesController;
 
   // Dropdown para capacidad
   int? _selectedCapacity;
@@ -46,6 +47,10 @@ class _ProfilePageState extends State<ProfilePage> {
     20,
   ];
 
+  // Rutas con checkboxes
+  final List<String> _availableRoutes = ['oriente', 'occidente', 'centro'];
+  final Set<String> _selectedRoutes = {};
+
   @override
   void initState() {
     super.initState();
@@ -56,6 +61,7 @@ class _ProfilePageState extends State<ProfilePage> {
     _phoneController = TextEditingController();
     _licenseController = TextEditingController();
     _capacityController = TextEditingController();
+    _routesController = TextEditingController();
 
     final user = Supabase.instance.client.auth.currentUser;
     final repo = DriverProfileRepositoryImpl(
@@ -81,6 +87,7 @@ class _ProfilePageState extends State<ProfilePage> {
     _phoneController.dispose();
     _licenseController.dispose();
     _capacityController.dispose();
+    _routesController.dispose();
     super.dispose();
   }
 
@@ -97,6 +104,11 @@ class _ProfilePageState extends State<ProfilePage> {
           model.driver!.vehicleCapacity > 0
               ? model.driver!.vehicleCapacity
               : null;
+      _routesController.text = model.driver!.routes.join(', ');
+
+      // Actualizar rutas seleccionadas
+      _selectedRoutes.clear();
+      _selectedRoutes.addAll(model.driver!.routes);
     }
   }
 
@@ -114,21 +126,46 @@ class _ProfilePageState extends State<ProfilePage> {
                     : _buildProfileContent(model),
             floatingActionButton:
                 !model.loading && model.error == null
-                    ? FloatingActionButton.extended(
-                      onPressed: () {
-                        setState(() {
-                          _isEditing = !_isEditing;
-                        });
-                        if (!_isEditing) {
-                          _updateControllers(model);
-                        }
-                      },
-                      icon: Icon(_isEditing ? Icons.close : Icons.edit),
-                      label: Text(_isEditing ? 'Cancelar' : 'Editar'),
-                      backgroundColor:
-                          _isEditing ? Colors.red : AppColors.primary,
-                      foregroundColor: Colors.white,
-                    )
+                    ? _isEditing
+                        ? Row(
+                            mainAxisAlignment: MainAxisAlignment.end,
+                            children: [
+                              FloatingActionButton.extended(
+                                onPressed: () => _saveChanges(model),
+                                icon: const Icon(Icons.save),
+                                label: const Text('Guardar'),
+                                backgroundColor: AppColors.primary,
+                                foregroundColor: Colors.white,
+                                heroTag: "save",
+                              ),
+                              const SizedBox(width: 10),
+                              FloatingActionButton.extended(
+                                onPressed: () {
+                                  setState(() {
+                                    _isEditing = false;
+                                  });
+                                  _updateControllers(model);
+                                },
+                                icon: const Icon(Icons.close),
+                                label: const Text('Cancelar'),
+                                backgroundColor: Colors.red,
+                                foregroundColor: Colors.white,
+                                heroTag: "cancel",
+                              ),
+                            ],
+                          )
+                        : FloatingActionButton.extended(
+                            onPressed: () {
+                              setState(() {
+                                _isEditing = true;
+                              });
+                            },
+                            icon: const Icon(Icons.edit),
+                            label: const Text('Editar'),
+                            backgroundColor: AppColors.primary,
+                            foregroundColor: Colors.white,
+                            heroTag: "edit",
+                          )
                     : null,
           );
         },
@@ -374,25 +411,6 @@ class _ProfilePageState extends State<ProfilePage> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.center,
         children: [
-          // Botones de acción (solo mostrar guardar cuando esté editando)
-          if (_isEditing) ...[
-            Row(
-              mainAxisAlignment: MainAxisAlignment.end,
-              children: [
-                ElevatedButton.icon(
-                  onPressed: () => _saveChanges(model),
-                  icon: const Icon(Icons.save),
-                  label: const Text('Guardar'),
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: AppColors.primary,
-                    foregroundColor: Colors.white,
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 16),
-          ],
-
           // Nombre y apellidos
           if (_isEditing) ...[
             _buildEditableField(
@@ -474,6 +492,8 @@ class _ProfilePageState extends State<ProfilePage> {
               ),
               const SizedBox(height: 16),
               _buildCapacityDropdown(),
+              const SizedBox(height: 16),
+              _buildRoutesDropdown(),
               const SizedBox(height: 16),
             ] else ...[
               if (_licenseController.text.isNotEmpty) ...[
@@ -617,6 +637,100 @@ class _ProfilePageState extends State<ProfilePage> {
     );
   }
 
+  Widget _buildRoutesDropdown() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          children: [
+            Icon(Icons.route, color: AppColors.primary, size: 20),
+            const SizedBox(width: 8),
+            Text(
+              'Rutas de operación',
+              style: TextStyle(
+                fontSize: 16,
+                fontWeight: FontWeight.w600,
+                color: Colors.grey.shade700,
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 12),
+        Container(
+          width: double.infinity,
+          padding: const EdgeInsets.all(16),
+          decoration: BoxDecoration(
+            border: Border.all(color: Colors.grey.shade300),
+            borderRadius: BorderRadius.circular(12),
+            color: Colors.grey.shade50,
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children:
+                _availableRoutes.map((route) {
+                  return CheckboxListTile(
+                    title: Text(
+                      route,
+                      style: const TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                    value: _selectedRoutes.contains(route),
+                    onChanged: (bool? value) {
+                      setState(() {
+                        if (value == true) {
+                          _selectedRoutes.add(route);
+                        } else {
+                          _selectedRoutes.remove(route);
+                        }
+                        // Actualizar el controller para mantener compatibilidad
+                        _routesController.text = _selectedRoutes.join(', ');
+                      });
+                    },
+                    activeColor: AppColors.primary,
+                    checkColor: Colors.white,
+                    controlAffinity: ListTileControlAffinity.leading,
+                    contentPadding: EdgeInsets.zero,
+                    dense: true,
+                  );
+                }).toList(),
+          ),
+        ),
+        if (_selectedRoutes.isNotEmpty) ...[
+          const SizedBox(height: 8),
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+            decoration: BoxDecoration(
+              color: AppColors.primary.withOpacity(0.1),
+              borderRadius: BorderRadius.circular(8),
+              border: Border.all(
+                color: AppColors.primary.withOpacity(0.3),
+                width: 1,
+              ),
+            ),
+            child: Row(
+              children: [
+                Icon(Icons.check_circle, color: AppColors.primary, size: 16),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: Text(
+                    'Seleccionadas: ${_selectedRoutes.join(', ')}',
+                    style: TextStyle(
+                      fontSize: 12,
+                      color: AppColors.primary,
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ],
+    );
+  }
+
   Future<void> _saveChanges(DriverProfileViewModel model) async {
     // Mostrar indicador de carga
     showDialog(
@@ -646,9 +760,16 @@ class _ProfilePageState extends State<ProfilePage> {
       // Actualizar información del conductor si existe
       bool driverInfoSuccess = true;
       if (model.driver != null) {
+        // Preparar las rutas desde las selecciones
+        List<String>? routes;
+        if (_selectedRoutes.isNotEmpty) {
+          routes = _selectedRoutes.toList();
+        }
+
         driverInfoSuccess = await model.updateDriverInfo(
           licenseNumber: _licenseController.text.trim(),
           vehicleCapacity: _selectedCapacity,
+          routes: routes,
         );
       }
 
