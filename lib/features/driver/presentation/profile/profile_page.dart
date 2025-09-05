@@ -28,6 +28,10 @@ class _ProfilePageState extends State<ProfilePage> {
   late final TextEditingController _licenseController;
   late final TextEditingController _capacityController;
   
+  // Dropdown para capacidad
+  int? _selectedCapacity;
+  final List<int> _capacityOptions = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 12, 15, 20];
+  
   @override
   void initState() {
     super.initState();
@@ -75,6 +79,7 @@ class _ProfilePageState extends State<ProfilePage> {
     if (model.driver != null) {
       _licenseController.text = model.driver!.licenseNumber;
       _capacityController.text = model.driver!.vehicleCapacity.toString();
+      _selectedCapacity = model.driver!.vehicleCapacity > 0 ? model.driver!.vehicleCapacity : null;
     }
   }
 
@@ -510,12 +515,7 @@ class _ProfilePageState extends State<ProfilePage> {
                 icon: Icons.credit_card,
               ),
               const SizedBox(height: 16),
-              _buildEditableField(
-                label: 'Capacidad de vehículo',
-                controller: _capacityController,
-                icon: Icons.people,
-                keyboardType: TextInputType.number,
-              ),
+              _buildCapacityDropdown(),
               const SizedBox(height: 16),
             ] else ...[
               if (_licenseController.text.isNotEmpty) ...[
@@ -616,6 +616,46 @@ class _ProfilePageState extends State<ProfilePage> {
     );
   }
 
+  Widget _buildCapacityDropdown() {
+    return DropdownButtonFormField<int>(
+      value: _selectedCapacity,
+      decoration: InputDecoration(
+        labelText: 'Capacidad de vehículo',
+        prefixIcon: Icon(Icons.people, color: AppColors.primary),
+        border: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(12),
+          borderSide: BorderSide(color: Colors.grey.shade300),
+        ),
+        enabledBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(12),
+          borderSide: BorderSide(color: Colors.grey.shade300),
+        ),
+        focusedBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(12),
+          borderSide: BorderSide(color: AppColors.primary, width: 2),
+        ),
+        filled: true,
+        fillColor: Colors.grey.shade50,
+        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+      ),
+      hint: const Text('Selecciona la capacidad'),
+      items: _capacityOptions.map((int capacity) {
+        return DropdownMenuItem<int>(
+          value: capacity,
+          child: Text('$capacity ${capacity == 1 ? 'pasajero' : 'pasajeros'}'),
+        );
+      }).toList(),
+      onChanged: (int? newValue) {
+        setState(() {
+          _selectedCapacity = newValue;
+          if (newValue != null) {
+            _capacityController.text = newValue.toString();
+          }
+        });
+      },
+    );
+  }
+
   Future<void> _saveChanges(DriverProfileViewModel model) async {
     // Mostrar indicador de carga
     showDialog(
@@ -644,10 +684,9 @@ class _ProfilePageState extends State<ProfilePage> {
       // Actualizar información del conductor si existe
       bool driverInfoSuccess = true;
       if (model.driver != null) {
-        final capacity = int.tryParse(_capacityController.text.trim()) ?? 0;
         driverInfoSuccess = await model.updateDriverInfo(
           licenseNumber: _licenseController.text.trim(),
-          vehicleCapacity: capacity > 0 ? capacity : null,
+          vehicleCapacity: _selectedCapacity,
         );
       }
 
