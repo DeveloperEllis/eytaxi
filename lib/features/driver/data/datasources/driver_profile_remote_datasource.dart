@@ -95,4 +95,19 @@ class DriverProfileRemoteDataSource {
     await client.from('drivers').update({'vehicle_photo_url': photoUrl}).eq('id', userId);
     return true;
   }
+
+  Future<String?> getDriverStatus(String userId) async {
+    try {
+      final response = await client
+          .from('drivers')
+          .select('driver_status')
+          .eq('id', userId)
+          .maybeSingle();
+      
+      return response?['driver_status'] as String?;
+    } catch (e) {
+      print('Error getting driver status: $e');
+      return null;
+    }
+  }
 }

@@ -133,12 +133,35 @@ class _ViajesPageState extends State<ViajesPage> {
                   children: [
                     _buildEstadoChip(status),
                     if (precio != '0')
-                      Text(
-                        '\$${_formatPrice(precio)}',
-                        style: TextStyle(
-                          color: AppColors.primary,
-                          fontSize: 25,
-                          fontWeight: FontWeight.bold,
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                        decoration: BoxDecoration(
+                          gradient: LinearGradient(
+                            colors: [
+                              AppColors.primary.withOpacity(0.15),
+                              AppColors.primary.withOpacity(0.08),
+                            ],
+                          ),
+                          borderRadius: BorderRadius.circular(12),
+                          border: Border.all(color: AppColors.primary.withOpacity(0.3)),
+                        ),
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Icon(
+                              Icons.attach_money,
+                              color: AppColors.primary,
+                              size: 18,
+                            ),
+                            Text(
+                              _formatPrice(precio),
+                              style: TextStyle(
+                                color: AppColors.primary,
+                                fontSize: 18,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                          ],
                         ),
                       ),
                   ],
@@ -172,9 +195,9 @@ class _ViajesPageState extends State<ViajesPage> {
                       Icons.calendar_today,
                       _formatFechaCompacta(trip.tripDate),
                     ),
-                    const SizedBox(width: 16),
+                    const SizedBox(width: 12),
                     _buildCompactInfo(Icons.local_taxi, tipoTaxi.toUpperCase()),
-                    const SizedBox(width: 16),
+                    const SizedBox(width: 12),
                     _buildCompactInfo(Icons.people, '$cantidadPersonas'),
                     const Spacer(), // Esto empuja el botón hacia la derecha
                     if (status == 'accepted' || status == 'started')
@@ -385,20 +408,28 @@ class _ViajesPageState extends State<ViajesPage> {
   // Resto de helpers (idénticos a los tuyos, sólo se adaptó _buildEstadoChip a recibir status normalizado)
 
   Widget _buildCompactInfo(IconData icon, String text) {
-    return Row(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        Icon(icon, size: 14, color: Colors.grey.shade600),
-        const SizedBox(width: 4),
-        Text(
-          text,
-          style: TextStyle(
-            fontSize: 12,
-            color: Colors.grey.shade700,
-            fontWeight: FontWeight.w500,
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+      decoration: BoxDecoration(
+        color: Colors.grey.shade100,
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(color: Colors.grey.withOpacity(0.2)),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(icon, size: 12, color: Colors.grey.shade600),
+          const SizedBox(width: 4),
+          Text(
+            text,
+            style: TextStyle(
+              fontSize: 11,
+              color: Colors.grey.shade700,
+              fontWeight: FontWeight.w500,
+            ),
           ),
-        ),
-      ],
+        ],
+      ),
     );
   }
 
