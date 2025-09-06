@@ -1,16 +1,18 @@
-import 'package:eytaxi/core/constants/app_colors.dart';
 import 'package:flutter/material.dart';
+import 'package:eytaxi/core/constants/app_colors.dart';
 
 class CapacityDropdown extends StatelessWidget {
   final int? selectedCapacity;
-  final ValueChanged<int?> onChanged;
   final List<int> capacityOptions;
+  final Function(int?) onChanged;
+  final TextEditingController capacityController;
 
   const CapacityDropdown({
     super.key,
     required this.selectedCapacity,
-    required this.onChanged,
     required this.capacityOptions,
+    required this.onChanged,
+    required this.capacityController,
   });
 
   @override
@@ -18,7 +20,7 @@ class CapacityDropdown extends StatelessWidget {
     return DropdownButtonFormField<int>(
       value: selectedCapacity,
       decoration: InputDecoration(
-        labelText: 'Capacidad del vehículo',
+        labelText: 'Capacidad de vehículo',
         prefixIcon: Icon(Icons.people, color: AppColors.primary),
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
@@ -39,18 +41,20 @@ class CapacityDropdown extends StatelessWidget {
           vertical: 12,
         ),
       ),
+      hint: const Text('Selecciona la capacidad'),
       items: capacityOptions.map((int capacity) {
         return DropdownMenuItem<int>(
           value: capacity,
-          child: Text('$capacity pasajeros'),
+          child: Text(
+            '$capacity ${capacity == 1 ? 'pasajero' : 'pasajeros'}',
+          ),
         );
       }).toList(),
-      onChanged: onChanged,
-      validator: (value) {
-        if (value == null || value <= 0) {
-          return 'Seleccione la capacidad del vehículo';
+      onChanged: (int? newValue) {
+        onChanged(newValue);
+        if (newValue != null) {
+          capacityController.text = newValue.toString();
         }
-        return null;
       },
     );
   }

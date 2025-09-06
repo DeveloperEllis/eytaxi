@@ -2,17 +2,16 @@ import 'dart:io';
 import 'package:eytaxi/core/constants/app_colors.dart';
 import 'package:eytaxi/core/services/storage_service.dart';
 import 'package:eytaxi/data/models/ubicacion_model.dart';
-import 'package:eytaxi/data/models/user_model.dart';
 import 'package:eytaxi/features/auth/utils/register_validators.dart';
 import 'package:eytaxi/features/driver/data/datasources/driver_profile_remote_datasource.dart';
 import 'package:eytaxi/features/driver/data/repositories/driver_profile_repository_impl.dart';
 import 'package:eytaxi/features/driver/presentation/profile/driver_profile_view_model.dart';
-import 'package:eytaxi/features/trip_request/presentation/pages/widgets/location_autocomplete.dart';
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:provider/provider.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import 'widgets/index.dart';
 
 class ProfilePage extends StatefulWidget {
   const ProfilePage({super.key});
@@ -593,26 +592,10 @@ class _ProfilePageState extends State<ProfilePage> {
     required String label,
     required String value,
   }) {
-    return Row(
-      children: [
-        Icon(icon, size: 18, color: AppColors.primary),
-        const SizedBox(width: 8),
-        Text(
-          '$label: ',
-          style: const TextStyle(
-            fontWeight: FontWeight.w600,
-            fontSize: 14,
-            color: Colors.black87,
-          ),
-        ),
-        Expanded(
-          child: Text(
-            value,
-            style: TextStyle(fontSize: 14, color: Colors.grey.shade700),
-            overflow: TextOverflow.ellipsis,
-          ),
-        ),
-      ],
+    return InfoRow(
+      icon: icon,
+      label: label,
+      value: value,
     );
   }
 
@@ -623,237 +606,60 @@ class _ProfilePageState extends State<ProfilePage> {
     TextInputType keyboardType = TextInputType.text,
     String? Function(String?)? validator,
   }) {
-    return TextFormField(
+    return EditableField(
+      label: label,
       controller: controller,
+      icon: icon,
       keyboardType: keyboardType,
       validator: validator,
-      decoration: InputDecoration(
-        labelText: label,
-        prefixIcon: Icon(icon, color: AppColors.primary),
-        border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
-          borderSide: BorderSide(color: Colors.grey.shade300),
-        ),
-        enabledBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
-          borderSide: BorderSide(color: Colors.grey.shade300),
-        ),
-        focusedBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
-          borderSide: BorderSide(color: AppColors.primary, width: 2),
-        ),
-        errorBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
-          borderSide: const BorderSide(color: Colors.red, width: 2),
-        ),
-        focusedErrorBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
-          borderSide: const BorderSide(color: Colors.red, width: 2),
-        ),
-        filled: true,
-        fillColor: Colors.grey.shade50,
-        contentPadding: const EdgeInsets.symmetric(
-          horizontal: 16,
-          vertical: 12,
-        ),
-      ),
     );
   }
 
   Widget _buildCapacityDropdown() {
-    return DropdownButtonFormField<int>(
-      value: _selectedCapacity,
-      decoration: InputDecoration(
-        labelText: 'Capacidad de vehículo',
-        prefixIcon: Icon(Icons.people, color: AppColors.primary),
-        border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
-          borderSide: BorderSide(color: Colors.grey.shade300),
-        ),
-        enabledBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
-          borderSide: BorderSide(color: Colors.grey.shade300),
-        ),
-        focusedBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
-          borderSide: BorderSide(color: AppColors.primary, width: 2),
-        ),
-        filled: true,
-        fillColor: Colors.grey.shade50,
-        contentPadding: const EdgeInsets.symmetric(
-          horizontal: 16,
-          vertical: 12,
-        ),
-      ),
-      hint: const Text('Selecciona la capacidad'),
-      items:
-          _capacityOptions.map((int capacity) {
-            return DropdownMenuItem<int>(
-              value: capacity,
-              child: Text(
-                '$capacity ${capacity == 1 ? 'pasajero' : 'pasajeros'}',
-              ),
-            );
-          }).toList(),
+    return CapacityDropdown(
+      selectedCapacity: _selectedCapacity,
+      capacityOptions: _capacityOptions,
+      capacityController: _capacityController,
       onChanged: (int? newValue) {
         setState(() {
           _selectedCapacity = newValue;
-          if (newValue != null) {
-            _capacityController.text = newValue.toString();
-          }
         });
       },
     );
   }
 
   Widget _buildRoutesDropdown() {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Row(
-          children: [
-            Icon(Icons.route, color: AppColors.primary, size: 20),
-            const SizedBox(width: 8),
-            Text(
-              'Rutas de operación',
-              style: TextStyle(
-                fontSize: 16,
-                fontWeight: FontWeight.w600,
-                color: Colors.grey.shade700,
-              ),
-            ),
-          ],
-        ),
-        const SizedBox(height: 12),
-        Container(
-          width: double.infinity,
-          padding: const EdgeInsets.all(16),
-          decoration: BoxDecoration(
-            border: Border.all(color: Colors.grey.shade300),
-            borderRadius: BorderRadius.circular(12),
-            color: Colors.grey.shade50,
-          ),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              // Rutas principales (Oriente, Occidente, Centro)
-              ..._availableRoutes.map((route) {
-                return CheckboxListTile(
-                  title: Text(
-                    route.toUpperCase(),
-                    style: const TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.w500,
-                    ),
-                  ),
-                  value: _selectedRoutes.contains(route),
-                  onChanged: (bool? value) {
-                    setState(() {
-                      if (value == true) {
-                        _selectedRoutes.add(route);
-                      } else {
-                        _selectedRoutes.remove(route);
-                      }
-                      // Actualizar el controller para mantener compatibilidad
-                      _routesController.text = _selectedRoutes.join(', ');
-                    });
-                  },
-                  activeColor: AppColors.primary,
-                  checkColor: Colors.white,
-                  controlAffinity: ListTileControlAffinity.leading,
-                  contentPadding: EdgeInsets.zero,
-                  dense: true,
-                );
-              }),
-
-              // Separador visual
-              if (_availableRoutes.isNotEmpty) ...[
-                const SizedBox(height: 8),
-                Divider(color: Colors.grey.shade300, thickness: 1),
-                const SizedBox(height: 8),
-              ],
-
-              // Checkbox para Viajes Locales
-              CheckboxListTile(
-                title: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    const Text(
-                      'VIAJES LOCALES',
-                      style: TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.w500,
-                      ),
-                    ),
-                    Text(
-                      'Rutas locales dentro de la provincia',
-                      style: TextStyle(
-                        fontSize: 12,
-                        color: Colors.grey.shade600,
-                      ),
-                    ),
-                  ],
-                ),
-                value: _viajesLocales,
-                onChanged: (bool? value) {
-                  setState(() {
-                    _viajesLocales = value ?? false;
-                  });
-                },
-                activeColor: Colors.green,
-                checkColor: Colors.white,
-                controlAffinity: ListTileControlAffinity.leading,
-                contentPadding: EdgeInsets.zero,
-                dense: true,
-              ),
-            ],
-          ),
-        ),
-        if (_selectedRoutes.isNotEmpty) ...[
-          const SizedBox(height: 8),
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-            decoration: BoxDecoration(
-              color: AppColors.primary.withOpacity(0.1),
-              borderRadius: BorderRadius.circular(8),
-              border: Border.all(
-                color: AppColors.primary.withOpacity(0.3),
-                width: 1,
-              ),
-            ),
-            child: Row(
-              children: [
-                Icon(Icons.check_circle, color: AppColors.primary, size: 16),
-                const SizedBox(width: 8),
-                Expanded(
-                  child: Text(
-                    'Seleccionadas: ${_selectedRoutes.join(', ')}',
-                    style: TextStyle(
-                      fontSize: 12,
-                      color: AppColors.primary,
-                      fontWeight: FontWeight.w500,
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ],
-      ],
+    return RoutesDropdown(
+      availableRoutes: _availableRoutes,
+      selectedRoutes: _selectedRoutes,
+      viajesLocales: _viajesLocales,
+      routesController: _routesController,
+      onRouteChanged: (String route, bool value) {
+        setState(() {
+          if (value) {
+            _selectedRoutes.add(route);
+          } else {
+            _selectedRoutes.remove(route);
+          }
+        });
+      },
+      onViajesLocalesChanged: (bool value) {
+        setState(() {
+          _viajesLocales = value;
+        });
+      },
     );
   }
 
   Widget _buildCiudadOrigenField() {
-    return LocationAutocomplete(
-      controller: _ciudadOrigenController,
-      labelText: 'Selecciona tu ciudad de residencia',
-      selectedLocation: _selectedCiudadOrigen,
+    return CiudadOrigenField(
+      ciudadOrigenController: _ciudadOrigenController,
+      selectedCiudadOrigen: _selectedCiudadOrigen,
       onSelected: (Ubicacion? selected) {
         setState(() {
           _selectedCiudadOrigen = selected;
         });
       },
-      user: UserType.driver,
     );
   }
 
