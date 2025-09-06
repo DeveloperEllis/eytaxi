@@ -250,14 +250,15 @@ class _ProfilePageState extends State<ProfilePage> {
 
     return Form(
       key: _formKey,
-      child: CustomScrollView(
-        slivers: [
-          // Header with cover photo and profile photo
-          _buildProfileHeader(model),
+      child: SingleChildScrollView(
+        physics: const ClampingScrollPhysics(),
+        child: Column(
+          children: [
+            // Header with cover photo and profile photo
+            _buildProfileHeader(model),
 
-          // Profile info and other content
-          SliverToBoxAdapter(
-            child: Padding(
+            // Profile info and other content
+            Padding(
               padding: const EdgeInsets.all(16),
               child: Column(
                 children: [
@@ -269,8 +270,8 @@ class _ProfilePageState extends State<ProfilePage> {
                 ],
               ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
@@ -280,25 +281,24 @@ class _ProfilePageState extends State<ProfilePage> {
     final profilePhotoUrl = up['photo_url'] as String?;
     final vehiclePhotoUrl = model.driver?.vehiclePhotoUrl;
 
-    return SliverAppBar(
-      expandedHeight: 250,
-      floating: false,
-      pinned: true,
-      backgroundColor: AppColors.primary,
-      flexibleSpace: FlexibleSpaceBar(
-        background: Stack(
-          children: [
-            // Foto del vehículo como fondo (cover photo)
-            _buildCoverPhoto(vehiclePhotoUrl, model),
+    return Container(
+      height: 250,
+      width: double.infinity,
+      decoration: BoxDecoration(
+        color: AppColors.primary,
+      ),
+      child: Stack(
+        children: [
+          // Foto del vehículo como fondo (cover photo)
+          _buildCoverPhoto(vehiclePhotoUrl, model),
 
-            // Foto de perfil superpuesta
-            Positioned(
-              bottom: 20,
-              left: 20,
-              child: _buildProfilePhoto(profilePhotoUrl, model),
-            ),
-          ],
-        ),
+          // Foto de perfil superpuesta
+          Positioned(
+            bottom: 20,
+            left: 20,
+            child: _buildProfilePhoto(profilePhotoUrl, model),
+          ),
+        ],
       ),
     );
   }
@@ -425,9 +425,6 @@ class _ProfilePageState extends State<ProfilePage> {
       _updateControllers(model);
     }
 
-    final up = model.userProfile ?? {};
-    final email = up['email'] as String? ?? '';
-
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.all(24),
@@ -480,10 +477,7 @@ class _ProfilePageState extends State<ProfilePage> {
               validator: RegisterValidators.validatePhone,
             ),
             const SizedBox(height: 16),
-          ] ,
-          // Email y teléfono con mejor diseño
-         
-         const SizedBox(height: 8),
+          ],
 
           // Estado del conductor (solo mostrar cuando no esté editando)
           if (!_isEditing && model.driver != null) ...[
