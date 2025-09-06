@@ -1,7 +1,9 @@
 enum TripStatus {
-  accepted,
-  rejected,
-  completed,
-  cancelled,
   pending,
+  accepted,
+  started,
+  finished,
+  completed,
+  rejected,
+  cancelled,
 }

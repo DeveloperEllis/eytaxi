@@ -3,8 +3,10 @@ import 'package:eytaxi/core/constants/app_colors.dart';
 import 'package:eytaxi/core/services/theme_notifier.dart';
 import 'package:eytaxi/core/widgets/messages/logs.dart';
 import 'package:eytaxi/features/driver/presentation/confirm_trips/confirm_trips_page.dart';
+import 'package:eytaxi/features/driver/presentation/history/pages/history_page.dart';
 import 'package:eytaxi/features/driver/presentation/home/driver_dashboard.dart';
 import 'package:eytaxi/features/driver/presentation/profile/profile_page.dart';
+import 'package:eytaxi/features/driver/presentation/viajes/pages/viajes_page.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
@@ -120,8 +122,8 @@ class _DriverHomeState extends State<DriverHome> with TickerProviderStateMixin {
     final driverState = Provider.of<ThemeNotifier>(context);
     final List<Widget> screens = [
       const DriverDashboard(),
-      const ConfirmTripsPage(),
-      const Center(child: Text('Historial')),
+      const ViajesPage(),
+      const HistoryPage(),
       const ProfilePage(),
     ];
 

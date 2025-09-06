@@ -85,15 +85,19 @@ class TripRequest {
   }
 
 		 static TripStatus _parseStatus(String status) {
-			 switch (status) {
+			 switch (status.toLowerCase()) {
 				 case 'pending':
 					 return TripStatus.pending;
 				 case 'accepted':
 					 return TripStatus.accepted;
-				 case 'rejected':
-					 return TripStatus.rejected;
+				 case 'started':
+					 return TripStatus.started;
+				 case 'finished':
+					 return TripStatus.finished;
 				 case 'completed':
 					 return TripStatus.completed;
+				 case 'rejected':
+					 return TripStatus.rejected;
 				 case 'cancelled':
 					 return TripStatus.cancelled;
 				 default:
