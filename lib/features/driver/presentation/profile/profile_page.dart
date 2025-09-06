@@ -131,7 +131,8 @@ class _ProfilePageState extends State<ProfilePage> {
       // Actualizar ciudad de origen
       _selectedCiudadOrigen = model.driver!.origen;
       if (_selectedCiudadOrigen != null) {
-        final ciudadText = '${_selectedCiudadOrigen!.nombre} (${_selectedCiudadOrigen!.codigo})';
+        final ciudadText =
+            '${_selectedCiudadOrigen!.nombre} (${_selectedCiudadOrigen!.codigo})';
         _ciudadOrigenController.text = ciudadText;
         print('DEBUG: Ciudad de origen cargada: $ciudadText');
         print('DEBUG: Ubicacion objeto: $_selectedCiudadOrigen');
@@ -259,17 +260,17 @@ class _ProfilePageState extends State<ProfilePage> {
             child: Padding(
               padding: const EdgeInsets.all(16),
               child: Column(
-              children: [
-                const SizedBox(height: 10), // Space for profile photo
-                _buildUserInfo(model),
-                const SizedBox(height: 20),
-                // Botón para recargar datos
-                const SizedBox(height: 20),
-              ],
+                children: [
+                  const SizedBox(height: 10), // Space for profile photo
+                  _buildUserInfo(model),
+                  const SizedBox(height: 20),
+                  // Botón para recargar datos
+                  const SizedBox(height: 20),
+                ],
+              ),
             ),
           ),
-        ),
-      ],
+        ],
       ),
     );
   }
@@ -429,15 +430,22 @@ class _ProfilePageState extends State<ProfilePage> {
 
     return Container(
       width: double.infinity,
-      padding: const EdgeInsets.all(20),
+      padding: const EdgeInsets.all(24),
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(15),
+        borderRadius: BorderRadius.circular(20),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.1),
-            blurRadius: 10,
-            offset: const Offset(0, 2),
+            color: Colors.black.withOpacity(0.08),
+            blurRadius: 20,
+            offset: const Offset(0, 4),
+            spreadRadius: 0,
+          ),
+          BoxShadow(
+            color: Colors.black.withOpacity(0.04),
+            blurRadius: 6,
+            offset: const Offset(0, 1),
+            spreadRadius: 0,
           ),
         ],
       ),
@@ -450,46 +458,20 @@ class _ProfilePageState extends State<ProfilePage> {
               label: 'Nombre',
               controller: _nombreController,
               icon: Icons.person,
-              validator: (value) => RegisterValidators.validateNonEmpty(value, 'nombre'),
+              validator:
+                  (value) =>
+                      RegisterValidators.validateNonEmpty(value, 'nombre'),
             ),
             const SizedBox(height: 16),
             _buildEditableField(
               label: 'Apellidos',
               controller: _apellidosController,
               icon: Icons.person_outline,
-              validator: (value) => RegisterValidators.validateNonEmpty(value, 'apellidos'),
+              validator:
+                  (value) =>
+                      RegisterValidators.validateNonEmpty(value, 'apellidos'),
             ),
             const SizedBox(height: 16),
-          ] else ...[
-            Text(
-              '${_nombreController.text} ${_apellidosController.text}'
-                      .trim()
-                      .isNotEmpty
-                  ? '${_nombreController.text} ${_apellidosController.text}'
-                      .trim()
-                  : 'Usuario sin nombre',
-              style: const TextStyle(
-                fontSize: 28,
-                fontWeight: FontWeight.bold,
-                color: Colors.black87,
-              ),
-              textAlign: TextAlign.center,
-            ),
-            const SizedBox(height: 8),
-          ],
-
-          // Email (no editable - solo mostrar cuando no esté editando)
-          if (!_isEditing && email.isNotEmpty) ...[
-            Text(
-              email,
-              style: TextStyle(fontSize: 16, color: Colors.grey.shade600),
-              textAlign: TextAlign.center,
-            ),
-            const SizedBox(height: 8),
-          ],
-
-          // Teléfono
-          if (_isEditing) ...[
             _buildEditableField(
               label: 'Teléfono',
               controller: _phoneController,
@@ -498,20 +480,10 @@ class _ProfilePageState extends State<ProfilePage> {
               validator: RegisterValidators.validatePhone,
             ),
             const SizedBox(height: 16),
-          ] else if (_phoneController.text.isNotEmpty) ...[
-            Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Icon(Icons.phone, size: 16, color: Colors.grey.shade600),
-                const SizedBox(width: 4),
-                Text(
-                  _phoneController.text,
-                  style: TextStyle(fontSize: 16, color: Colors.grey.shade600),
-                ),
-              ],
-            ),
-            const SizedBox(height: 12),
-          ],
+          ] ,
+          // Email y teléfono con mejor diseño
+         
+         const SizedBox(height: 8),
 
           // Estado del conductor (solo mostrar cuando no esté editando)
           if (!_isEditing && model.driver != null) ...[
@@ -525,7 +497,11 @@ class _ProfilePageState extends State<ProfilePage> {
                 label: 'Número de licencia',
                 controller: _licenseController,
                 icon: Icons.credit_card,
-                validator: (value) => RegisterValidators.validateNonEmpty(value, 'número de licencia'),
+                validator:
+                    (value) => RegisterValidators.validateNonEmpty(
+                      value,
+                      'número de licencia',
+                    ),
               ),
               const SizedBox(height: 16),
               _buildCiudadOrigenField(),
@@ -535,51 +511,72 @@ class _ProfilePageState extends State<ProfilePage> {
               _buildRoutesDropdown(),
               const SizedBox(height: 16),
             ] else ...[
-              if (_licenseController.text.isNotEmpty) ...[
-                _buildInfoRow(
-                  icon: Icons.credit_card,
-                  label: 'Licencia',
-                  value: _licenseController.text,
-                ),
-                const SizedBox(height: 8),
-              ],
-
-              if (_capacityController.text.isNotEmpty &&
-                  _capacityController.text != '0') ...[
-                _buildInfoRow(
-                  icon: Icons.people,
-                  label: 'Capacidad',
-                  value: '${_capacityController.text} pasajeros',
-                ),
-                const SizedBox(height: 8),
-              ],
-
-              if (model.driver!.routes.isNotEmpty) ...[
-                _buildInfoRow(
-                  icon: Icons.route,
-                  label: 'Rutas',
-                  value: model.driver!.routes.join(', '),
-                ),
-                const SizedBox(height: 8),
-              ],
-
-              // Mostrar viajes locales
-              _buildInfoRow(
-                icon: Icons.location_on,
-                label: 'Viajes locales',
-                value: model.driver!.viajes_locales ? 'Sí' : 'No',
+              // Sección de información personal
+              _buildInfoSection(
+                title: 'Información Personal',
+                icon: Icons.person,
+                children: [
+                  if (_licenseController.text.isNotEmpty)
+                    _buildInfoRow(
+                      icon: Icons.phone,
+                      label: 'Número de teléfono',
+                      value: _phoneController.text,
+                    ),
+                    _buildInfoRow(
+                      icon: Icons.credit_card,
+                      label: 'Número de Licencia',
+                      value: _licenseController.text,
+                    ),
+                  if (model.driver!.origen != null)
+                    _buildInfoRow(
+                      icon: Icons.home_work,
+                      label: 'Ciudad de Residencia',
+                      value:
+                          '${model.driver!.origen!.nombre} (${model.driver!.origen!.codigo})',
+                    ),
+                ],
               ),
-              const SizedBox(height: 8),
 
-              // Mostrar ciudad de origen
-              if (model.driver!.origen != null) ...[
-                _buildInfoRow(
-                  icon: Icons.home_work,
-                  label: 'Ciudad de residencia',
-                  value:
-                      '${model.driver!.origen!.nombre} (${model.driver!.origen!.codigo})',
-                ),
-              ],
+              const SizedBox(height: 16),
+
+              // Sección de información del vehículo
+              _buildInfoSection(
+                title: 'Información del Vehículo',
+                icon: Icons.directions_car,
+                children: [
+                  if (_capacityController.text.isNotEmpty &&
+                      _capacityController.text != '0')
+                    _buildInfoRow(
+                      icon: Icons.people,
+                      label: 'Capacidad de Pasajeros',
+                      value: '${_capacityController.text} personas',
+                    ),
+                ],
+              ),
+
+              const SizedBox(height: 16),
+
+              // Sección de rutas y servicios
+              _buildInfoSection(
+                title: 'Rutas y Servicios',
+                icon: Icons.route,
+                children: [
+                  if (model.driver!.routes.isNotEmpty)
+                    _buildInfoRow(
+                      icon: Icons.route,
+                      label: 'Rutas Disponibles',
+                      value: model.driver!.routes.join(', '),
+                    ),
+                  _buildInfoRow(
+                    icon: Icons.location_on,
+                    label: 'Viajes Locales',
+                    value:
+                        model.driver!.viajes_locales
+                            ? 'Disponible'
+                            : 'No disponible',
+                  ),
+                ],
+              ),
             ],
           ],
         ],
@@ -592,11 +589,7 @@ class _ProfilePageState extends State<ProfilePage> {
     required String label,
     required String value,
   }) {
-    return InfoRow(
-      icon: icon,
-      label: label,
-      value: value,
-    );
+    return InfoRow(icon: icon, label: label, value: value);
   }
 
   Widget _buildEditableField({
@@ -702,10 +695,7 @@ class _ProfilePageState extends State<ProfilePage> {
     if (validationError != null) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(validationError),
-            backgroundColor: Colors.red,
-          ),
+          SnackBar(content: Text(validationError), backgroundColor: Colors.red),
         );
       }
       return; // No continuar si hay errores de validación
@@ -938,5 +928,62 @@ class _ProfilePageState extends State<ProfilePage> {
         ),
       );
     }
+  }
+
+  Widget _buildInfoSection({
+    required String title,
+    required IconData icon,
+    required List<Widget> children,
+  }) {
+    if (children.isEmpty) return const SizedBox.shrink();
+
+    return Container(
+      width: double.infinity,
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.06),
+            blurRadius: 10,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Container(
+            width: double.infinity,
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              color: AppColors.primary.withOpacity(0.05),
+              borderRadius: const BorderRadius.only(
+                topLeft: Radius.circular(16),
+                topRight: Radius.circular(16),
+              ),
+            ),
+            child: Row(
+              children: [
+                Icon(icon, size: 22, color: AppColors.primary),
+                const SizedBox(width: 10),
+                Text(
+                  title,
+                  style: TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.w600,
+                    color: AppColors.primary,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          Padding(
+            padding: const EdgeInsets.all(16),
+            child: Column(children: children),
+          ),
+        ],
+      ),
+    );
   }
 }
