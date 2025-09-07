@@ -6,7 +6,7 @@ import 'package:eytaxi/features/home/presentation/pages/home_screen.dart';
 import 'package:eytaxi/features/driver/presentation/home/driver_home.dart';
 import 'package:eytaxi/features/driver/presentation/status/pending_driver_screen.dart';
 import 'package:eytaxi/features/driver/presentation/status/rejected_driver_screen.dart';
-import 'package:eytaxi/presentation/splashscreen/splash_screen.dart';
+import 'package:eytaxi/features/splashscreen/splash_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 

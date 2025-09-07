@@ -1,3 +1,4 @@
+import 'package:easy_localization/easy_localization.dart';
 import 'package:eytaxi/core/constants/app_colors.dart';
 import 'package:flutter/material.dart';
 
@@ -19,7 +20,7 @@ class LocationDropdown extends StatelessWidget {
     return DropdownButtonFormField<String>(
       value: value,
       decoration: InputDecoration(
-        labelText: 'Provincia turística',
+        labelText: 'provincia turistica'.tr(),
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(16),
         ),

@@ -1,3 +1,4 @@
+import 'package:easy_localization/easy_localization.dart';
 import 'package:eytaxi/core/constants/app_colors.dart';
 import 'package:eytaxi/features/excursiones/presentation/detalles_excursion.dart';
 import 'package:flutter/material.dart';
@@ -318,9 +319,9 @@ class ExcursionCard extends StatelessWidget {
             borderRadius: BorderRadius.circular(12),
           ),
         ),
-        child: const Text(
-          'Reservar',
-          style: TextStyle(
+        child: Text(
+          'reservar'.tr(),
+          style: const TextStyle(
             fontSize: 16,
             fontWeight: FontWeight.w600,
             letterSpacing: 0.5,

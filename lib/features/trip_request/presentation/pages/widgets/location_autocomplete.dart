@@ -149,12 +149,6 @@ class _LocationAutocompleteState extends State<LocationAutocomplete> {
                 }
               },
             ),
-          ).copyWith(
-            filled: true,
-            fillColor:
-                widget.user == UserType.driver
-                    ? Colors.grey.shade50 // 👈 Fondo diferente para drivers
-                    : AppColors.borderInput, // 👈 Fondo normal para otros usuarios
           ),
           onChanged: (value) {
             if (widget.selectedLocation != null &&

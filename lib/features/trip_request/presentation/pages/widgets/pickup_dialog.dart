@@ -5,6 +5,7 @@ import 'package:eytaxi/core/constants/app_colors.dart';
 import 'package:eytaxi/core/styles/button_style.dart';
 import 'package:eytaxi/core/styles/input_decorations.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
+import 'package:easy_localization/easy_localization.dart';
 
 enum ContactMethod { phone, whatsapp }
 
@@ -203,7 +204,7 @@ class _PickupDialogContentState extends State<_PickupDialogContent>
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  "Solicitar Recogida",
+                  "solicitar_recogida".tr(),
                   style: Theme.of(context).textTheme.titleLarge?.copyWith(
                         color: isDarkMode ? Colors.white : Colors.black87,
                         fontWeight: FontWeight.bold,
@@ -211,7 +212,7 @@ class _PickupDialogContentState extends State<_PickupDialogContent>
                 ),
                 const SizedBox(height: 2),
                 Text(
-                  "Complete los siguientes pasos",
+                  "complete_siguientes_pasos".tr(),
                   style: Theme.of(context).textTheme.bodySmall?.copyWith(
                         color: isDarkMode ? AppColors.grey : Colors.black54,
                       ),
@@ -316,13 +317,13 @@ class _PickupDialogContentState extends State<_PickupDialogContent>
         crossAxisAlignment: CrossAxisAlignment.start,
         mainAxisSize: MainAxisSize.min,
         children: [
-          _buildStepTitle("¿Cuál es su nombre?", Icons.person),
+          _buildStepTitle("cual_es_su_nombre".tr(), Icons.person),
           const SizedBox(height: 20),
           TextFormField(
             controller: _nameController,
             decoration: AppInputDecoration.buildEmailInputDecoration(
               context: context,
-              labelText: 'Nombre completo',
+              labelText: 'nombre_completo'.tr(),
               prefixIcon: Icons.person_outline,
             ).copyWith(
               filled: true,
@@ -332,7 +333,7 @@ class _PickupDialogContentState extends State<_PickupDialogContent>
             ),
             validator: (value) =>
                 value == null || value.trim().isEmpty
-                    ? 'Por favor ingrese su nombre'
+                    ? "por_favor_ingrese_nombre".tr()
                     : null,
             keyboardType: TextInputType.name,
             textCapitalization: TextCapitalization.words,
@@ -350,7 +351,7 @@ class _PickupDialogContentState extends State<_PickupDialogContent>
         crossAxisAlignment: CrossAxisAlignment.start,
         mainAxisSize: MainAxisSize.min,
         children: [
-          _buildStepTitle("¿Cómo prefiere que le contactemos?", Icons.contact_mail),
+          _buildStepTitle("como_prefiere_contacto".tr(), Icons.contact_mail),
           const SizedBox(height: 20),
           Column(
             mainAxisSize: MainAxisSize.min,
@@ -460,7 +461,7 @@ class _PickupDialogContentState extends State<_PickupDialogContent>
                             decoration:
                                 AppInputDecoration.buildEmailInputDecoration(
                               context: context,
-                              labelText: 'Número de WhatsApp',
+                              labelText: "numero_whatsapp_pickup".tr(),
                               prefixIcon: _getContactIcon(_selectedContactMethod!),
                             ).copyWith(
                               filled: true,
@@ -529,13 +530,13 @@ class _PickupDialogContentState extends State<_PickupDialogContent>
         crossAxisAlignment: CrossAxisAlignment.start,
         mainAxisSize: MainAxisSize.min,
         children: [
-          _buildStepTitle("¿Dónde debemos recogerle?", Icons.location_on),
+          _buildStepTitle("donde_recogerle".tr(), Icons.location_on),
           const SizedBox(height: 20),
           TextFormField(
             controller: _addressController,
             decoration: AppInputDecoration.buildEmailInputDecoration(
               context: context,
-              labelText: 'Dirección de recogida',
+              labelText: "direccion_recogida_pickup".tr(),
               prefixIcon: Icons.location_on_outlined,
             ).copyWith(
               filled: true,
@@ -545,7 +546,7 @@ class _PickupDialogContentState extends State<_PickupDialogContent>
             ),
             validator: (value) =>
                 value == null || value.trim().isEmpty
-                    ? 'Por favor ingrese la dirección'
+                    ? "por_favor_ingrese_direccion".tr()
                     : null,
             onChanged: (value) => setState(() {}),
             maxLines: 2,
@@ -555,7 +556,7 @@ class _PickupDialogContentState extends State<_PickupDialogContent>
             controller: _extraInfoController,
             decoration: AppInputDecoration.buildEmailInputDecoration(
               context: context,
-              labelText: 'Información adicional (opcional)',
+              labelText: "informacion_adicional_opcional".tr(),
               prefixIcon: Icons.note_outlined,
             ).copyWith(
               filled: true,
@@ -605,7 +606,7 @@ class _PickupDialogContentState extends State<_PickupDialogContent>
               child: TextButton(
                 style: AppButtonStyles.textButtonStyle(context),
                 onPressed: _previousStep,
-                child: const Text("Anterior"),
+                child: Text("anterior".tr()),
               ),
             ),
           if (_currentStep > 0) const SizedBox(width: 12),
@@ -625,7 +626,7 @@ class _PickupDialogContentState extends State<_PickupDialogContent>
                         color: Colors.white,
                       ),
                     )
-                  : Text(_currentStep == 2 ? "Confirmar" : "Siguiente"),
+                  : Text(_currentStep == 2 ? "confirmar".tr() : "siguiente".tr()),
             ),
           ),
         ],
@@ -645,18 +646,18 @@ class _PickupDialogContentState extends State<_PickupDialogContent>
   String _getContactLabel(ContactMethod method) {
     switch (method) {
       case ContactMethod.phone:
-        return 'Llamada Dentro de Cuba';
+        return "llamada_dentro_cuba_pickup".tr();
       case ContactMethod.whatsapp:
-        return 'WhatsApp';
+        return "whatsapp".tr();
     }
   }
 
   String _getContactInputLabel(ContactMethod method) {
     switch (method) {
       case ContactMethod.phone:
-        return 'Número cubano';
+        return "numero_cubano_pickup".tr();
       case ContactMethod.whatsapp:
-        return 'Número de WhatsApp';
+        return "numero_whatsapp_pickup".tr();
     }
   }
 
@@ -685,17 +686,17 @@ class _PickupDialogContentState extends State<_PickupDialogContent>
 
   String? _validateContact(String? value) {
     if (value == null || value.trim().isEmpty) {
-      return 'Este campo es requerido';
+      return "este_campo_requerido".tr();
     }
      else if (_selectedContactMethod == ContactMethod.phone) {
       final cleanedValue = value.replaceAll(RegExp(r'[^0-9]'), '');
       if (!RegExp(r'^\d{8}$').hasMatch(cleanedValue)) {
-        return 'Ingrese un número de teléfono válido (8 dígitos, sin +53)';
+        return "numero_telefono_valido_8_digitos".tr();
       }
     } else if (_selectedContactMethod == ContactMethod.whatsapp) {
       final cleanedValue = value.replaceAll(RegExp(r'[^0-9]'), '');
       if (!RegExp(r'^\d{8,15}$').hasMatch(cleanedValue)) {
-        return 'Ingrese un número de WhatsApp válido (8-15 dígitos)';
+        return "numero_whatsapp_valido_8_15_digitos".tr();
       }
     }
     return null;

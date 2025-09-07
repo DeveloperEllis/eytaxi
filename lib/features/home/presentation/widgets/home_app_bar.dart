@@ -19,6 +19,10 @@ class HomeAppBar extends StatelessWidget implements PreferredSizeWidget {
 
   @override
   Widget build(BuildContext context) {
+    // Get current language to determine which flag to show
+    final currentLocale = context.locale;
+    final isSpanish = currentLocale.languageCode == 'es';
+
     return AppBar(
       centerTitle: false,
       title: Text(title),
@@ -27,11 +31,27 @@ class HomeAppBar extends StatelessWidget implements PreferredSizeWidget {
       automaticallyImplyLeading: false,
       actions: [
         GestureDetector(
-          onTapDown: (details) =>
-              onLanguageMenuRequested?.call(details.globalPosition),
-          child: const Padding(
-            padding: EdgeInsets.symmetric(horizontal: 8.0),
-            child: Icon(Icons.language),
+          onTapDown:
+              (details) =>
+                  onLanguageMenuRequested?.call(details.globalPosition),
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 8.0),
+            child: Row(
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(6),
+                  decoration: BoxDecoration(
+                    color: Colors.white.withOpacity(0.1),
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: Text(
+                    isSpanish ? '🇪🇸' : '🇺🇸',
+                    style: const TextStyle(fontSize: 20),
+                  ),
+                ),
+                Icon(Icons.arrow_drop_down),
+              ],
+            ),
           ),
         ),
         IconButton(
