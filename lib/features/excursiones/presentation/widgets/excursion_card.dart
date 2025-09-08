@@ -13,6 +13,13 @@ class ExcursionCard extends StatelessWidget {
     required this.onReservePressed,
   });
 
+  // Helper method para obtener texto según idioma
+  String _getLocalizedText(BuildContext context, String fieldPrefix) {
+    final currentLanguage = context.locale.languageCode;
+    final key = '${fieldPrefix}_$currentLanguage';
+    return excursion[key] ?? excursion['${fieldPrefix}_es'] ?? '';
+  }
+
   @override
   Widget build(BuildContext context) {
     final isDarkMode = Theme.of(context).brightness == Brightness.dark;
@@ -195,7 +202,7 @@ class ExcursionCard extends StatelessWidget {
   Widget _buildTitle(BuildContext context) {
     final isDarkMode = Theme.of(context).brightness == Brightness.dark;     
     return Text(
-      excursion['titulo'] ?? '',
+      _getLocalizedText(context, 'titulo'),
       style: TextStyle(
         fontSize: 18,
         fontWeight: FontWeight.w700,
@@ -210,7 +217,7 @@ class ExcursionCard extends StatelessWidget {
   Widget _buildDescription(BuildContext context) {
     final isDarkMode = Theme.of(context).brightness == Brightness.dark;
     return Text(
-      excursion['descripcion'] ?? '',
+      _getLocalizedText(context, 'descripcion'),
       style: TextStyle(
         fontSize: 14,
         color: isDarkMode ? Colors.grey[400] : Colors.grey[600],
@@ -243,7 +250,7 @@ class ExcursionCard extends StatelessWidget {
         if (horaSalida.isNotEmpty)
           Row(
             children: [
-              Expanded(child: _buildInfoChip(Icons.departure_board, 'Salida: $horaSalida')),
+              Expanded(child: _buildInfoChip(Icons.departure_board, '${"salida".tr()}: $horaSalida')),
             ],
           ),
       ],

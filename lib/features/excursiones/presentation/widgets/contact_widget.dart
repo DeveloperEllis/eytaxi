@@ -45,6 +45,13 @@ class _ReservationFormDialogState extends State<ReservationFormDialog> {
     ExcursionRemoteDataSource(Supabase.instance.client),
   );
 
+  // Helper method para obtener texto según idioma
+  String _getLocalizedText(String fieldPrefix) {
+    final currentLanguage = context.locale.languageCode;
+    final key = '${fieldPrefix}_$currentLanguage';
+    return widget.excursion[key] ?? widget.excursion['${fieldPrefix}_es'] ?? '';
+  }
+
   @override
   void initState() {
     super.initState();
@@ -157,7 +164,7 @@ class _ReservationFormDialogState extends State<ReservationFormDialog> {
             children: [
               Expanded(
                 child: Text(
-                  widget.excursion['titulo'] ?? 'Excursión',
+                  _getLocalizedText('titulo'),
                   style: TextStyle(
                     fontSize: 14,
                     fontWeight: FontWeight.w600,

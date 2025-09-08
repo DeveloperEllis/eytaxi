@@ -86,7 +86,7 @@
   "whatsapp_excursion": "WhatsApp",
   "cuba_telefono": "Cuba",
   "numero_whatsapp_requerido": "Número de WhatsApp *",
-  "numero_telefono_llamadas_requerido": "Número de teléfono para receibir llamadas *",
+  "numero_telefono_llamadas_requerido": "Número de teléfono para recibir llamadas *",
   "codigo_pais": "Código",
   "selecciona_codigo": "Selecciona un código",
   "direccion_recogida_requerido": "Dirección de recogida *",
@@ -101,5 +101,6 @@
   "numero_whatsapp_valido_excursion": "Ingresa un número de WhatsApp válido",
   "numero_cubano_valido_excursion": "Ingresa un número cubano válido",
   "reserva_enviada_exitosamente": "Reserva enviada exitosamente",
-  "contactaremos_pronto": "Le contactaremos lo antes posible"
+  "contactaremos_pronto": "Le contactaremos lo antes posible",
+  "salida": "Salida"
 }

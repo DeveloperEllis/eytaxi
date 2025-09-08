@@ -1,5 +1,6 @@
+import 'package:eytaxi/core/constants/app_constants.dart';
 import 'package:eytaxi/core/services/theme_notifier.dart';
-import 'package:eytaxi/presentation/common/information_screen.dart';
+import 'package:eytaxi/features/common/information_screen.dart';
 import 'package:eytaxi/features/home/presentation/widgets/home_app_bar.dart';
 import 'package:eytaxi/features/home/presentation/widgets/home_bottom_nav.dart';
 import 'package:eytaxi/features/trip_request/presentation/pages/trip_request_screen.dart';
@@ -25,8 +26,61 @@ class _HomeScreenState extends State<HomeScreen> {
         position.dx, position.dy, position.dx + 1, position.dy + 1,
       ),
       items: const [
-        PopupMenuItem(value: Locale('es'), child: Text('Español')),
-        PopupMenuItem(value: Locale('en'), child: Text('English')),
+        PopupMenuItem(
+          value: Locale('es'),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text('🇪🇸', style: TextStyle(fontSize: 18)),
+              SizedBox(width: 8),
+              Text('Español'),
+            ],
+          ),
+        ),
+        PopupMenuItem(
+          value: Locale('en'),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text('🇺🇸', style: TextStyle(fontSize: 18)),
+              SizedBox(width: 8),
+              Text('English'),
+            ],
+          ),
+        ),
+        PopupMenuItem(
+          value: Locale('fr'),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text('🇫🇷', style: TextStyle(fontSize: 18)),
+              SizedBox(width: 8),
+              Text('Français'),
+            ],
+          ),
+        ),
+        PopupMenuItem(
+          value: Locale('ru'),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text('🇷🇺', style: TextStyle(fontSize: 18)),
+              SizedBox(width: 8),
+              Text('Русский'),
+            ],
+          ),
+        ),
+        PopupMenuItem(
+          value: Locale('it'),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text('🇮🇹', style: TextStyle(fontSize: 18)),
+              SizedBox(width: 8),
+              Text('Italiano'),
+            ],
+          ),
+        ),
       ],
     );
 
@@ -42,7 +96,7 @@ class _HomeScreenState extends State<HomeScreen> {
 
     return Scaffold(
       appBar: HomeAppBar(
-        title: 'Pikera',
+        title: AppConstants.appname,
         onLanguageMenuRequested: (pos) => _showLanguageMenu(context, pos),
         onToggleTheme: () => themeNotifier.toggleTheme(),
       ),

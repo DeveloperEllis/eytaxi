@@ -1,5 +1,5 @@
 import 'package:eytaxi/core/services/theme_notifier.dart';
-import 'package:eytaxi/presentation/admin/admin_dashboard.dart';
+import 'package:eytaxi/features/admin/admin_dashboard.dart';
 import 'package:eytaxi/features/auth/presentation/login/login_screen.dart';
 import 'package:eytaxi/features/auth/presentation/registro/register_screen.dart';
 import 'package:eytaxi/features/home/presentation/pages/home_screen.dart';
@@ -9,6 +9,7 @@ import 'package:eytaxi/features/driver/presentation/status/rejected_driver_scree
 import 'package:eytaxi/features/splashscreen/splash_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 
 // Importa más pantallas aquí según las vayas creando
 final ThemeNotifier themeNotifier = ThemeNotifier();
@@ -30,36 +31,41 @@ class AppRoutes {
   static const String admin = '/admin';
   static final GoRouter router = GoRouter(
     initialLocation: splash,
-    // redirect: (context, state) {
-    //   final user = Supabase.instance.client.auth.currentUser;
+    redirect: (context, state) {
+      final user = Supabase.instance.client.auth.currentUser;
+      final currentLocation = state.matchedLocation;
 
-    //   // Si estoy en splash, no redirijo todavía
-    //   if (state.matchedLocation == splash) {
-    //     return null;
-    //   }
+      print('DEBUG ROUTER: Current location: $currentLocation, User: ${user?.id}');
 
-    //   // Usuario no logueado → solo puede entrar a login/register
-    //   if (user == null) {
-    //     final isAuthPage =
-    //         state.matchedLocation == login || state.matchedLocation == register;
-    //     return isAuthPage ? null : home;
-    //   }
+      // Si estoy en splash, no redirijo todavía
+      if (currentLocation == splash) {
+        return null;
+      }
 
-    //   // Si el usuario está logueado y quiere ir a login/register → mándalo a home
-    //   if (user != null &&
-    //       (state.matchedLocation == login ||
-    //           state.matchedLocation == register)) {
-    //     return home;
-    //   }
+      // Rutas públicas (accesibles sin autenticación)
+      final publicRoutes = [home, login, register];
+      
+      // Usuario no autenticado
+      if (user == null) {
+        // Solo puede acceder a rutas públicas
+        if (publicRoutes.contains(currentLocation)) {
+          return null; // Permitir acceso
+        } else {
+          print('DEBUG ROUTER: Usuario no autenticado intentando acceder a $currentLocation, redirigiendo a home');
+          return home; // Redirigir a home si intenta acceder a rutas protegidas
+        }
+      }
 
-    //   // Aquí puedes verificar el rol o estado del conductor desde la base de datos
-    //   // Ejemplo (pseudo):
-    //   // final role = await getRole(user.id);
-    //   // if (role == 'pending') return pendingDriver;
-    //   // if (role == 'rejected') return rejectedDriver;
-
-    //   return null; // No redirigir
-    // },
+      // Usuario autenticado (user != null)
+      // Si intenta acceder a login o register, redirigir a driverHome
+      if (currentLocation == login || currentLocation == register) {
+        print('DEBUG ROUTER: Usuario autenticado intentando acceder a auth, redirigiendo a driverHome');
+        return driverHome;
+      }
+      
+      // Para otras rutas, permitir acceso (el repositorio maneja la lógica específica de estado del conductor)
+      return null;
+    },
     routes: [
       GoRoute(path: splash, builder: (context, state) => SplashScreen()),
       GoRoute(path: home, builder: (context, state) => HomeScreen()),

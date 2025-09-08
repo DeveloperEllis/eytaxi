@@ -1,4 +1,5 @@
 import 'package:eytaxi/core/constants/app_colors.dart';
+import 'package:eytaxi/core/constants/app_constants.dart';
 import 'package:eytaxi/core/constants/app_routes.dart';
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
@@ -8,7 +9,7 @@ class InfoScreen extends StatelessWidget {
   const InfoScreen({super.key});
 
   // URLs para redes sociales y WhatsApp
-  static const String whatsappUrl = 'https://wa.me/+5358408409?text=¡Hola!%20Quiero%20más%20información%20sobre%20TaxiCuba';
+  static const String whatsappUrl = 'https://wa.me/${AppConstants.numero_soporte}?text=¡Hola!%20Quiero%20más%20información%20sobre%20TaxiCuba';
   static const String instagramUrl = 'https://www.instagram.com/taxicuba';
   static const String twitterUrl = 'https://x.com/taxicuba';
   static const String facebookUrl = 'https://www.facebook.com/taxicuba';
@@ -75,7 +76,7 @@ class InfoScreen extends StatelessWidget {
                     
                     // Título y subtítulo
                     Text(
-                      'TaxiCuba',
+                      AppConstants.appname,
                       style: TextStyle(
                         fontSize: 36,
                         fontWeight: FontWeight.bold,
@@ -85,7 +86,7 @@ class InfoScreen extends StatelessWidget {
                     ),
                     const SizedBox(height: 8),
                     Text(
-                      'Conectando Cuba, un viaje a la vez',
+                      AppConstants.slogan,
                       style: TextStyle(
                         fontSize: 16,
                         color: Colors.white.withOpacity(0.9),
@@ -130,33 +131,6 @@ class InfoScreen extends StatelessWidget {
                       ],
                     ),
                     const SizedBox(height: 16),
-                    
-                    // Contacto mejorado
-                    GestureDetector(
-                      onTap: () => _launchUrl(whatsappUrl),
-                      child: Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                        decoration: BoxDecoration(
-                          color: Colors.white.withOpacity(0.2),
-                          borderRadius: BorderRadius.circular(20),
-                        ),
-                        child: Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            const Icon(Icons.phone, color: Colors.white, size: 18),
-                            const SizedBox(width: 8),
-                            Text(
-                              '+53 5123 4567',
-                              style: const TextStyle(
-                                fontSize: 16,
-                                color: Colors.white,
-                                fontWeight: FontWeight.w500,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ),
                   ],
                 ),
               ),
@@ -172,7 +146,7 @@ class InfoScreen extends StatelessWidget {
                   // Sección ¿Qué es TaxiCuba?
                   _buildSectionTitle(
                     context: context,
-                    title: '¿Qué es TaxiCuba?',
+                    title: AppConstants.appname,
                     isDarkMode: isDarkMode,
                   ),
                   const SizedBox(height: 16),
@@ -211,36 +185,68 @@ class InfoScreen extends StatelessWidget {
                   ),
                   const SizedBox(height: 20),
                   
-                  // Grid de características
-                  GridView.builder(
-                    shrinkWrap: true,
-                    physics: const NeverScrollableScrollPhysics(),
-                    gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                      crossAxisCount: 2,
-                      crossAxisSpacing: 16,
-                      mainAxisSpacing: 16,
-                      childAspectRatio: 1.1,
+                  // Lista de características
+                  Container(
+                    decoration: BoxDecoration(
+                      color: isDarkMode ? AppColors.surfaceDark : Colors.white,
+                      borderRadius: BorderRadius.circular(16),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withOpacity(0.05),
+                          spreadRadius: 1,
+                          blurRadius: 8,
+                          offset: const Offset(0, 2),
+                        ),
+                      ],
                     ),
-                    itemCount: 6,
-                    itemBuilder: (context, index) {
-                      final features = [
-                       
-                        {'icon': Icons.local_taxi, 'title': 'Viajes locales', 'desc': 'Transporte rápido y confiable'},
-                        {'icon': Icons.landscape, 'title': 'Excursiones turísticas', 'desc': 'Descubre Cuba con expertos'},
-                        {'icon': Icons.route, 'title': 'Viajes personalizados', 'desc': 'Rutas adaptadas a tus necesidades'},
-                        {'icon': Icons.payment, 'title': 'Tarifas transparentes', 'desc': 'Precios justos conocidos antes'},
-                        {'icon': Icons.star_rate, 'title': 'Sistema de calificaciones', 'desc': 'Conductores verificados'},
-                        {'icon': Icons.schedule, 'title': 'Disponibilidad 24/7', 'desc': 'Siempre disponible'},
-                      ];
-                      
-                      return _buildFeatureCard(
-                        context: context,
-                        icon: features[index]['icon'] as IconData,
-                        title: features[index]['title'] as String,
-                        description: features[index]['desc'] as String,
-                        isDarkMode: isDarkMode,
-                      );
-                    },
+                    child: Column(
+                      children: [
+                        _buildFeatureListItem(
+                          context: context,
+                          icon: Icons.local_taxi,
+                          title: 'Viajes locales',
+                          description: 'Transporte rápido y confiable en toda Cuba',
+                          isDarkMode: isDarkMode,
+                          isFirst: true,
+                        ),
+                        _buildFeatureListItem(
+                          context: context,
+                          icon: Icons.landscape,
+                          title: 'Excursiones turísticas',
+                          description: 'Descubre los mejores destinos de Cuba con guías expertos',
+                          isDarkMode: isDarkMode,
+                        ),
+                        _buildFeatureListItem(
+                          context: context,
+                          icon: Icons.route,
+                          title: 'Viajes personalizados',
+                          description: 'Rutas completamente adaptadas a tus necesidades específicas',
+                          isDarkMode: isDarkMode,
+                        ),
+                        _buildFeatureListItem(
+                          context: context,
+                          icon: Icons.payment,
+                          title: 'Tarifas transparentes',
+                          description: 'Precios justos y conocidos antes de confirmar tu viaje',
+                          isDarkMode: isDarkMode,
+                        ),
+                        _buildFeatureListItem(
+                          context: context,
+                          icon: Icons.star_rate,
+                          title: 'Sistema de calificaciones',
+                          description: 'Conductores verificados y evaluados por otros usuarios',
+                          isDarkMode: isDarkMode,
+                        ),
+                        _buildFeatureListItem(
+                          context: context,
+                          icon: Icons.schedule,
+                          title: 'Disponibilidad 24/7',
+                          description: 'Servicio disponible las 24 horas, todos los días del año',
+                          isDarkMode: isDarkMode,
+                          isLast: true,
+                        ),
+                      ],
+                    ),
                   ),
                   
                   const SizedBox(height: 40),
@@ -339,35 +345,75 @@ class InfoScreen extends StatelessWidget {
                   ),
                   const SizedBox(height: 20),
                   
-                  // Grid de beneficios
-                  GridView.builder(
-                    shrinkWrap: true,
-                    physics: const NeverScrollableScrollPhysics(),
-                    gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                      crossAxisCount: 2,
-                      crossAxisSpacing: 16,
-                      mainAxisSpacing: 16,
-                      childAspectRatio: 1.2,
+                  // Lista de beneficios organizada
+                  Container(
+                    decoration: BoxDecoration(
+                      color: isDarkMode ? AppColors.surfaceDark : Colors.white,
+                      borderRadius: BorderRadius.circular(16),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withOpacity(0.05),
+                          spreadRadius: 1,
+                          blurRadius: 8,
+                          offset: const Offset(0, 2),
+                        ),
+                      ],
                     ),
-                    itemCount: 7,
-                    itemBuilder: (context, index) {
-                      final benefits = [
-                        {'emoji': '💰', 'title': 'Aumenta tus ingresos'},
-                        {'emoji': '🚗', 'title': 'Viajes locales y excursiones'},
-                        {'emoji': '✈️', 'title': 'Traslados aeropuerto'},
-                        {'emoji': '🗺️', 'title': 'Rutas personalizadas'},
-                        {'emoji': '📱', 'title': 'Gestión fácil desde móvil'},
-                        {'emoji': '⭐', 'title': 'Construye tu reputación'},
-                        {'emoji': '🛡️', 'title': 'Pagos seguros garantizados'},
-                      ];
-                      
-                      return _buildBenefitCard(
-                        context: context,
-                        emoji: benefits[index]['emoji'] as String,
-                        title: benefits[index]['title'] as String,
-                        isDarkMode: isDarkMode,
-                      );
-                    },
+                    child: Column(
+                      children: [
+                        _buildBenefitListItem(
+                          context: context,
+                          emoji: '💰',
+                          title: 'Aumenta tus ingresos',
+                          description: 'Maximiza tus ganancias con múltiples tipos de servicios y tarifas competitivas',
+                          isDarkMode: isDarkMode,
+                          isFirst: true,
+                        ),
+                        _buildBenefitListItem(
+                          context: context,
+                          emoji: '🚗',
+                          title: 'Viajes locales y excursiones',
+                          description: 'Ofrece tanto transporte urbano como experiencias turísticas completas',
+                          isDarkMode: isDarkMode,
+                        ),
+                        _buildBenefitListItem(
+                          context: context,
+                          emoji: '✈️',
+                          title: 'Traslados aeropuerto',
+                          description: 'Conecta con turistas que necesitan transporte desde y hacia el aeropuerto',
+                          isDarkMode: isDarkMode,
+                        ),
+                        _buildBenefitListItem(
+                          context: context,
+                          emoji: '🗺️',
+                          title: 'Rutas personalizadas',
+                          description: 'Crea itinerarios únicos según las necesidades específicas de cada cliente',
+                          isDarkMode: isDarkMode,
+                        ),
+                        _buildBenefitListItem(
+                          context: context,
+                          emoji: '📱',
+                          title: 'Gestión fácil desde móvil',
+                          description: 'Administra tus servicios, horarios y ganancias desde una aplicación intuitiva',
+                          isDarkMode: isDarkMode,
+                        ),
+                        _buildBenefitListItem(
+                          context: context,
+                          emoji: '⭐',
+                          title: 'Construye tu reputación',
+                          description: 'Recibe calificaciones de clientes y construye una reputación sólida',
+                          isDarkMode: isDarkMode,
+                        ),
+                        _buildBenefitListItem(
+                          context: context,
+                          emoji: '🛡️',
+                          title: 'Pagos seguros garantizados',
+                          description: 'Sistema de pagos confiable que protege tanto a conductores como a pasajeros',
+                          isDarkMode: isDarkMode,
+                          isLast: true,
+                        ),
+                      ],
+                    ),
                   ),
                   
                   const SizedBox(height: 40),
@@ -456,110 +502,6 @@ class InfoScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildFeatureCard({
-    required BuildContext context,
-    required IconData icon,
-    required String title,
-    required String description,
-    required bool isDarkMode,
-  }) {
-    return Container(
-      padding: const EdgeInsets.all(10),
-      decoration: BoxDecoration(
-        color: isDarkMode ? AppColors.surfaceDark : Colors.white,
-        borderRadius: BorderRadius.circular(16),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.05),
-            spreadRadius: 1,
-            blurRadius: 6,
-            offset: const Offset(0, 2),
-          ),
-        ],
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Container(
-            padding: const EdgeInsets.all(8),
-            decoration: BoxDecoration(
-              color: AppColors.primary.withOpacity(0.1),
-              borderRadius: BorderRadius.circular(12),
-            ),
-            child: Icon(
-              icon,
-              color: AppColors.primary,
-              size: 28,
-            ),
-          ),
-          const SizedBox(height: 12),
-          Text(
-            title,
-            style: TextStyle(
-              fontSize: 16,
-              fontWeight: FontWeight.bold,
-              color: isDarkMode ? AppColors.white : AppColors.black,
-            ),
-          ),
-          const SizedBox(height: 8),
-          Flexible(
-            child: Text(
-              description,
-              style: TextStyle(
-                fontSize: 14,
-                color: AppColors.grey,
-                height: 1.3,
-              ),
-              maxLines: 3,
-              overflow: TextOverflow.ellipsis,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildBenefitCard({
-    required BuildContext context,
-    required String emoji,
-    required String title,
-    required bool isDarkMode,
-  }) {
-    return Container(
-      padding: const EdgeInsets.all(10),
-      decoration: BoxDecoration(
-        color: isDarkMode ? AppColors.surfaceDark : Colors.white,
-        borderRadius: BorderRadius.circular(16),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.05),
-            spreadRadius: 1,
-            blurRadius: 6,
-            offset: const Offset(0, 2),
-          ),
-        ],
-      ),
-      child: Column(
-        children: [
-          Text(
-            emoji,
-            style: const TextStyle(fontSize: 32),
-          ),
-          const SizedBox(height: 10),
-          Text(
-            title,
-            style: TextStyle(
-              fontSize: 14,
-              fontWeight: FontWeight.bold,
-              color: isDarkMode ? AppColors.white : AppColors.black,
-            ),
-            textAlign: TextAlign.center,
-          ),
-        ],
-      ),
-    );
-  }
-
   Widget _buildSocialIcon({
     required IconData icon,
     required Color color,
@@ -579,6 +521,156 @@ class InfoScreen extends StatelessWidget {
           ),
           child: FaIcon(icon, color: Colors.white, size: 30,),
         ),
+      ),
+    );
+  }
+
+  Widget _buildFeatureListItem({
+    required BuildContext context,
+    required IconData icon,
+    required String title,
+    required String description,
+    required bool isDarkMode,
+    bool isFirst = false,
+    bool isLast = false,
+  }) {
+    return Container(
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        border: Border(
+          bottom: isLast ? BorderSide.none : BorderSide(
+            color: isDarkMode ? AppColors.grey.withOpacity(0.3) : AppColors.grey.withOpacity(0.2),
+            width: 1,
+          ),
+        ),
+      ),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Icono
+          Container(
+            width: 50,
+            height: 50,
+            decoration: BoxDecoration(
+              color: AppColors.primary.withOpacity(0.1),
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: Icon(
+              icon,
+              color: AppColors.primary,
+              size: 24,
+            ),
+          ),
+          const SizedBox(width: 16),
+          
+          // Contenido
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  title,
+                  style: TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
+                    color: isDarkMode ? AppColors.white : AppColors.black,
+                  ),
+                ),
+                const SizedBox(height: 6),
+                Text(
+                  description,
+                  style: TextStyle(
+                    fontSize: 14,
+                    height: 1.4,
+                    color: isDarkMode ? AppColors.grey : AppColors.grey.withOpacity(0.8),
+                  ),
+                ),
+              ],
+            ),
+          ),
+          
+          // Flecha indicadora
+         
+        ],
+      ),
+    );
+  }
+
+  Widget _buildBenefitListItem({
+    required BuildContext context,
+    required String emoji,
+    required String title,
+    required String description,
+    required bool isDarkMode,
+    bool isFirst = false,
+    bool isLast = false,
+  }) {
+    return Container(
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        border: Border(
+          bottom: isLast ? BorderSide.none : BorderSide(
+            color: isDarkMode ? AppColors.grey.withOpacity(0.3) : AppColors.grey.withOpacity(0.2),
+            width: 1,
+          ),
+        ),
+      ),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Emoji como icono
+          Container(
+            width: 50,
+            height: 50,
+            decoration: BoxDecoration(
+              color: isDarkMode ? AppColors.primary.withOpacity(0.2) : AppColors.primary.withOpacity(0.1),
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: Center(
+              child: Text(
+                emoji,
+                style: const TextStyle(fontSize: 24),
+              ),
+            ),
+          ),
+          const SizedBox(width: 16),
+          
+          // Contenido
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  title,
+                  style: TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
+                    color: isDarkMode ? AppColors.white : AppColors.black,
+                  ),
+                ),
+                const SizedBox(height: 6),
+                Text(
+                  description,
+                  style: TextStyle(
+                    fontSize: 14,
+                    height: 1.4,
+                    color: isDarkMode ? AppColors.grey : AppColors.grey.withOpacity(0.8),
+                  ),
+                ),
+              ],
+            ),
+          ),
+          
+          // Punto indicador
+          Container(
+            width: 8,
+            height: 8,
+            decoration: BoxDecoration(
+              color: AppColors.primary,
+              shape: BoxShape.circle,
+            ),
+          ),
+        ],
       ),
     );
   }

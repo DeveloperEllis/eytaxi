@@ -1,6 +1,10 @@
 class AppConstants {
 
+static String appname = 'TaxiPorCuba';
+static String slogan = 'Conectamos viajeros con taxistas en Cuba';
 static const String registroexitoso = 'assets/checkanimation.json';
+static const String numero_soporte = '+5358408409';
+static const String numero_gestion = '+5352375007';
 
 static const List<Map<String, String>> countryCodes = [
     {'code': '+1', 'flag': '🇺🇸'},

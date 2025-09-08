@@ -2,9 +2,6 @@ import 'package:eytaxi/core/constants/app_colors.dart';
 import 'package:eytaxi/core/constants/app_routes.dart';
 import 'package:eytaxi/core/widgets/messages/logs.dart';
 import 'package:eytaxi/features/auth/data/datasources/auth_remote_datasource.dart';
-import 'package:eytaxi/features/driver/data/datasources/driver_profile_remote_datasource.dart';
-import 'package:eytaxi/features/driver/presentation/status/pending_driver_screen.dart';
-import 'package:eytaxi/features/driver/presentation/status/rejected_driver_screen.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:eytaxi/core/styles/button_style.dart';
 import 'package:eytaxi/core/styles/input_decorations.dart';
@@ -26,62 +23,11 @@ class _LoginScreenState extends State<LoginScreen> {
   bool _loading = false;
   bool _obscurePassword = true;
   late AuthRepositoryImpl _authRepository;
-  late DriverProfileRemoteDataSource _driverDataSource;
 
- 
   @override
   void initState() {
     super.initState();
     _authRepository = AuthRepositoryImpl(AuthRemoteDataSource());
-    _driverDataSource = DriverProfileRemoteDataSource(Supabase.instance.client);
-  }
-
-  Future<void> _handlePostLoginRedirection() async {
-    final user = Supabase.instance.client.auth.currentUser;
-    if (user == null) {
-      print('DEBUG: No user found after login');
-      return;
-    }
-
-    try {
-      print('DEBUG: Checking driver status for user: ${user.id}');
-      
-      // Verificar el estado del conductor
-      final driverStatus = await _driverDataSource.getDriverStatus(user.id);
-      
-      print('DEBUG: Driver status: $driverStatus');
-      
-      if (driverStatus == null) {
-        // El usuario no está registrado como conductor, dirigir al home normal
-        print('DEBUG: User is not a driver, redirecting to driver home');
-        AppRoutes.router.go(AppRoutes.driverHome);
-        return;
-      }
-
-      // Manejar los diferentes estados del conductor
-      switch (driverStatus.toLowerCase()) {
-        case 'pending':
-          print('DEBUG: Driver status is pending, showing pending screen');
-         AppRoutes.router.go(AppRoutes.pendingdriver);
-          break;
-        case 'rejected':
-          print('DEBUG: Driver status is rejected, showing rejected screen');
-          AppRoutes.router.go(AppRoutes.rejectedDriver);
-          break;
-        case 'approved':
-          print('DEBUG: Driver status is approved/active, redirecting to driver home');
-          AppRoutes.router.go(AppRoutes.driverHome);
-          break;
-        default:
-          // Estado desconocido, dirigir al home por defecto
-          print('DEBUG: Unknown driver status: $driverStatus, redirecting to driver home');
-          AppRoutes.router.go(AppRoutes.driverHome);
-      }
-    } catch (e) {
-      print('Error checking driver status: $e');
-      // En caso de error, dirigir al home por defecto
-      AppRoutes.router.go(AppRoutes.pendingdriver);
-    }
   }
 
   @override
@@ -177,7 +123,7 @@ class _LoginScreenState extends State<LoginScreen> {
                                     await _authRepository.signInWithPassword(_email, _password);
                                     // Si llega aquí sin excepción, login exitoso
                                     // Verificar estado del conductor antes de redirigir
-                                    await _handlePostLoginRedirection();
+                                    await _authRepository.handlePostLoginRedirection();
                                   } on AuthException catch (e) {
                                     String message = 'Error al iniciar sesión.';
                                     final msg = e.message.toLowerCase();
@@ -196,7 +142,9 @@ class _LoginScreenState extends State<LoginScreen> {
                                       const SnackBar(content: Text('Ocurrió un error inesperado. Intenta nuevamente.')),
                                     );
                                   } finally {
-                                    setState(() => _loading = false);
+                                    if (mounted) {
+                                      setState(() => _loading = false);
+                                    }
                                   }
                                 }
                               },

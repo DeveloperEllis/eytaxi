@@ -1,10 +1,18 @@
 import 'package:eytaxi/core/constants/app_colors.dart';
 import 'package:eytaxi/features/excursiones/presentation/widgets/contact_widget.dart';
 import 'package:flutter/material.dart';
+import 'package:easy_localization/easy_localization.dart';
 
 class ExcursionDetallePage extends StatelessWidget {
   final Map<String, dynamic> excursion;
   const ExcursionDetallePage({super.key, required this.excursion});
+
+  // Helper method para obtener texto según idioma
+  String _getLocalizedText(BuildContext context, String fieldPrefix) {
+    final currentLanguage = context.locale.languageCode;
+    final key = '${fieldPrefix}_$currentLanguage';
+    return excursion[key] ?? excursion['${fieldPrefix}_es'] ?? '';
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -94,7 +102,7 @@ class ExcursionDetallePage extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(20),
       child: Text(
-        excursion['titulo'] ?? 'Excursión',
+        _getLocalizedText(context, 'titulo'),
         style: TextStyle(
           fontSize: 22,
           fontWeight: FontWeight.bold,
@@ -175,8 +183,8 @@ class ExcursionDetallePage extends StatelessWidget {
   }
 
   Widget _buildDescriptionSection(BuildContext context, bool isDarkMode) {
-    final descripcion = excursion['descripcion'];
-    if (descripcion == null || descripcion.toString().isEmpty) {
+    final descripcion = _getLocalizedText(context, 'descripcion');
+    if (descripcion.isEmpty) {
       return const SizedBox.shrink();
     }
 
@@ -195,7 +203,7 @@ class ExcursionDetallePage extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            'Descripción',
+            'descripcion'.tr(),
             style: TextStyle(
               fontSize: 16,
               fontWeight: FontWeight.w600,
@@ -204,7 +212,7 @@ class ExcursionDetallePage extends StatelessWidget {
           ),
           const SizedBox(height: 8),
           Text(
-            descripcion.toString(),
+            descripcion,
             style: TextStyle(
               fontSize: 15,
               color: isDarkMode ? Colors.grey[300] : Colors.grey[700],
@@ -237,7 +245,7 @@ class ExcursionDetallePage extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  'Total',
+                  'total'.tr(),
                   style: TextStyle(
                     fontSize: 14,
                     color: isDarkMode ? Colors.grey[400] : Colors.grey[600],
@@ -268,9 +276,9 @@ class ExcursionDetallePage extends StatelessWidget {
                     borderRadius: BorderRadius.circular(12),
                   ),
                 ),
-                child: const Text(
-                  'Reservar',
-                  style: TextStyle(
+                child: Text(
+                  'reservar'.tr(),
+                  style: const TextStyle(
                     fontSize: 16,
                     fontWeight: FontWeight.w600,
                   ),

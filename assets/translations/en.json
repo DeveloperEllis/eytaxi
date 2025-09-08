@@ -39,7 +39,7 @@
   "solicitar_recogida": "Request Pickup",
   "complete_siguientes_pasos": "Complete the following steps",
   "cual_es_su_nombre": "What is your name?",
-  "nombre_completo": "Name and surname?",
+  "nombre_completo": "Name and surname",
   "por_favor_ingrese_nombre": "Please enter your name",
   "como_prefiere_contacto": "How do you prefer to be contacted?",
   "llamada_dentro_cuba_pickup": "Call Within Cuba",
@@ -83,5 +83,6 @@
   "numero_whatsapp_valido_excursion": "Enter a valid WhatsApp number",
   "numero_cubano_valido_excursion": "Enter a valid Cuban number",
   "reserva_enviada_exitosamente": "Reservation sent successfully",
-  "contactaremos_pronto": "We will contact you as soon as possible"
+  "contactaremos_pronto": "We will contact you as soon as possible",
+  "salida": "Departure"
 }

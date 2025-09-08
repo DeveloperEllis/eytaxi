@@ -322,6 +322,7 @@ class _PickupDialogContentState extends State<_PickupDialogContent>
           TextFormField(
             controller: _nameController,
             decoration: AppInputDecoration.buildEmailInputDecoration(
+              hintText: 'nombre_completo'.tr(),
               context: context,
               labelText: 'nombre_completo'.tr(),
               prefixIcon: Icons.person_outline,
@@ -462,6 +463,7 @@ class _PickupDialogContentState extends State<_PickupDialogContent>
                                 AppInputDecoration.buildEmailInputDecoration(
                               context: context,
                               labelText: "numero_whatsapp_pickup".tr(),
+                              hintText: "numero_whatsapp_pickup".tr(),
                               prefixIcon: _getContactIcon(_selectedContactMethod!),
                             ).copyWith(
                               filled: true,
@@ -537,6 +539,7 @@ class _PickupDialogContentState extends State<_PickupDialogContent>
             decoration: AppInputDecoration.buildEmailInputDecoration(
               context: context,
               labelText: "direccion_recogida_pickup".tr(),
+              hintText: "ingrese_direccion_recogida".tr(),
               prefixIcon: Icons.location_on_outlined,
             ).copyWith(
               filled: true,
@@ -557,6 +560,7 @@ class _PickupDialogContentState extends State<_PickupDialogContent>
             decoration: AppInputDecoration.buildEmailInputDecoration(
               context: context,
               labelText: "informacion_adicional_opcional".tr(),
+              hintText: "informacion_adicional_opcional".tr(),
               prefixIcon: Icons.note_outlined,
             ).copyWith(
               filled: true,

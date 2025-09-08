@@ -1,4 +1,5 @@
 import 'package:eytaxi/core/constants/app_colors.dart';
+import 'package:eytaxi/core/constants/app_constants.dart';
 import 'package:eytaxi/core/constants/app_routes.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
@@ -143,7 +144,7 @@ class _SplashScreenState extends State<SplashScreen>
                     
                     // App Name
                     Text(
-                      'Pikera',
+                      AppConstants.appname,
                       style: TextStyle(
                         fontSize: 32,
                         fontWeight: FontWeight.bold,
@@ -156,7 +157,7 @@ class _SplashScreenState extends State<SplashScreen>
                     
                     // Tagline
                     Text(
-                      'Conectamos pasajeros con taxistas en Cuba',
+                      AppConstants.appname,
                       style: TextStyle(
                         fontSize: 16,
                         color: Colors.white.withOpacity(0.9),

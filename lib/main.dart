@@ -1,3 +1,4 @@
+import 'package:eytaxi/core/constants/app_constants.dart';
 import 'package:eytaxi/core/constants/app_routes.dart';
 import 'package:eytaxi/core/constants/fcmtoken.dart';
 import 'package:eytaxi/core/constants/supabaseApi.dart';
@@ -12,8 +13,9 @@ import 'package:firebase_core/firebase_core.dart';
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
-  // Inicializa Firebase solo si no existe ninguna app
+  // Inicializa Firebase
   if (kIsWeb) {
+    // Solo Firebase Core para web (sin messaging)
     await Firebase.initializeApp(
       options: const FirebaseOptions(
         apiKey: "AIzaSyB7S5IpWuSN9GUGWEmpLJI6oZv8NbmEElM",
@@ -25,7 +27,8 @@ Future<void> main() async {
         measurementId: "G-EE8XPE8X3Y",
       ),
     );
-  }else{
+  } else {
+    // Firebase completo con FCM solo para móvil
     await Firebase.initializeApp();
     await Fcmtoken().setupFCM();
   }
@@ -42,6 +45,9 @@ Future<void> main() async {
       supportedLocales: const [
         Locale('en'), // Inglés
         Locale('es'), // Español
+        Locale('fr'), // Francés
+        Locale('ru'), // Ruso
+        Locale('it'), // Italiano
       ],
       path: 'assets/translations', // Carpeta de traducciones
       fallbackLocale: const Locale('es'),
@@ -65,7 +71,7 @@ class MyApp extends StatelessWidget {
     final themeNotifier = Provider.of<ThemeNotifier>(context);
 
     return MaterialApp.router(
-      title: 'Taxi Booking',
+      title: AppConstants.appname,
       theme: ThemeData.light(),
       darkTheme: ThemeData.dark(),
       themeMode: themeNotifier.value,

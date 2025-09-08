@@ -21,7 +21,27 @@ class HomeAppBar extends StatelessWidget implements PreferredSizeWidget {
   Widget build(BuildContext context) {
     // Get current language to determine which flag to show
     final currentLocale = context.locale;
-    final isSpanish = currentLocale.languageCode == 'es';
+    String flagEmoji;
+    
+    switch (currentLocale.languageCode) {
+      case 'es':
+        flagEmoji = '🇪🇸';
+        break;
+      case 'en':
+        flagEmoji = '🇺🇸';
+        break;
+      case 'fr':
+        flagEmoji = '🇫🇷';
+        break;
+      case 'ru':
+        flagEmoji = '🇷🇺';
+        break;
+      case 'it':
+        flagEmoji = '🇮🇹';
+        break;
+      default:
+        flagEmoji = '🇪🇸'; // Default to Spanish
+    }
 
     return AppBar(
       centerTitle: false,
@@ -31,12 +51,12 @@ class HomeAppBar extends StatelessWidget implements PreferredSizeWidget {
       automaticallyImplyLeading: false,
       actions: [
         GestureDetector(
-          onTapDown:
-              (details) =>
-                  onLanguageMenuRequested?.call(details.globalPosition),
+          onTapDown: (details) =>
+              onLanguageMenuRequested?.call(details.globalPosition),
           child: Padding(
             padding: const EdgeInsets.symmetric(horizontal: 8.0),
             child: Row(
+              mainAxisSize: MainAxisSize.min,
               children: [
                 Container(
                   padding: const EdgeInsets.all(6),
@@ -45,11 +65,12 @@ class HomeAppBar extends StatelessWidget implements PreferredSizeWidget {
                     borderRadius: BorderRadius.circular(8),
                   ),
                   child: Text(
-                    isSpanish ? '🇪🇸' : '🇺🇸',
+                    flagEmoji,
                     style: const TextStyle(fontSize: 20),
                   ),
                 ),
-                Icon(Icons.arrow_drop_down),
+                const SizedBox(width: 4),
+                const Icon(Icons.arrow_drop_down),
               ],
             ),
           ),
