@@ -1,4 +1,5 @@
 import 'package:supabase_flutter/supabase_flutter.dart';
+import 'dart:developer' as developer;
 
 class DashboardStats {
   final int excursionReservations;
@@ -34,6 +35,8 @@ class AdminDashboardService {
 
   Future<DashboardStats> fetchDashboardStats() async {
     try {
+      developer.log('🔄 AdminDashboardService: Obteniendo estadísticas del dashboard...', name: 'AdminDashboardService');
+      
       // Ejecutar todas las consultas en paralelo para mejor rendimiento
       final results = await Future.wait([
         _getExcursionReservations(),
@@ -44,7 +47,7 @@ class AdminDashboardService {
         _getAcceptedRequests(),
       ]);
 
-      return DashboardStats(
+      final stats = DashboardStats(
         excursionReservations: results[0],
         totalRequests: results[1],
         pendingRequests: results[2],
@@ -52,8 +55,12 @@ class AdminDashboardService {
         pendingDrivers: results[4],
         acceptedRequests: results[5],
       );
+      
+      developer.log('✅ AdminDashboardService: Estadísticas obtenidas - Pendientes: ${stats.pendingRequests}, Total: ${stats.totalRequests}', name: 'AdminDashboardService');
+      
+      return stats;
     } catch (e) {
-      print('Error fetching dashboard stats: $e');
+      developer.log('❌ AdminDashboardService: Error al obtener estadísticas: $e', name: 'AdminDashboardService');
       return DashboardStats.empty();
     }
   }
@@ -73,11 +80,68 @@ class AdminDashboardService {
   }
 
   Future<int> _getPendingRequests() async {
-    final response = await _client
-        .from('trip_requests')
-        .select()
-        .eq('status', 'pending');
-    return (response as List).length;
+    // Usar la misma lógica que AdminTripRequestService para consistencia
+    try {
+      developer.log('🔍 AdminDashboardService: Obteniendo solicitudes pendientes (desde hoy con lógica de respuestas)...', name: 'AdminDashboardService');
+      
+      // Paso 1: Obtener solicitudes desde hoy con status 'pending'
+      final today = DateTime.now();
+      final todayStart = DateTime(today.year, today.month, today.day);
+      
+      final allRequests = await _client
+          .from('trip_requests')
+          .select('id, status, trip_date')
+          .eq('status', 'pending')
+          .gte('trip_date', todayStart.toIso8601String());
+      
+      developer.log('📊 AdminDashboardService: ${allRequests.length} solicitudes pendientes desde hoy encontradas', name: 'AdminDashboardService');
+      
+      // Paso 2: Obtener todas las respuestas de conductores
+      final responses = await _client
+          .from('driver_responses')
+          .select('request_id, status');
+      
+      developer.log('📊 AdminDashboardService: ${responses.length} respuestas de conductores obtenidas', name: 'AdminDashboardService');
+      
+      // Paso 3: Filtrar solicitudes realmente pendientes
+      int pendingCount = 0;
+      
+      for (final request in allRequests) {
+        final requestId = request['id'] as String?;
+        if (requestId == null) continue;
+        
+        // Obtener respuestas para esta solicitud
+        final requestResponses = responses
+            .where((response) => response['request_id'] == requestId)
+            .toList();
+        
+        // Si no tiene respuestas, es pendiente
+        if (requestResponses.isEmpty) {
+          pendingCount++;
+          continue;
+        }
+        
+        // Si solo tiene respuestas 'rejected', también es pendiente
+        final hasAccepted = requestResponses
+            .any((response) => response['status'] == 'accepted');
+        
+        if (!hasAccepted) {
+          pendingCount++;
+        }
+      }
+      
+      developer.log('✅ AdminDashboardService: $pendingCount solicitudes realmente pendientes identificadas', name: 'AdminDashboardService');
+      
+      return pendingCount;
+    } catch (e) {
+      developer.log('❌ AdminDashboardService: Error al obtener solicitudes pendientes: $e', name: 'AdminDashboardService');
+      // Fallback a consulta simple si falla
+      final response = await _client
+          .from('trip_requests')
+          .select()
+          .eq('status', 'pending');
+      return (response as List).length;
+    }
   }
 
   Future<int> _getTotalDrivers() async {

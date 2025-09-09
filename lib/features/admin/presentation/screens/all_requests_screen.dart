@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:eytaxi/features/admin/data/admin_trip_request_service.dart';
 import 'package:eytaxi/features/trip_request/data/models/trip_request_model.dart';
+import 'package:eytaxi/features/admin/presentation/screens/attend_request_screen.dart';
 import 'package:eytaxi/features/admin/presentation/widgets/trip_request_detail_dialog.dart';
 import 'package:intl/intl.dart';
 import 'dart:developer' as developer;
@@ -416,15 +417,7 @@ class _AllRequestsScreenState extends State<AllRequestsScreen> {
                       color: Colors.grey.shade700,
                     ),
                   ),
-                  const Spacer(),
-                  IconButton(
-                    padding: EdgeInsets.zero,
-                    constraints: const BoxConstraints(minWidth: 32, minHeight: 32),
-                    iconSize: 18,
-                    onPressed: () => _showUpdateStatusDialog(request),
-                    icon: const Icon(Icons.edit),
-                    tooltip: 'Editar estado',
-                  ),
+                  
                 ],
               ),
             ],
@@ -542,10 +535,26 @@ class _AllRequestsScreenState extends State<AllRequestsScreen> {
       context: context,
       builder: (context) => TripRequestDetailDialog(
         request: request,
-        onUpdateStatus: (request) => _showUpdateStatusDialog(request),
+        onAttendRequest: (request) => _attendRequest(request),
+      
         onDelete: (request) => _deleteTripRequest(request),
       ),
     );
+  }
+
+  void _attendRequest(TripRequest request) {
+    Navigator.pop(context); // Cerrar el diálogo
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => AttendRequestScreen(request: request),
+      ),
+    ).then((result) {
+      // Recargar solicitudes si hubo cambios
+      if (result == true) {
+        _loadRequests();
+      }
+    });
   }
 
   Future<void> _deleteTripRequest(TripRequest request) async {
@@ -573,51 +582,7 @@ class _AllRequestsScreenState extends State<AllRequestsScreen> {
     }
   }
 
-  void _showUpdateStatusDialog(TripRequest request) {
-    final currentStatus = request.status.name;
-    String selectedStatus = currentStatus;
-
-    showDialog(
-      context: context,
-      builder: (context) => StatefulBuilder(
-        builder: (context, setState) => AlertDialog(
-          title: const Text('Actualizar Estado'),
-          content: DropdownButtonFormField<String>(
-            value: selectedStatus,
-            decoration: const InputDecoration(
-              labelText: 'Nuevo Estado',
-              border: OutlineInputBorder(),
-            ),
-            items: const [
-              DropdownMenuItem(value: 'pending', child: Text('Pendiente')),
-              DropdownMenuItem(value: 'accepted', child: Text('Aceptado')),
-              DropdownMenuItem(value: 'started', child: Text('Iniciado')),
-              DropdownMenuItem(value: 'completed', child: Text('Completado')),
-              DropdownMenuItem(value: 'cancelled', child: Text('Cancelado')),
-              DropdownMenuItem(value: 'rejected', child: Text('Rechazado')),
-            ],
-            onChanged: (value) {
-              setState(() {
-                selectedStatus = value!;
-              });
-            },
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(context),
-              child: const Text('Cancelar'),
-            ),
-            ElevatedButton(
-              onPressed: selectedStatus != currentStatus
-                  ? () => _updateStatus(request.id!, selectedStatus)
-                  : null,
-              child: const Text('Actualizar'),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
+  
 
   Future<void> _updateStatus(String requestId, String newStatus) async {
     try {

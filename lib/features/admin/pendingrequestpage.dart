@@ -443,12 +443,19 @@ class _PendingRequestsPageState extends State<PendingRequestsPage> {
   Future<void> fetchPendingRequests() async {
     setState(() => isLoading = true);
     final client = Supabase.instance.client;
+    
+    // Obtener fecha de hoy para filtrar solicitudes
+    final today = DateTime.now();
+    final todayStart = DateTime(today.year, today.month, today.day);
+    
     final response = await client
         .from('trip_requests')
         .select(
           '*,origen:origen_id(*),destino:destino_id(*), contact:guest_contacts!contact_id(id,name,method,contact,address,extra_info)',
         )
-        .eq('status', 'pending');
+        .eq('status', 'pending')
+        .gte('trip_date', todayStart.toIso8601String())
+        .order('trip_date', ascending: true);
     final List<TripRequest> requests =
         (response as List)
             .map((json) => TripRequest.fromJson(json as Map<String, dynamic>))

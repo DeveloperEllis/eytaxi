@@ -15,6 +15,7 @@ class _TripRequestsScreenState extends State<TripRequestsScreen> {
   final AdminTripRequestService _service = AdminTripRequestService();
   Map<String, int> _requestCounts = {};
   Map<String, int> _taxiTypeCounts = {};
+  int _totalRequestsCount = 0;
   bool _isLoading = true;
 
   @override
@@ -33,16 +34,19 @@ class _TripRequestsScreenState extends State<TripRequestsScreen> {
 
       final counts = await _service.getRequestCountsByStatus();
       final taxiTypeCounts = await _service.getRequestCountsByTaxiType();
+      final totalCount = await _service.getTotalRequestsCount();
       
       if (mounted) {
         setState(() {
           _requestCounts = counts;
           _taxiTypeCounts = taxiTypeCounts;
+          _totalRequestsCount = totalCount;
           _isLoading = false;
         });
         
         developer.log('✅ TripRequestsScreen: Contadores cargados: $counts', name: 'TripRequestsScreen');
         developer.log('✅ TripRequestsScreen: Contadores taxi: $taxiTypeCounts', name: 'TripRequestsScreen');
+        developer.log('✅ TripRequestsScreen: Total solicitudes: $totalCount', name: 'TripRequestsScreen');
       }
     } catch (e) {
       developer.log('❌ TripRequestsScreen: Error al cargar contadores: $e', name: 'TripRequestsScreen');
@@ -56,7 +60,7 @@ class _TripRequestsScreenState extends State<TripRequestsScreen> {
   }
 
   int _getTotalRequests() {
-    return _requestCounts.values.fold(0, (sum, count) => sum + count);
+    return _totalRequestsCount;
   }
 
   int _getCountForStatus(String status) {

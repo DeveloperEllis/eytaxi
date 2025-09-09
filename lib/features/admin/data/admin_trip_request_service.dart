@@ -271,6 +271,26 @@ class AdminTripRequestService {
     }
   }
 
+  /// Obtener el conteo total de TODAS las solicitudes (sin filtro de fecha)
+  Future<int> getTotalRequestsCount() async {
+    try {
+      developer.log('📊 AdminTripRequestService: Obteniendo conteo total de solicitudes...', name: 'AdminTripRequestService');
+      
+      final data = await client
+          .from('trip_requests')
+          .select('id');
+
+      final count = data.length;
+      developer.log('📊 AdminTripRequestService: Total de solicitudes: $count', name: 'AdminTripRequestService');
+      
+      return count;
+    } catch (e, stackTrace) {
+      developer.log('❌ AdminTripRequestService: Error al obtener conteo total: $e', name: 'AdminTripRequestService');
+      developer.log('📚 AdminTripRequestService: StackTrace: $stackTrace', name: 'AdminTripRequestService');
+      return 0;
+    }
+  }
+
   /// Eliminar una solicitud de viaje
   Future<void> deleteTripRequest(String id) async {
     try {

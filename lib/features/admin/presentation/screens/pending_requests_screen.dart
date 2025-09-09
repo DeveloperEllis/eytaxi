@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:eytaxi/features/admin/data/admin_trip_request_service.dart';
 import 'package:eytaxi/features/trip_request/data/models/trip_request_model.dart';
 import 'package:eytaxi/features/admin/presentation/widgets/trip_request_detail_dialog.dart';
+import 'package:eytaxi/features/admin/presentation/screens/attend_request_screen.dart';
 import 'package:intl/intl.dart';
 import 'dart:developer' as developer;
 
@@ -510,10 +511,26 @@ class _PendingRequestsScreenState extends State<PendingRequestsScreen> {
       builder: (context) => TripRequestDetailDialog(
         request: request,
         customTitle: 'Solicitud Pendiente #${request.id?.substring(0, 8) ?? 'N/A'}',
+        onAttendRequest: (request) => _attendRequest(request),
         onUpdateStatus: (request) => _showUpdateStatusDialog(request),
         onDelete: (request) => _deleteTripRequest(request),
       ),
     );
+  }
+
+  void _attendRequest(TripRequest request) {
+    Navigator.pop(context); // Cerrar el diálogo
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => AttendRequestScreen(request: request),
+      ),
+    ).then((result) {
+      // Recargar solicitudes si hubo cambios
+      if (result == true) {
+        _loadRequests();
+      }
+    });
   }
 
   Future<void> _deleteTripRequest(TripRequest request) async {

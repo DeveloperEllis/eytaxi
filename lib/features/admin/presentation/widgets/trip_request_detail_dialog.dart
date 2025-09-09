@@ -5,6 +5,7 @@ import 'package:eytaxi/features/trip_request/data/models/trip_request_model.dart
 class TripRequestDetailDialog extends StatelessWidget {
   final TripRequest request;
   final Function(TripRequest)? onUpdateStatus;
+  final Function(TripRequest)? onAttendRequest;
   final Function(TripRequest)? onDelete;
   final String? customTitle;
   final Widget? customAlert;
@@ -13,6 +14,7 @@ class TripRequestDetailDialog extends StatelessWidget {
     super.key,
     required this.request,
     this.onUpdateStatus,
+    this.onAttendRequest,
     this.onDelete,
     this.customTitle,
     this.customAlert,
@@ -254,18 +256,21 @@ class TripRequestDetailDialog extends StatelessWidget {
                         onPressed: () => Navigator.pop(context),
                         child: const Text('Cerrar'),
                       ),
-                      if (onUpdateStatus != null) ...[
+                      // Mostrar "Atender Solicitud" si está pendiente o tiene respuestas de taxistas
+                      if (onAttendRequest != null && _shouldShowAttendButton()) ...[
                         const SizedBox(width: 8),
                         ElevatedButton.icon(
-                          onPressed: () => onUpdateStatus!(request),
-                          icon: const Icon(Icons.edit, size: 16),
-                          label: const Text('Editar Estado'),
+                          onPressed: () => onAttendRequest!(request),
+                          icon: const Icon(Icons.support_agent, size: 16),
+                          label: const Text('Atender Solicitud'),
                           style: ElevatedButton.styleFrom(
-                            backgroundColor: Colors.blue,
+                            backgroundColor: Colors.green,
                             foregroundColor: Colors.white,
                           ),
                         ),
                       ],
+                      // Mantener "Editar Estado" como opción secundaria
+                      
                     ],
                   ),
                 ),
@@ -304,6 +309,13 @@ class TripRequestDetailDialog extends StatelessWidget {
         ],
       ),
     );
+  }
+
+  bool _shouldShowAttendButton() {
+    // Mostrar el botón si la solicitud está pendiente o tiene cualquier respuesta de taxistas
+    // (esto incluye solicitudes aceptadas que necesitan gestión)
+    return request.status.name.toLowerCase() == 'pending' || 
+           request.driverResponseCount > 0;
   }
 
   void _showDeleteConfirmation(BuildContext context) {
