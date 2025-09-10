@@ -1,5 +1,5 @@
+import 'package:eytaxi/features/admin/request_page.dart';
 import 'package:flutter/material.dart';
-import 'package:eytaxi/features/admin/presentation/screens/all_requests_screen.dart';
 import 'package:eytaxi/features/admin/presentation/screens/pending_requests_screen.dart';
 import 'package:eytaxi/features/admin/data/admin_trip_request_service.dart';
 import 'dart:developer' as developer;
@@ -16,7 +16,6 @@ class _TripRequestsScreenState extends State<TripRequestsScreen> {
   Map<String, int> _requestCounts = {};
   Map<String, int> _taxiTypeCounts = {};
   int _totalRequestsCount = 0;
-  bool _isLoading = true;
 
   @override
   void initState() {
@@ -28,10 +27,6 @@ class _TripRequestsScreenState extends State<TripRequestsScreen> {
     try {
       developer.log('🔄 TripRequestsScreen: Cargando contadores de solicitudes', name: 'TripRequestsScreen');
       
-      setState(() {
-        _isLoading = true;
-      });
-
       final counts = await _service.getRequestCountsByStatus();
       final taxiTypeCounts = await _service.getRequestCountsByTaxiType();
       final totalCount = await _service.getTotalRequestsCount();
@@ -41,7 +36,6 @@ class _TripRequestsScreenState extends State<TripRequestsScreen> {
           _requestCounts = counts;
           _taxiTypeCounts = taxiTypeCounts;
           _totalRequestsCount = totalCount;
-          _isLoading = false;
         });
         
         developer.log('✅ TripRequestsScreen: Contadores cargados: $counts', name: 'TripRequestsScreen');
@@ -50,12 +44,6 @@ class _TripRequestsScreenState extends State<TripRequestsScreen> {
       }
     } catch (e) {
       developer.log('❌ TripRequestsScreen: Error al cargar contadores: $e', name: 'TripRequestsScreen');
-      
-      if (mounted) {
-        setState(() {
-          _isLoading = false;
-        });
-      }
     }
   }
 
@@ -73,122 +61,98 @@ class _TripRequestsScreenState extends State<TripRequestsScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text(
-          'Gestión de Solicitudes',
-          style: TextStyle(fontWeight: FontWeight.bold),
-        ),
-        backgroundColor: Colors.blue.shade700,
-        foregroundColor: Colors.white,
-        actions: [
-          IconButton(
-            icon: _isLoading 
-                ? const SizedBox(
-                    width: 16,
-                    height: 16,
-                    child: CircularProgressIndicator(strokeWidth: 2),
-                  )
-                : const Icon(Icons.refresh),
-            onPressed: _isLoading ? null : _loadRequestCounts,
-            tooltip: 'Actualizar contadores',
-          ),
-        ],
-      ),
-      body: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: GridView.count(
-          crossAxisCount: 2,
+    final crossAxisCount = 2; // Mantener siempre 2 columnas
+
+    return Padding(
+      padding: const EdgeInsets.all(16.0),
+      child: GridView.builder(
+        gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+          crossAxisCount: crossAxisCount,
           crossAxisSpacing: 12,
           mainAxisSpacing: 12,
           childAspectRatio: 1.1,
-          children: [
-            _buildRequestBox(
-              context,
-              title: 'Solicitudes',
-              subtitle: 'Ver todas',
-              icon: Icons.list_alt,
-              color: Colors.blue,
-              count: _getTotalRequests(),
-              onTap: () async {
-                final result = await Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (context) => const AllRequestsScreen(),
-                  ),
-                );
-                // Recargar contadores cuando se regrese de la pantalla
-                if (result != null || mounted) {
-                  _loadRequestCounts();
-                }
-              },
-            ),
-            _buildRequestBox(
-              context,
-              title: 'Pendientes',
-              subtitle: 'Sin respuesta',
-              icon: Icons.pending,
-              color: Colors.orange,
-              count: _getCountForStatus('pending'),
-              onTap: () {
-                // Navegar a solicitudes pendientes
-                Navigator.of(context).push(
-                  MaterialPageRoute(
-                    builder: (context) => const PendingRequestsScreen(),
-                  ),
-                );
-              },
-            ),
-            _buildRequestBox(
-              context,
-              title: 'Aceptadas',
-              subtitle: 'Confirmados',
-              icon: Icons.check_circle,
-              color: Colors.green,
-              count: _getCountForStatus('accepted'),
-              onTap: () {
-                // TODO: Navegar a solicitudes aceptadas
-                _showComingSoon(context, 'Solicitudes Aceptadas');
-              },
-            ),
-            _buildRequestBox(
-              context,
-              title: 'En Curso',
-              subtitle: 'En progreso',
-              icon: Icons.directions_car,
-              color: Colors.purple,
-              count: _getCountForStatus('started'),
-              onTap: () {
-                // TODO: Navegar a solicitudes en curso
-                _showComingSoon(context, 'Solicitudes En Curso');
-              },
-            ),
-            _buildRequestBox(
-              context,
-              title: 'Colectivo',
-              subtitle: 'Taxis compartidos',
-              icon: Icons.group,
-              color: Colors.deepPurple,
-              count: _getCountForTaxiType('colectivo'),
-              onTap: () {
-                // TODO: Navegar a solicitudes colectivas
-                _showComingSoon(context, 'Solicitudes Colectivas');
-              },
-            ),
-            _buildRequestBox(
-              context,
-              title: 'Privado',
-              subtitle: 'Taxis privados',
-              icon: Icons.person,
-              color: Colors.indigo,
-              count: _getCountForTaxiType('privado'),
-              onTap: () {
-                // TODO: Navegar a solicitudes privadas
-                _showComingSoon(context, 'Solicitudes Privadas');
-              },
-            ),
-          ],
         ),
+        itemCount: 6, // Número total de cajas
+        itemBuilder: (context, index) {
+          switch (index) {
+            case 0:
+              return _buildRequestBox(
+                context,
+                title: 'Solicitudes',
+                subtitle: 'Total',
+                icon: Icons.assignment,
+                color: Colors.blue.shade600,
+                count: _getTotalRequests(),
+                onTap: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => const RequestsPage(title: 'Solicitudes'),
+                    ),
+                  );
+                },
+              );
+            case 1:
+              return _buildRequestBox(
+                context,
+                title: 'Aceptadas',
+                subtitle: 'Confirmadas',
+                icon: Icons.check_circle,
+                color: Colors.green.shade600,
+                count: _getCountForStatus('accepted'),
+                onTap: () => _showComingSoon(context, 'Solicitudes Aceptadas'),
+              );
+            case 2:
+              return _buildRequestBox(
+                context,
+                title: 'Pendientes',
+                subtitle: 'Esperando',
+                icon: Icons.pending_actions,
+                color: Colors.orange.shade600,
+                count: _getCountForStatus('pending'),
+                onTap: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => const PendingRequestsScreen(),
+                    ),
+                  );
+                },
+              );
+            case 3:
+              return _buildRequestBox(
+                context,
+                title: 'En Curso',
+                subtitle: 'Activas',
+                icon: Icons.directions_car,
+                color: Colors.purple.shade600,
+                count: _getCountForStatus('in_progress'),
+                onTap: () => _showComingSoon(context, 'Solicitudes En Curso'),
+              );
+            case 4:
+              return _buildRequestBox(
+                context,
+                title: 'Colectivo',
+                subtitle: 'Compartido',
+                icon: Icons.groups,
+                color: Colors.deepPurple.shade600,
+                count: _getCountForTaxiType('colectivo'),
+                onTap: () => _showComingSoon(context, 'Solicitudes Colectivo'),
+              );
+            case 5:
+              return _buildRequestBox(
+                context,
+                title: 'Privado',
+                subtitle: 'Individual',
+                icon: Icons.person,
+                color: Colors.indigo.shade600,
+                count: _getCountForTaxiType('privado'),
+                onTap: () => _showComingSoon(context, 'Solicitudes Privadas'),
+              );
+            default:
+              return const SizedBox.shrink();
+          }
+        },
       ),
     );
   }
@@ -226,72 +190,71 @@ class _TripRequestsScreenState extends State<TripRequestsScreen> {
             padding: const EdgeInsets.all(12),
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
+              mainAxisSize: MainAxisSize.min, // Ajustar al contenido mínimo
               children: [
-                // Icono principal
-                Container(
-                  width: 45,
-                  height: 45,
-                  decoration: BoxDecoration(
-                    color: color.withOpacity(0.2),
-                    borderRadius: BorderRadius.circular(22.5),
-                  ),
-                  child: Icon(
-                    icon,
-                    size: 24,
-                    color: color,
-                  ),
-                ),
-                
-                const SizedBox(height: 8),
-                
-                // Título
-                Text(
-                  title,
-                  style: TextStyle(
-                    fontSize: 14,
-                    fontWeight: FontWeight.bold,
-                    color: color,
-                  ),
-                  textAlign: TextAlign.center,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                ),
-                
-                const SizedBox(height: 2),
-                
-                // Subtítulo
-                Text(
-                  subtitle,
-                  style: TextStyle(
-                    fontSize: 10,
-                    color: Colors.grey.shade600,
-                  ),
-                  textAlign: TextAlign.center,
-                  maxLines: 2,
-                  overflow: TextOverflow.ellipsis,
-                ),
-                
-                const SizedBox(height: 6),
-                
-                // Contador
-                Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 8,
-                    vertical: 2,
-                  ),
-                  decoration: BoxDecoration(
-                    color: color.withOpacity(0.1),
-                    borderRadius: BorderRadius.circular(8),
-                    border: Border.all(
-                      color: color.withOpacity(0.3),
+                Flexible(
+                  child: Container(
+                    width: 45,
+                    height: 45,
+                    decoration: BoxDecoration(
+                      color: color.withOpacity(0.2),
+                      borderRadius: BorderRadius.circular(22.5),
+                    ),
+                    child: Icon(
+                      icon,
+                      size: 24,
+                      color: color,
                     ),
                   ),
+                ),
+                const SizedBox(height: 8),
+                Flexible(
                   child: Text(
-                    count.toString(),
+                    title,
                     style: TextStyle(
                       fontSize: 14,
                       fontWeight: FontWeight.bold,
                       color: color,
+                    ),
+                    textAlign: TextAlign.center,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ),
+                const SizedBox(height: 2),
+                Flexible(
+                  child: Text(
+                    subtitle,
+                    style: TextStyle(
+                      fontSize: 10,
+                      color: Colors.grey.shade600,
+                    ),
+                    textAlign: TextAlign.center,
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ),
+                const SizedBox(height: 6),
+                Flexible(
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 8,
+                      vertical: 2,
+                    ),
+                    decoration: BoxDecoration(
+                      color: color.withOpacity(0.1),
+                      borderRadius: BorderRadius.circular(8),
+                      border: Border.all(
+                        color: color.withOpacity(0.3),
+                      ),
+                    ),
+                    child: Text(
+                      count.toString(),
+                      style: TextStyle(
+                        fontSize: 14,
+                        fontWeight: FontWeight.bold,
+                        color: color,
+                      ),
                     ),
                   ),
                 ),
