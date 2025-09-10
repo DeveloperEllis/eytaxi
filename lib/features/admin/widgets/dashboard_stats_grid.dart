@@ -1,10 +1,10 @@
+import 'package:eytaxi/features/admin/presentation/screens/all_requests_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:eytaxi/features/admin/data/admin_dashboard_service.dart';
 import 'package:eytaxi/features/admin/widgets/dashboard_nav_card.dart';
 import 'package:eytaxi/features/admin/driver_page.dart';
 import 'package:eytaxi/features/admin/pendingdriverpage.dart';
 import 'package:eytaxi/features/admin/presentation/screens/pending_requests_screen.dart';
-import 'package:eytaxi/features/admin/request_page.dart';
 import 'package:eytaxi/features/admin/requestwhitdriver.dart';
 import 'package:eytaxi/features/admin/excursion_reservations_page.dart';
 
@@ -48,7 +48,7 @@ class DashboardStatsGrid extends StatelessWidget {
         value: stats.totalRequests,
         icon: Icons.assignment,
         color: Colors.blue.shade600,
-        page: const RequestsPage(title: ''),
+        page: const AllRequestsScreen(),
       ),
       DashboardNavCard(
         label: 'Pendientes',

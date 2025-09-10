@@ -96,6 +96,10 @@ class DriverRequestsRemoteDataSource {
         'status': 'accepted',
         'created_at': DateTime.now().toIso8601String(),
       });
+      await client.from('trip_requests').update({
+        'status': 'accepted',
+      }).eq('id', requestId);
+
       return true;
     } catch (_) {
       return false;

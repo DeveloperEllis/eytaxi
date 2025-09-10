@@ -1,10 +1,10 @@
+import 'package:eytaxi/features/admin/presentation/widgets/trip_request_card_widget.dart';
 import 'package:flutter/material.dart';
 import 'package:eytaxi/features/trip_request/data/models/trip_request_model.dart';
 import 'package:eytaxi/data/models/driver_model.dart';
 import 'package:eytaxi/core/constants/app_colors.dart';
 import 'package:eytaxi/features/admin/data/services/admin_driver_service.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
-import 'package:intl/intl.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 
@@ -125,9 +125,10 @@ class _AttendRequestScreenState extends State<AttendRequestScreen> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    // Resumen de la solicitud
-                    _buildRequestSummary(),
-                    
+
+                    TripRequestCardWidget(request: widget.request, onTap: () {
+                      
+                    },),                    
                     const SizedBox(height: 24),
                     
                     // Información del cliente/guest
@@ -149,79 +150,6 @@ class _AttendRequestScreenState extends State<AttendRequestScreen> {
     );
   }
 
-  Widget _buildRequestSummary() {
-    return Card(
-      elevation: 4,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              children: [
-                Icon(Icons.receipt_long, color: Colors.blue.shade600, size: 24),
-                const SizedBox(width: 8),
-                const Text(
-                  'Resumen de la Solicitud',
-                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-                ),
-                const Spacer(),
-                _buildStatusChip(widget.request.status.name),
-              ],
-            ),
-            const SizedBox(height: 16),
-            
-            Row(
-              children: [
-                Expanded(
-                  child: _buildSummaryItem(
-                    'Origen',
-                    widget.request.origen?.nombre ?? 'No especificado',
-                    Icons.my_location,
-                    Colors.green,
-                  ),
-                ),
-                const SizedBox(width: 16),
-                Expanded(
-                  child: _buildSummaryItem(
-                    'Destino',
-                    widget.request.destino?.nombre ?? 'No especificado',
-                    Icons.location_on,
-                    Colors.red,
-                  ),
-                ),
-              ],
-            ),
-            
-            const SizedBox(height: 12),
-            
-            Row(
-              children: [
-                Expanded(
-                  child: _buildSummaryItem(
-                    'Fecha del viaje',
-                    DateFormat('dd/MM/yyyy HH:mm').format(widget.request.tripDate),
-                    Icons.calendar_today,
-                    Colors.blue,
-                  ),
-                ),
-                const SizedBox(width: 16),
-                Expanded(
-                  child: _buildSummaryItem(
-                    'Pasajeros',
-                    '${widget.request.cantidadPersonas} personas',
-                    Icons.group,
-                    Colors.purple,
-                  ),
-                ),
-              ],
-            ),
-          ],
-        ),
-      ),
-    );
-  }
 
   Widget _buildSummaryItem(String title, String value, IconData icon, Color color) {
     return Row(

@@ -57,7 +57,7 @@ class TripRequestDetailDialog extends StatelessWidget {
                       Expanded(
                         child: Text(
                           customTitle ??
-                              'Solicitud #${request.id?.substring(0, 8) ?? 'N/A'}',
+                              '#${request.id?.substring(0, 8) ?? 'N/A'}',
                           style: const TextStyle(
                             fontSize: 18,
                             fontWeight: FontWeight.bold,
@@ -257,11 +257,11 @@ class TripRequestDetailDialog extends StatelessWidget {
                         child: const Text('Cerrar'),
                       ),
                       // Mostrar "Atender Solicitud" si está pendiente o tiene respuestas de taxistas
-                      if (onAttendRequest != null && _shouldShowAttendButton()) ...[
+                       ...[
                         const SizedBox(width: 8),
                         ElevatedButton.icon(
                           onPressed: () => onAttendRequest!(request),
-                          icon: const Icon(Icons.support_agent, size: 16),
+                          icon: const Icon(Icons.support_agent, size: 10),
                           label: const Text('Atender Solicitud'),
                           style: ElevatedButton.styleFrom(
                             backgroundColor: Colors.green,
@@ -311,12 +311,6 @@ class TripRequestDetailDialog extends StatelessWidget {
     );
   }
 
-  bool _shouldShowAttendButton() {
-    // Mostrar el botón si la solicitud está pendiente o tiene cualquier respuesta de taxistas
-    // (esto incluye solicitudes aceptadas que necesitan gestión)
-    return request.status.name.toLowerCase() == 'pending' || 
-           request.driverResponseCount > 0;
-  }
 
   void _showDeleteConfirmation(BuildContext context) {
     showDialog(

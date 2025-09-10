@@ -1,4 +1,4 @@
-import 'package:eytaxi/features/admin/request_page.dart';
+import 'package:eytaxi/features/admin/presentation/screens/all_requests_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:eytaxi/features/admin/presentation/screens/pending_requests_screen.dart';
 import 'package:eytaxi/features/admin/data/admin_trip_request_service.dart';
@@ -87,7 +87,7 @@ class _TripRequestsScreenState extends State<TripRequestsScreen> {
                   Navigator.push(
                     context,
                     MaterialPageRoute(
-                      builder: (context) => const RequestsPage(title: 'Solicitudes'),
+                      builder: (context) => const AllRequestsScreen(),
                     ),
                   );
                 },
