@@ -42,7 +42,7 @@ class AdminDrawer extends StatelessWidget {
                       ),
                     ),
                     const SizedBox(height: 16),
-                    
+
                     // Título
                     const Text(
                       'Administrador',
@@ -53,7 +53,7 @@ class AdminDrawer extends StatelessWidget {
                       ),
                     ),
                     const SizedBox(height: 4),
-                    
+
                     // Subtítulo
                     Text(
                       'Panel de control',
@@ -67,19 +67,12 @@ class AdminDrawer extends StatelessWidget {
               ),
             ),
           ),
-          
+
           // Opciones del menú
           Expanded(
             child: ListView(
               padding: const EdgeInsets.symmetric(vertical: 8),
               children: [
-                _buildMenuItem(
-                  context,
-                  icon: Icons.dashboard,
-                  title: 'Dashboard',
-                  onTap: () => Navigator.pop(context),
-                ),
-                
                 _buildMenuItem(
                   context,
                   icon: Icons.local_taxi,
@@ -94,7 +87,7 @@ class AdminDrawer extends StatelessWidget {
                     );
                   },
                 ),
-                
+
                 _buildMenuItem(
                   context,
                   icon: Icons.person_pin,
@@ -104,7 +97,7 @@ class AdminDrawer extends StatelessWidget {
                     // TODO: Implementar página de drivers
                   },
                 ),
-                
+
                 _buildMenuItem(
                   context,
                   icon: Icons.tour,
@@ -119,7 +112,7 @@ class AdminDrawer extends StatelessWidget {
                     );
                   },
                 ),
-                
+
                 _buildMenuItem(
                   context,
                   icon: Icons.settings,
@@ -129,7 +122,7 @@ class AdminDrawer extends StatelessWidget {
                     // TODO: Implementar página de configuración
                   },
                 ),
-                
+
                 _buildMenuItem(
                   context,
                   icon: Icons.analytics,
@@ -142,15 +135,13 @@ class AdminDrawer extends StatelessWidget {
               ],
             ),
           ),
-          
+
           // Footer del drawer
           Container(
             padding: const EdgeInsets.all(16),
             decoration: BoxDecoration(
               color: Colors.grey.shade50,
-              border: Border(
-                top: BorderSide(color: Colors.grey.shade300),
-              ),
+              border: Border(top: BorderSide(color: Colors.grey.shade300)),
             ),
             child: Row(
               children: [
@@ -158,10 +149,7 @@ class AdminDrawer extends StatelessWidget {
                 const SizedBox(width: 8),
                 Text(
                   'v1.0.0',
-                  style: TextStyle(
-                    color: Colors.grey.shade600,
-                    fontSize: 12,
-                  ),
+                  style: TextStyle(color: Colors.grey.shade600, fontSize: 12),
                 ),
               ],
             ),
@@ -178,20 +166,10 @@ class AdminDrawer extends StatelessWidget {
     required VoidCallback onTap,
   }) {
     return ListTile(
-      leading: Icon(
-        icon,
-        color: Colors.blue.shade700,
-      ),
-      title: Text(
-        title,
-        style: const TextStyle(
-          fontWeight: FontWeight.w500,
-        ),
-      ),
+      leading: Icon(icon, color: Colors.blue.shade700),
+      title: Text(title, style: const TextStyle(fontWeight: FontWeight.w500)),
       onTap: onTap,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(8),
-      ),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
       contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
     );
   }
