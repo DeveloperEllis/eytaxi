@@ -145,6 +145,12 @@ class _AttendRequestScreenState extends State<AttendRequestScreen> {
                       const SizedBox(height: 24),
                     ],
 
+                    // Información del conductor asignado
+                    if (widget.request.driver != null) ...[
+                      _buildAssignedDriverSection(),
+                      const SizedBox(height: 24),
+                    ],
+
                     // Taxistas que han aceptado
                     if (_acceptedDrivers.isNotEmpty) ...[
                       _buildAcceptedDriversSection(),
@@ -272,6 +278,125 @@ class _AttendRequestScreenState extends State<AttendRequestScreen> {
           ),
         ),
       ],
+    );
+  }
+
+  Widget _buildAssignedDriverSection() {
+    final driver = widget.request.driver!;
+
+    return Card(
+      elevation: 4,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                Icon(Icons.drive_eta, color: Colors.orange.shade600, size: 24),
+                const SizedBox(width: 8),
+                const Text(
+                  'Conductor Asignado',
+                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                ),
+                const Spacer(),
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                  decoration: BoxDecoration(
+                    color: Colors.green.withOpacity(0.1),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: Text(
+                    'Asignado',
+                    style: TextStyle(
+                      color: Colors.green.shade700,
+                      fontWeight: FontWeight.bold,
+                      fontSize: 12,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 16),
+
+            // Nombre del conductor
+            _buildClientDetailRow(
+              'Nombre',
+              '${driver.nombre} ${driver.apellidos}'.trim(),
+              Icons.person,
+              Colors.orange,
+            ),
+
+            const SizedBox(height: 12),
+
+            // Teléfono del conductor con botón de acción
+            Row(
+              children: [
+                Expanded(
+                  child: _buildClientDetailRow(
+                    'Teléfono',
+                    driver.phoneNumber,
+                    Icons.phone,
+                    Colors.blue,
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Container(
+                  decoration: BoxDecoration(
+                    color: Colors.blue.shade100,
+                    borderRadius: BorderRadius.circular(25),
+                  ),
+                  child: IconButton(
+                    onPressed: () => _launchPhone(driver.phoneNumber),
+                    icon: Icon(Icons.phone, color: Colors.blue.shade700, size: 20),
+                    tooltip: 'Llamar al conductor',
+                  ),
+                ),
+                const SizedBox(width: 8),
+                Container(
+                  decoration: BoxDecoration(
+                    color: Colors.green.shade100,
+                    borderRadius: BorderRadius.circular(25),
+                  ),
+                  child: IconButton(
+                    onPressed: () => _launchWhatsApp(driver.phoneNumber),
+                    icon: FaIcon(
+                      FontAwesomeIcons.whatsapp,
+                      color: Colors.green.shade700,
+                      size: 20,
+                    ),
+                    tooltip: 'WhatsApp al conductor',
+                  ),
+                ),
+              ],
+            ),
+
+            const SizedBox(height: 12),
+
+            // Licencia
+            if (driver.licenseNumber.isNotEmpty) ...[
+              _buildClientDetailRow(
+                'Licencia',
+                driver.licenseNumber,
+                Icons.badge,
+                Colors.purple,
+              ),
+              const SizedBox(height: 12),
+            ],
+
+            // Capacidad del vehículo
+            if (driver.vehicleCapacity > 0) ...[
+              _buildClientDetailRow(
+                'Capacidad del vehículo',
+                '${driver.vehicleCapacity} pasajeros',
+                Icons.directions_car,
+                Colors.indigo,
+              ),
+            ],
+          ],
+        ),
+      ),
     );
   }
 
@@ -666,12 +791,17 @@ class _AttendRequestScreenState extends State<AttendRequestScreen> {
               ),
               if (isAccepted)
                 Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                  width: 24,
+                  height: 24,
                   decoration: BoxDecoration(
-                    color: Colors.green.withAlpha((0.1 * 255).round()),
-                    borderRadius: BorderRadius.circular(12),
+                    color: Colors.green.shade600,
+                    shape: BoxShape.circle,
                   ),
-                  child: Text('Aceptado', style: TextStyle(color: Colors.green.shade700, fontWeight: FontWeight.w600)),
+                  child: Icon(
+                    Icons.check,
+                    color: Colors.white,
+                    size: 16,
+                  ),
                 ),
             ],
           ),
@@ -680,326 +810,296 @@ class _AttendRequestScreenState extends State<AttendRequestScreen> {
     );
   }
 
-  void _showDriverDetails(Map<String, dynamic> data) {
-    final List<String> vehiclePhotos = (data['vehiclePhotos'] as List?)
-        ?.where((url) => url != null && url.toString().isNotEmpty)
-        .map((url) => url.toString())
-        .toList() ?? <String>[];
-    
-    String? profile = data['profilePhoto'] as String?;
-    // Clean and validate profile photo URL
-    if (profile != null && profile.isNotEmpty && !profile.startsWith('http')) {
-      profile = null; // Invalid URL format
+  Future<void> _showDriverDetails(Map<String, dynamic> data) async {
+  final supabase = Supabase.instance.client;
+
+  // 🔹 Resolver foto de perfil
+  String? profileUrl;
+  if (data['profilePhoto'] != null && data['profilePhoto'].toString().isNotEmpty) {
+    final profile = data['profilePhoto'].toString();
+    if (profile.startsWith('http')) {
+      profileUrl = profile; // URL pública
+    } else {
+      // Generar URL firmada desde Supabase Storage (válida por 1 hora)
+      profileUrl = await supabase.storage.from('drivers').createSignedUrl(profile, 3600);
     }
-    
-    final String name = '${data['nombre'] ?? ''} ${data['apellidos'] ?? ''}'.trim();
+    debugPrint("Profile photo URL: $profileUrl");
+  }
 
-    showDialog<void>(
-      context: context,
-      builder: (context) => Dialog(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-        child: Container(
-          constraints: const BoxConstraints(maxWidth: 500, maxHeight: 700),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              // Header with profile photo and name
-              Container(
-                padding: const EdgeInsets.all(20),
-                decoration: BoxDecoration(
-                  color: Colors.blue.shade50,
-                  borderRadius: const BorderRadius.vertical(top: Radius.circular(16)),
-                ),
-                child: Column(
-                  children: [
-                    ClipOval(
-                      child: SizedBox(
-                        width: 100,
-                        height: 100,
-                        child: profile != null
-                            ? Image.network(
-                                profile,
-                                fit: BoxFit.cover,
-                                loadingBuilder: (context, child, loadingProgress) {
-                                  if (loadingProgress == null) return child;
-                                  return Container(
-                                    color: Colors.grey.shade200,
-                                    child: const Center(
-                                      child: CircularProgressIndicator(strokeWidth: 2),
-                                    ),
-                                  );
-                                },
-                                errorBuilder: (_, __, ___) => Container(
-                                  color: Colors.grey.shade200,
-                                  child: const Center(child: Icon(Icons.person, size: 50)),
-                                ),
-                              )
-                            : Container(
-                                color: Colors.grey.shade200,
-                                child: const Center(child: Icon(Icons.person, size: 50)),
-                              ),
-                      ),
-                    ),
-                    const SizedBox(height: 12),
-                    Text(
-                      name.isEmpty ? 'Conductor' : name,
-                      style: const TextStyle(
-                        fontSize: 20,
-                        fontWeight: FontWeight.bold,
-                      ),
-                      textAlign: TextAlign.center,
-                    ),
-                  ],
-                ),
-              ),
-              
-              // Single card with all driver information
-              Expanded(
-                child: SingleChildScrollView(
-                  padding: const EdgeInsets.all(20),
-                  child: Card(
-                    elevation: 2,
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                    child: Padding(
-                      padding: const EdgeInsets.all(20),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          // Phone with contact buttons
-                          Row(
-                            children: [
-                              Icon(Icons.phone, size: 20, color: Colors.blue.shade600),
-                              const SizedBox(width: 8),
-                              Expanded(
-                                child: Text(
-                                  data['phoneNumber']?.toString() ?? 'No disponible',
-                                  style: const TextStyle(fontSize: 16),
-                                ),
-                              ),
-                              // Phone call button
-                              IconButton(
-                                onPressed: () {
-                                  final phone = data['phoneNumber'];
-                                  if (phone != null && phone.toString().isNotEmpty) {
-                                    launchUrl(Uri.parse('tel:$phone'));
-                                  }
-                                },
-                                icon: Icon(Icons.phone, color: Colors.blue.shade700),
-                                tooltip: 'Llamar',
-                                style: IconButton.styleFrom(
-                                  backgroundColor: Colors.blue.shade50,
-                                ),
-                              ),
-                              const SizedBox(width: 8),
-                              // WhatsApp button
-                              IconButton(
-                                onPressed: () {
-                                  final phone = data['phoneNumber'];
-                                  if (phone != null && phone.toString().isNotEmpty) {
-                                    final cleanPhone = phone.toString().replaceAll(RegExp(r'[^\d+]'), '');
-                                    launchUrl(Uri.parse('https://wa.me/$cleanPhone'), mode: LaunchMode.externalApplication);
-                                  }
-                                },
-                                icon: FaIcon(FontAwesomeIcons.whatsapp, color: Colors.green.shade700),
-                                tooltip: 'WhatsApp',
-                                style: IconButton.styleFrom(
-                                  backgroundColor: Colors.green.shade50,
-                                ),
-                              ),
-                            ],
-                          ),
-                          
-                          const SizedBox(height: 16),
-                          
-                          // License
-                          Row(
-                            children: [
-                              Icon(Icons.credit_card, size: 20, color: Colors.orange.shade600),
-                              const SizedBox(width: 8),
-                              Expanded(
-                                child: Text(
-                                  data['licenseNumber']?.toString() ?? 'No disponible',
-                                  style: const TextStyle(fontSize: 16),
-                                ),
-                              ),
-                            ],
-                          ),
-                          
-                          const SizedBox(height: 16),
-                          
-                          // Capacity
-                          Row(
-                            children: [
-                              Icon(Icons.group, size: 20, color: Colors.purple.shade600),
-                              const SizedBox(width: 8),
-                              Expanded(
-                                child: Text(
-                                  '${data['vehicleCapacity'] ?? 'N/A'} pasajeros',
-                                  style: const TextStyle(fontSize: 16),
-                                ),
-                              ),
-                            ],
-                          ),
-                          
-                          const SizedBox(height: 16),
-                          
-                          // Routes
-                          if ((data['routes'] as List?) != null && (data['routes'] as List).isNotEmpty) ...[
-                            Row(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Icon(Icons.route, size: 20, color: Colors.teal.shade600),
-                                const SizedBox(width: 8),
-                                Expanded(
-                                  child: Column(
-                                    crossAxisAlignment: CrossAxisAlignment.start,
-                                    children: [
-                                      for (var route in (data['routes'] as List))
-                                        Padding(
-                                          padding: const EdgeInsets.only(bottom: 4),
-                                          child: Text(
-                                            route.toString(),
-                                            style: const TextStyle(fontSize: 16),
-                                          ),
-                                        ),
-                                    ],
-                                  ),
-                                ),
-                              ],
-                            ),
-                            const SizedBox(height: 16),
-                          ],
-                          
-                          // Vehicle photos
-                          if (vehiclePhotos.isNotEmpty) ...[
-                            Row(
-                              children: [
-                                Icon(Icons.photo_camera, size: 20, color: Colors.indigo.shade600),
-                                const SizedBox(width: 8),
-                                const Text(
-                                  'Fotos del vehículo',
-                                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.w500),
-                                ),
-                              ],
-                            ),
-                            const SizedBox(height: 12),
-                            SizedBox(
-                              height: 120,
-                              child: ListView.separated(
-                                scrollDirection: Axis.horizontal,
-                                itemCount: vehiclePhotos.length,
-                                separatorBuilder: (_, __) => const SizedBox(width: 8),
-                                itemBuilder: (context, i) {
-                                  final url = vehiclePhotos[i];
-                                  return ClipRRect(
-                                    borderRadius: BorderRadius.circular(8),
-                                    child: GestureDetector(
-                                      onTap: () => _showImagePreview(context, url),
-                                      child: Image.network(
-                                        url,
-                                        width: 160,
-                                        height: 120,
-                                        fit: BoxFit.cover,
-                                        loadingBuilder: (context, child, loadingProgress) {
-                                          if (loadingProgress == null) return child;
-                                          return Container(
-                                            width: 160,
-                                            height: 120,
-                                            color: Colors.grey.shade200,
-                                            child: const Center(
-                                              child: CircularProgressIndicator(strokeWidth: 2),
-                                            ),
-                                          );
-                                        },
-                                        errorBuilder: (_, __, ___) => Container(
-                                          color: Colors.grey.shade200,
-                                          width: 160,
-                                          height: 120,
-                                          child: const Center(
-                                            child: Column(
-                                              mainAxisAlignment: MainAxisAlignment.center,
-                                              children: [
-                                                Icon(Icons.directions_car, size: 30),
-                                                SizedBox(height: 4),
-                                                Text('Error al cargar', style: TextStyle(fontSize: 10)),
-                                              ],
-                                            ),
-                                          ),
-                                        ),
+  // 🔹 Resolver fotos del vehículo
+  final List<String> vehiclePhotos = (data['vehiclePhotos'] as List? ?? [])
+      .where((url) => url != null && url.toString().isNotEmpty)
+      .map((url) => url.toString())
+      .toList();
+
+  final List<String> resolvedVehicleUrls = [];
+  for (final v in vehiclePhotos) {
+    if (v.startsWith('http')) {
+      resolvedVehicleUrls.add(v);
+    } else {
+      final signed = await supabase.storage.from('drivers').createSignedUrl(v, 3600);
+      resolvedVehicleUrls.add(signed);
+    }
+  }
+
+  final String name = '${data['nombre'] ?? ''} ${data['apellidos'] ?? ''}'.trim();
+
+  // 🔹 Mostrar el diálogo
+  showDialog<void>(
+    context: context,
+    builder: (context) => Dialog(
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+      child: Container(
+        constraints: const BoxConstraints(maxWidth: 500, maxHeight: 700),
+        child: Stack(
+          children: [
+            Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                // ------------------- HEADER -------------------
+                Container(
+                  padding: const EdgeInsets.fromLTRB(20, 20, 50, 20),
+                  decoration: BoxDecoration(
+                    color: Colors.blue.shade50,
+                    borderRadius: const BorderRadius.vertical(top: Radius.circular(16)),
+                  ),
+                  child: Column(
+                    children: [
+                      ClipOval(
+                        child: SizedBox(
+                          width: 80,
+                          height: 80,
+                          child: profileUrl != null
+                              ? Image.network(
+                                  profileUrl,
+                                  fit: BoxFit.cover,
+                                  loadingBuilder: (context, child, loadingProgress) {
+                                    if (loadingProgress == null) return child;
+                                    return Container(
+                                      color: Colors.grey.shade200,
+                                      child: const Center(
+                                        child: CircularProgressIndicator(strokeWidth: 2),
                                       ),
-                                    ),
-                                  );
-                                },
-                              ),
-                            ),
-                          ],
-                        ],
+                                    );
+                                  },
+                                  errorBuilder: (_, error, ___) {
+                                    debugPrint('Error loading profile image: $error');
+                                    return Container(
+                                      color: Colors.grey.shade200,
+                                      child: const Center(child: Icon(Icons.person, size: 40)),
+                                    );
+                                  },
+                                )
+                              : Container(
+                                  color: Colors.grey.shade200,
+                                  child: const Center(child: Icon(Icons.person, size: 40)),
+                                ),
+                        ),
                       ),
+                      const SizedBox(height: 12),
+                      Text(
+                        name.isEmpty ? 'Conductor' : name,
+                        style: const TextStyle(
+                          fontSize: 18,
+                          fontWeight: FontWeight.bold,
+                        ),
+                        textAlign: TextAlign.center,
+                      ),
+                    ],
+                  ),
+                ),
+
+                // ------------------- BODY -------------------
+                Expanded(
+                  child: SingleChildScrollView(
+                    padding: const EdgeInsets.all(20),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        // Información básica
+                        _buildDriverInfoCard(data),
+                        
+                        const SizedBox(height: 16),
+                        
+                        // Fotos del vehículo
+                        if (resolvedVehicleUrls.isNotEmpty) ...[
+                          _buildVehiclePhotosCard(resolvedVehicleUrls),
+                          const SizedBox(height: 16),
+                        ],
+                        
+                        // Botones de acción
+                        _buildActionButtons(data),
+                      ],
                     ),
                   ),
                 ),
-              ),
-              
-              // Action buttons below the card
-              Container(
-                padding: const EdgeInsets.all(16),
+              ],
+            ),
+            
+            // ------------------- BOTÓN CERRAR -------------------
+            Positioned(
+              top: 8,
+              right: 8,
+              child: Container(
                 decoration: BoxDecoration(
-                  color: Colors.grey.shade50,
-                  borderRadius: const BorderRadius.vertical(bottom: Radius.circular(16)),
-                ),
-                child: Row(
-                  children: [
-                    Expanded(
-                      child: ElevatedButton.icon(
-                        onPressed: () {
-                          Navigator.of(context).pop();
-                          // TODO: Implement reject functionality
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(
-                              content: Text('Conductor rechazado'),
-                              backgroundColor: Colors.orange,
-                            ),
-                          );
-                        },
-                        icon: const Icon(Icons.close),
-                        label: const Text('Rechazar'),
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: Colors.red,
-                          foregroundColor: Colors.white,
-                          padding: const EdgeInsets.symmetric(vertical: 12),
-                        ),
-                      ),
-                    ),
-                    const SizedBox(width: 16),
-                    Expanded(
-                      child: ElevatedButton.icon(
-                        onPressed: () {
-                          Navigator.of(context).pop();
-                          final driverId = data['id']?.toString();
-                          if (driverId != null && driverId.isNotEmpty) {
-                            _assignDriver(driverId);
-                          }
-                        },
-                        icon: const Icon(Icons.check),
-                        label: const Text('Asignar'),
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: Colors.green,
-                          foregroundColor: Colors.white,
-                          padding: const EdgeInsets.symmetric(vertical: 12),
-                        ),
-                      ),
+                  color: Colors.white,
+                  shape: BoxShape.circle,
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withOpacity(0.1),
+                      blurRadius: 4,
+                      offset: const Offset(0, 2),
                     ),
                   ],
                 ),
+                child: IconButton(
+                  onPressed: () => Navigator.of(context).pop(),
+                  icon: Icon(Icons.close, color: Colors.grey.shade600),
+                  iconSize: 20,
+                  padding: const EdgeInsets.all(8),
+                  constraints: const BoxConstraints(
+                    minWidth: 36,
+                    minHeight: 36,
+                  ),
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    ),
+  );
+  }
+
+  Widget _buildDriverInfoCard(Map<String, dynamic> data) {
+    return Card(
+      elevation: 2,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // Título
+            Row(
+              children: [
+                Icon(Icons.info_outline, color: Colors.blue.shade600),
+                const SizedBox(width: 8),
+                Text(
+                  'Información Personal',
+                  style: TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.blue.shade700,
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 16),
+
+            // Teléfono
+            _buildInfoRow(
+              Icons.phone,
+              'Teléfono',
+              data['phoneNumber']?.toString() ?? 'No disponible',
+              Colors.green,
+              actions: [
+                IconButton(
+                  onPressed: () {
+                    final phone = data['phoneNumber'];
+                    if (phone != null && phone.toString().isNotEmpty) {
+                      launchUrl(Uri.parse('tel:$phone'));
+                    }
+                  },
+                  icon: Icon(Icons.phone, color: Colors.blue.shade700),
+                  tooltip: 'Llamar',
+                  iconSize: 20,
+                ),
+                IconButton(
+                  onPressed: () {
+                    final phone = data['phoneNumber'];
+                    if (phone != null && phone.toString().isNotEmpty) {
+                      final cleanPhone = phone.toString().replaceAll(RegExp(r'[^\d+]'), '');
+                      launchUrl(Uri.parse('https://wa.me/$cleanPhone'), mode: LaunchMode.externalApplication);
+                    }
+                  },
+                  icon: FaIcon(FontAwesomeIcons.whatsapp, color: Colors.green.shade700),
+                  tooltip: 'WhatsApp',
+                  iconSize: 18,
+                ),
+              ],
+            ),
+
+            const Divider(height: 24),
+
+            // Licencia
+            _buildInfoRow(
+              Icons.badge,
+              'Licencia',
+              data['licenseNumber']?.toString() ?? 'No disponible',
+              Colors.orange,
+            ),
+
+            const Divider(height: 24),
+
+            // Capacidad
+            _buildInfoRow(
+              Icons.group,
+              'Capacidad del vehículo',
+              '${data['vehicleCapacity'] ?? 'N/A'} pasajeros',
+              Colors.purple,
+            ),
+
+            // Rutas
+            if ((data['routes'] as List?)?.isNotEmpty ?? false) ...[
+              const Divider(height: 24),
+              _buildInfoRow(
+                Icons.route,
+                'Rutas disponibles',
+                (data['routes'] as List).join(', '),
+                Colors.teal,
               ),
             ],
-          ),
+          ],
         ),
       ),
     );
   }
 
-  Widget _buildDetailCard(String title, IconData icon, Color color, List<Widget> children) {
+  Widget _buildInfoRow(IconData icon, String label, String value, Color color, {List<Widget>? actions}) {
+    return Row(
+      children: [
+        Icon(icon, size: 20, color: color),
+        const SizedBox(width: 12),
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                label,
+                style: TextStyle(
+                  fontSize: 12,
+                  color: Colors.grey.shade600,
+                  fontWeight: FontWeight.w500,
+                ),
+              ),
+              const SizedBox(height: 2),
+              Text(
+                value,
+                style: const TextStyle(
+                  fontSize: 14,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+            ],
+          ),
+        ),
+        if (actions != null) ...actions,
+      ],
+    );
+  }
+
+  Widget _buildVehiclePhotosCard(List<String> vehicleUrls) {
     return Card(
       elevation: 2,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
@@ -1010,49 +1110,94 @@ class _AttendRequestScreenState extends State<AttendRequestScreen> {
           children: [
             Row(
               children: [
-                Icon(icon, color: color, size: 20),
+                Icon(Icons.directions_car, color: Colors.indigo.shade600),
                 const SizedBox(width: 8),
                 Text(
-                  title,
-                  style: const TextStyle(
+                  'Fotos del Vehículo',
+                  style: TextStyle(
                     fontSize: 16,
                     fontWeight: FontWeight.bold,
+                    color: Colors.indigo.shade700,
                   ),
                 ),
               ],
             ),
             const SizedBox(height: 12),
-            ...children,
+            SizedBox(
+              height: 100,
+              child: ListView.builder(
+                scrollDirection: Axis.horizontal,
+                itemCount: vehicleUrls.length,
+                itemBuilder: (context, index) {
+                  final url = vehicleUrls[index];
+                  return Padding(
+                    padding: const EdgeInsets.only(right: 8),
+                    child: GestureDetector(
+                      onTap: () => _showImagePreview(context, url),
+                      child: ClipRRect(
+                        borderRadius: BorderRadius.circular(8),
+                        child: Image.network(
+                          url,
+                          width: 100,
+                          height: 100,
+                          fit: BoxFit.cover,
+                          errorBuilder: (_, __, ___) => Container(
+                            width: 100,
+                            height: 100,
+                            color: Colors.grey.shade200,
+                            child: const Icon(Icons.error),
+                          ),
+                        ),
+                      ),
+                    ),
+                  );
+                },
+              ),
+            ),
           ],
         ),
       ),
     );
   }
 
-  Widget _buildDetailRow(String label, String value, IconData icon) {
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 8),
-      child: Row(
-        children: [
-          Icon(icon, size: 16, color: Colors.grey.shade600),
-          const SizedBox(width: 8),
-          if (label.isNotEmpty) ...[
-            Text(
-              '$label: ',
-              style: TextStyle(
-                fontWeight: FontWeight.w500,
-                color: Colors.grey.shade700,
-              ),
-            ),
-          ],
-          Expanded(
-            child: Text(
-              value,
-              style: const TextStyle(fontSize: 14),
+  Widget _buildActionButtons(Map<String, dynamic> data) {
+    return Row(
+      children: [
+        Expanded(
+          child: ElevatedButton.icon(
+            onPressed: () {
+              Navigator.of(context).pop();
+              _assignDriver(data['id']?.toString() ?? '', isRejection: true);
+            },
+            icon: const Icon(Icons.close),
+            label: const Text('Rechazar'),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.red,
+              foregroundColor: Colors.white,
+              padding: const EdgeInsets.symmetric(vertical: 12),
             ),
           ),
-        ],
-      ),
+        ),
+        const SizedBox(width: 16),
+        Expanded(
+          child: ElevatedButton.icon(
+            onPressed: () {
+              Navigator.of(context).pop();
+              final driverId = data['id']?.toString();
+              if (driverId != null && driverId.isNotEmpty) {
+                _assignDriver(driverId);
+              }
+            },
+            icon: const Icon(Icons.check),
+            label: const Text('Asignar'),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.green,
+              foregroundColor: Colors.white,
+              padding: const EdgeInsets.symmetric(vertical: 12),
+            ),
+          ),
+        ),
+      ],
     );
   }
 
@@ -1094,30 +1239,31 @@ class _AttendRequestScreenState extends State<AttendRequestScreen> {
     );
   }
 
-  Future<void> _assignDriver(String driverId) async {
+  Future<void> _assignDriver(String driverId, {bool isRejection = false}) async {
     final bool? confirmed = await showDialog<bool>(
       context: context,
-      builder:
-          (context) => AlertDialog(
-            title: const Text('Confirmar Asignación'),
-            content: const Text(
-              '¿Estás seguro de que deseas asignar este conductor a la solicitud?',
-            ),
-            actions: [
-              TextButton(
-                onPressed: () => Navigator.of(context).pop(false),
-                child: const Text('Cancelar'),
-              ),
-              ElevatedButton(
-                onPressed: () => Navigator.of(context).pop(true),
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: AppColors.primary,
-                  foregroundColor: Colors.white,
-                ),
-                child: const Text('Confirmar'),
-              ),
-            ],
+      builder: (context) => AlertDialog(
+        title: Text(isRejection ? 'Confirmar Rechazo' : 'Confirmar Asignación'),
+        content: Text(
+          isRejection
+              ? '¿Estás seguro de que deseas rechazar este conductor para la solicitud?'
+              : '¿Estás seguro de que deseas asignar este conductor a la solicitud?',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(false),
+            child: const Text('Cancelar'),
           ),
+          ElevatedButton(
+            onPressed: () => Navigator.of(context).pop(true),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: AppColors.primary,
+              foregroundColor: Colors.white,
+            ),
+            child: const Text('Confirmar'),
+          ),
+        ],
+      ),
     );
 
     if (confirmed != true) return;
@@ -1132,16 +1278,26 @@ class _AttendRequestScreenState extends State<AttendRequestScreen> {
         throw Exception('Usuario no autenticado');
       }
 
-      final success = await _driverService.assignDriverToRequest(
-        requestId: widget.request.id!,
-        driverId: driverId,
-        adminId: user.id,
-      );
+      final success = isRejection
+          ? await _driverService.RejectDriverToRequest(
+              requestId: widget.request.id!,
+              driverId: driverId,
+              adminId: user.id,
+            )
+          : await _driverService.assignDriverToRequest(
+              requestId: widget.request.id!,
+              driverId: driverId,
+              adminId: user.id,
+            );
 
       if (success && mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Conductor asignado exitosamente'),
+          SnackBar(
+            content: Text(
+              isRejection
+                  ? 'Conductor rechazado exitosamente'
+                  : 'Conductor asignado exitosamente',
+            ),
             backgroundColor: Colors.green,
           ),
         );
@@ -1153,7 +1309,11 @@ class _AttendRequestScreenState extends State<AttendRequestScreen> {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Error al asignar conductor: $e'),
+            content: Text(
+              isRejection
+                  ? 'Error al rechazar conductor: $e'
+                  : 'Error al asignar conductor: $e',
+            ),
             backgroundColor: Colors.red,
           ),
         );
@@ -1167,3 +1327,4 @@ class _AttendRequestScreenState extends State<AttendRequestScreen> {
     }
   }
 }
+ 

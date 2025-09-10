@@ -1,5 +1,6 @@
 import 'package:eytaxi/core/enum/Trip_status.dart';
 import 'package:eytaxi/data/models/guest_contact_model.dart';
+import 'package:eytaxi/data/models/driver_model.dart';
 import 'package:eytaxi/features/trip_request/data/models/ubicacion_model.dart';
 
 class TripRequest {
@@ -20,6 +21,7 @@ class TripRequest {
 	final Ubicacion? destino;
 	final GuestContact? contact;
 	final int driverResponseCount;
+	final Driver? driver; // Add driver property
 
 	TripRequest({
 		this.id,
@@ -39,6 +41,7 @@ class TripRequest {
 		this.destino,
 		this.contact,
 		this.driverResponseCount = 0,
+		this.driver,
 	});
 
 		 factory TripRequest.fromJson(Map<String, dynamic> json) {
@@ -64,6 +67,7 @@ class TripRequest {
 						 destino: json['destino'] != null ? Ubicacion.fromJson(json['destino']) : null,
 						 contact: json['contact'] != null ? GuestContact.fromJson(json['contact']) : null,
 						 driverResponseCount: json['driver_response_count'] as int? ?? 0,
+						 driver: json['driver'] != null ? Driver.fromJson(json['driver']) : null, // Parse driver details
 				 );
 		 }
 

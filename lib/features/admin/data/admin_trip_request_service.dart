@@ -17,7 +17,11 @@ class AdminTripRequestService {
             *,
             origen:origen_id(*),
             destino:destino_id(*),
-            contact:contact_id(*)
+            contact:contact_id(*),
+            driver:driver_id(
+              *,
+              user_profiles(*)
+            )
           ''')
           .order('created_at', ascending: false);
 

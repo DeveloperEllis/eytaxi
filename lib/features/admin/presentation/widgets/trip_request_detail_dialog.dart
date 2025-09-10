@@ -234,6 +234,54 @@ class TripRequestDetailDialog extends StatelessWidget {
                             ),
                           ),
                         ],
+
+                        if (request.driver != null) ...[
+                          const SizedBox(height: 16),
+
+                          // Información del Conductor
+                          _buildSectionHeader(
+                            '🚖 Información del Conductor',
+                            Colors.orange,
+                          ),
+                          const SizedBox(height: 8),
+                          Container(
+                            width: double.infinity,
+                            padding: const EdgeInsets.all(12),
+                            decoration: BoxDecoration(
+                              color: Colors.orange.withOpacity(0.05),
+                              borderRadius: BorderRadius.circular(8),
+                              border: Border.all(
+                                color: Colors.orange.withOpacity(0.1),
+                              ),
+                            ),
+                            child: Column(
+                              children: [
+                                _buildDetailRow(
+                                  'Nombre:',
+                                  '${request.driver?.nombre ?? 'N/A'} ${request.driver?.apellidos ?? ''}'.trim(),
+                                  Icons.person,
+                                ),
+                                _buildDetailRow(
+                                  'Teléfono:',
+                                  request.driver?.phoneNumber ?? 'N/A',
+                                  Icons.phone,
+                                ),
+                                if (request.driver?.licenseNumber != null && request.driver!.licenseNumber.isNotEmpty)
+                                  _buildDetailRow(
+                                    'Licencia:',
+                                    request.driver!.licenseNumber,
+                                    Icons.badge,
+                                  ),
+                                if (request.driver?.vehicleCapacity != null && request.driver!.vehicleCapacity > 0)
+                                  _buildDetailRow(
+                                    'Capacidad del vehículo:',
+                                    request.driver!.vehicleCapacity.toString(),
+                                    Icons.directions_car,
+                                  ),
+                              ],
+                            ),
+                          ),
+                        ],
                       ],
                     ),
                   ),
@@ -257,7 +305,7 @@ class TripRequestDetailDialog extends StatelessWidget {
                         child: const Text('Cerrar'),
                       ),
                       // Mostrar "Atender Solicitud" si está pendiente o tiene respuestas de taxistas
-                       ...[
+                      ...[
                         const SizedBox(width: 8),
                         ElevatedButton.icon(
                           onPressed: () => onAttendRequest!(request),
@@ -269,8 +317,8 @@ class TripRequestDetailDialog extends StatelessWidget {
                           ),
                         ),
                       ],
+
                       // Mantener "Editar Estado" como opción secundaria
-                      
                     ],
                   ),
                 ),
@@ -310,7 +358,6 @@ class TripRequestDetailDialog extends StatelessWidget {
       ),
     );
   }
-
 
   void _showDeleteConfirmation(BuildContext context) {
     showDialog(

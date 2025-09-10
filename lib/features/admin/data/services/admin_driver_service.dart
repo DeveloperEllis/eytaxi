@@ -103,6 +103,7 @@ class AdminDriverService {
               id,
               license_number,
               vehicle_capacity,
+              vehicle_photo_url,
               routes,
               rating,
               total_trips,
@@ -134,6 +135,7 @@ class AdminDriverService {
             'rating': driverInfo?['rating'] ?? 0.0,
             'total_trips': driverInfo?['total_trips'] ?? 0,
             'viajes_locales': driverInfo?['viajes_locales'] ?? false,
+            'vehicle_photo_url': driverInfo?['vehicle_photo_url'],
           }
         });
       }
@@ -212,42 +214,13 @@ class AdminDriverService {
     try {
       dev.log('📝 AdminDriverService: Asignando conductor $driverId a solicitud $requestId...');
       
-      // Primero verificar si ya existe una respuesta de este conductor
-      final existingResponse = await _client
-          .from('driver_responses')
-          .select('id')
-          .eq('request_id', requestId)
-          .eq('driver_id', driverId)
-          .maybeSingle();
-
-      if (existingResponse != null) {
-        // Actualizar respuesta existente
-        await _client
-            .from('driver_responses')
-            .update({
-              'status': 'accepted',
-            })
-            .eq('request_id', requestId)
-            .eq('driver_id', driverId);
-      } else {
-        // Crear nueva respuesta
-        await _client
-            .from('driver_responses')
-            .insert({
-              'request_id': requestId,
-              'driver_id': driverId,
-              'status': 'accepted',
-            });
-      }
-
-      // Actualizar la solicitud para marcarla como aceptada
       await _client
           .from('trip_requests')
           .update({
-            'status': 'accepted',
-            'updated_at': DateTime.now().toIso8601String(),
+            'driver_id': driverId,
           })
           .eq('id', requestId);
+          
 
       dev.log('✅ AdminDriverService: Conductor asignado exitosamente');
       return true;
@@ -256,6 +229,49 @@ class AdminDriverService {
       throw Exception('Error al asignar conductor: $e');
     }
   }
+
+   Future<bool> RejectDriverToRequest({
+  required String requestId,
+  required String driverId,
+  required String adminId,
+}) async {
+  try {
+    dev.log('📝 AdminDriverService: Rechazar conductor $driverId a solicitud $requestId...');
+
+    // 1️⃣ Rechazar el driver en driver_responses
+    await _client
+        .from('driver_responses')
+        .update({'status': 'rejected'})
+        .eq('driver_id', driverId)
+        .eq('request_id', requestId);
+
+    // 2️⃣ Verificar si queda algún driver aceptado para esta solicitud
+    final acceptedResponses = await _client
+        .from('driver_responses')
+        .select()
+        .eq('request_id', requestId)
+        .eq('status', 'accepted');
+
+    final hasAccepted = acceptedResponses != null && acceptedResponses.isNotEmpty;
+
+    // 3️⃣ Si no hay aceptados, actualizar trip_requests a pending
+    if (!hasAccepted) {
+      await _client
+          .from('trip_requests')
+          .update({'status': 'pending'})
+          .eq('id', requestId);
+
+      dev.log('ℹ️ AdminDriverService: No hay conductores aceptados, trip_requests → pending');
+    }
+
+    dev.log('✅ AdminDriverService: Conductor rechazado exitosamente');
+    return true;
+  } catch (e, st) {
+    dev.log('❌ AdminDriverService: Error al rechazar conductor: $e\n$st');
+    throw Exception('Error al rechazar conductor: $e');
+  }
+}
+
 
   // Obtener detalles de un conductor específico
   Future<Driver?> getDriverById(String driverId) async {

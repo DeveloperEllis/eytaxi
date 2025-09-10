@@ -29,13 +29,16 @@ class Driver extends User {
   }) : super(userType: UserType.driver);
 
   factory Driver.fromJson(Map<String, dynamic> json) {
+    // Verificar si los datos vienen de user_profiles anidados o directamente
+    Map<String, dynamic> userProfileData = json['user_profiles'] ?? json;
+    
     return Driver(
-      id: json['id'] ?? '',
-      email: json['email'] ?? '',
-      nombre: json['nombre'] ?? '',
-      apellidos: json['apellidos'] ?? '',
-      phoneNumber: json['phone_number'] ?? '',
-      photoUrl: json['photo_url'] ?? '',
+      id: json['id'] ?? userProfileData['id'] ?? '',
+      email: userProfileData['email'] ?? '',
+      nombre: userProfileData['nombre'] ?? '',
+      apellidos: userProfileData['apellidos'] ?? '',
+      phoneNumber: userProfileData['phone_number'] ?? '',
+      photoUrl: userProfileData['photo_url'] ?? '',
       licenseNumber: json['license_number'] ?? '',
       vehiclePhotoUrl: json['vehicle_photo_url'] ?? '',
       vehicleCapacity: json['vehicle_capacity'] ?? 0,
