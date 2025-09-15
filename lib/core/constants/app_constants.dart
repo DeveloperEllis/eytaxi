@@ -1,6 +1,6 @@
 class AppConstants {
 
-static String appname = 'TaxiPorCuba';
+static String appname = 'Cubva';
 static String slogan = 'Conectamos viajeros con taxistas en Cuba';
 static const String registroexitoso = 'assets/checkanimation.json';
 static const String numero_soporte = '+5358408409';

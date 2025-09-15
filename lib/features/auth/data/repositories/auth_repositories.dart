@@ -41,17 +41,17 @@ class AuthRepositoryImpl {
     
     String? token;
     
-    if (!kIsWeb) {
+    
       // Solicitar permisos para notificaciones en iOS
       await FirebaseMessaging.instance.requestPermission();
       FirebaseMessaging messaging = FirebaseMessaging.instance;
       token = await messaging.getToken();
-    }
+    
 
-    final user = Supabase.instance.client.auth.currentUser;
     final response = await remoteDataSource.signInWithPassword(email, password);
+    final user = await Supabase.instance.client.auth.currentUser;
 
-    if (!kIsWeb && user != null && token != null) {
+    if (user != null && token != null) {
       // Actualizar el campo fcmtoken en user_profiles
       final response = await Supabase.instance.client
           .from('user_profiles')

@@ -45,10 +45,12 @@ class _AttendRequestScreenState extends State<AttendRequestScreen> {
 
   Future<void> _loadData() async {
     try {
-      setState(() {
-        _isLoading = true;
-        _errorMessage = null;
-      });
+      if (mounted) {
+        setState(() {
+          _isLoading = true;
+          _errorMessage = null;
+        });
+      }
 
       // Cargar conductores que han respondido a esta solicitud
       final responses = await _driverService.getDriverResponsesForRequest(
@@ -62,26 +64,32 @@ class _AttendRequestScreenState extends State<AttendRequestScreen> {
       _availableDrivers = available;
       _filteredDrivers = available;
     } catch (e) {
-      setState(() {
-        _errorMessage = 'Error al cargar datos: $e';
-      });
+      if (mounted) {
+        setState(() {
+          _errorMessage = 'Error al cargar datos: $e';
+        });
+      }
     } finally {
-      setState(() {
-        _isLoading = false;
-      });
+      if (mounted) {
+        setState(() {
+          _isLoading = false;
+        });
+      }
     }
   }
 
   void _filterDrivers() {
     final query = _searchController.text.toLowerCase();
-    setState(() {
-      _filteredDrivers =
-          _availableDrivers.where((driver) {
-            final name = '${driver.nombre} ${driver.apellidos}'.toLowerCase();
-            final license = driver.licenseNumber.toLowerCase();
-            return name.contains(query) || license.contains(query);
-          }).toList();
-    });
+    if (mounted) {
+      setState(() {
+        _filteredDrivers =
+            _availableDrivers.where((driver) {
+              final name = '${driver.nombre} ${driver.apellidos}'.toLowerCase();
+              final license = driver.licenseNumber.toLowerCase();
+              return name.contains(query) || license.contains(query);
+            }).toList();
+      });
+    }
   }
 
   @override
@@ -95,6 +103,7 @@ class _AttendRequestScreenState extends State<AttendRequestScreen> {
         foregroundColor: Colors.white,
         elevation: 0,
         actions: [
+          
           IconButton(
             icon: const Icon(Icons.refresh),
             onPressed: _loadData,
@@ -842,9 +851,7 @@ class _AttendRequestScreenState extends State<AttendRequestScreen> {
     }
   }
 
-  final String name = '${data['nombre'] ?? ''} ${data['apellidos'] ?? ''}'.trim();
-
-  // 🔹 Mostrar el diálogo
+  // Mostrar el diálogo
   showDialog<void>(
     context: context,
     builder: (context) => Dialog(
@@ -856,59 +863,7 @@ class _AttendRequestScreenState extends State<AttendRequestScreen> {
             Column(
               mainAxisSize: MainAxisSize.min,
               children: [
-                // ------------------- HEADER -------------------
-                Container(
-                  padding: const EdgeInsets.fromLTRB(20, 20, 50, 20),
-                  decoration: BoxDecoration(
-                    color: Colors.blue.shade50,
-                    borderRadius: const BorderRadius.vertical(top: Radius.circular(16)),
-                  ),
-                  child: Column(
-                    children: [
-                      ClipOval(
-                        child: SizedBox(
-                          width: 80,
-                          height: 80,
-                          child: profileUrl != null
-                              ? Image.network(
-                                  profileUrl,
-                                  fit: BoxFit.cover,
-                                  loadingBuilder: (context, child, loadingProgress) {
-                                    if (loadingProgress == null) return child;
-                                    return Container(
-                                      color: Colors.grey.shade200,
-                                      child: const Center(
-                                        child: CircularProgressIndicator(strokeWidth: 2),
-                                      ),
-                                    );
-                                  },
-                                  errorBuilder: (_, error, ___) {
-                                    debugPrint('Error loading profile image: $error');
-                                    return Container(
-                                      color: Colors.grey.shade200,
-                                      child: const Center(child: Icon(Icons.person, size: 40)),
-                                    );
-                                  },
-                                )
-                              : Container(
-                                  color: Colors.grey.shade200,
-                                  child: const Center(child: Icon(Icons.person, size: 40)),
-                                ),
-                        ),
-                      ),
-                      const SizedBox(height: 12),
-                      Text(
-                        name.isEmpty ? 'Conductor' : name,
-                        style: const TextStyle(
-                          fontSize: 18,
-                          fontWeight: FontWeight.bold,
-                        ),
-                        textAlign: TextAlign.center,
-                      ),
-                    ],
-                  ),
-                ),
-
+                
                 // ------------------- BODY -------------------
                 Expanded(
                   child: SingleChildScrollView(
@@ -1269,9 +1224,11 @@ class _AttendRequestScreenState extends State<AttendRequestScreen> {
     if (confirmed != true) return;
 
     try {
-      setState(() {
-        _isAssigning = true;
-      });
+      if (mounted) {
+        setState(() {
+          _isAssigning = true;
+        });
+      }
 
       final user = Supabase.instance.client.auth.currentUser;
       if (user == null) {

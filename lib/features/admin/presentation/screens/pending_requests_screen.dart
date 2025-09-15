@@ -2,8 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:eytaxi/features/admin/data/admin_trip_request_service.dart';
 import 'package:eytaxi/features/trip_request/data/models/trip_request_model.dart';
 import 'package:eytaxi/features/admin/presentation/widgets/trip_request_detail_dialog.dart';
+import 'package:eytaxi/features/admin/presentation/widgets/trip_request_card_widget.dart';
 import 'package:eytaxi/features/admin/presentation/screens/attend_request_screen.dart';
-import 'package:intl/intl.dart';
 import 'dart:developer' as developer;
 
 class PendingRequestsScreen extends StatefulWidget {
@@ -280,228 +280,10 @@ class _PendingRequestsScreenState extends State<PendingRequestsScreen> {
   }
 
   Widget _buildRequestCard(TripRequest request) {
-    return Card(
-      margin: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-      elevation: 2,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(12),
-        side: BorderSide(
-          color: Colors.orange.withOpacity(0.3),
-          width: 1,
-        ),
-      ),
-      child: InkWell(
-        borderRadius: BorderRadius.circular(12),
-        onTap: () => _showRequestDetails(request),
-        child: Padding(
-          padding: const EdgeInsets.all(16),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              // Header con ID y tipo de taxi
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Text(
-                    'ID: ${request.id?.substring(0, 8) ?? 'N/A'}',
-                    style: const TextStyle(
-                      fontSize: 12,
-                      fontWeight: FontWeight.bold,
-                      color: Colors.grey,
-                    ),
-                  ),
-                  Row(
-                    children: [
-                      _buildTaxiTypeChip(request.taxiType),
-                      const SizedBox(width: 8),
-                      Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                        decoration: BoxDecoration(
-                          color: Colors.orange.withOpacity(0.1),
-                          borderRadius: BorderRadius.circular(12),
-                          border: Border.all(color: Colors.orange.withOpacity(0.3)),
-                        ),
-                        child: Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            Icon(
-                              Icons.pending_actions,
-                              size: 10,
-                              color: Colors.orange.shade700,
-                            ),
-                            const SizedBox(width: 4),
-                            Text(
-                              'Sin respuesta',
-                              style: TextStyle(
-                                color: Colors.orange.shade700,
-                                fontSize: 10,
-                                fontWeight: FontWeight.w600,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ],
-                  ),
-                ],
-              ),
-              
-              const SizedBox(height: 12),
-              
-              // Origen y destino
-              Row(
-                children: [
-                  Icon(Icons.my_location, size: 16, color: Colors.green.shade600),
-                  const SizedBox(width: 8),
-                  Expanded(
-                    child: Text(
-                      request.origen?.nombre ?? 'Origen no especificado',
-                      style: const TextStyle(
-                        fontSize: 14,
-                        fontWeight: FontWeight.w500,
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-              
-              const SizedBox(height: 4),
-              
-              Row(
-                children: [
-                  Icon(Icons.location_on, size: 16, color: Colors.red.shade600),
-                  const SizedBox(width: 8),
-                  Expanded(
-                    child: Text(
-                      request.destino?.nombre ?? 'Destino no especificado',
-                      style: const TextStyle(
-                        fontSize: 14,
-                        fontWeight: FontWeight.w500,
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-              
-              const SizedBox(height: 12),
-              
-              // Información adicional
-              Row(
-                children: [
-                  Icon(Icons.group, size: 14, color: Colors.grey.shade600),
-                  const SizedBox(width: 4),
-                  Text(
-                    '${request.cantidadPersonas} personas',
-                    style: TextStyle(
-                      fontSize: 12,
-                      color: Colors.grey.shade700,
-                    ),
-                  ),
-                  const SizedBox(width: 16),
-                  Icon(Icons.access_time, size: 14, color: Colors.grey.shade600),
-                  const SizedBox(width: 4),
-                  Text(
-                    _formatTripDateTime(request.tripDate, request.taxiType),
-                    style: TextStyle(
-                      fontSize: 12,
-                      color: Colors.grey.shade700,
-                    ),
-                  ),
-                  const Spacer(),
-                  // Mostrar tiempo desde creación
-                  _buildTimeElapsed(request.createdAt),
-                ],
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildTaxiTypeChip(String taxiType) {
-    Color color;
-    String label;
-    IconData icon;
-    
-    switch (taxiType.toLowerCase()) {
-      case 'colectivo':
-        color = Colors.purple;
-        label = 'Colectivo';
-        icon = Icons.group;
-        break;
-      case 'privado':
-        color = Colors.indigo;
-        label = 'Privado';
-        icon = Icons.person;
-        break;
-      default:
-        color = Colors.grey;
-        label = taxiType;
-        icon = Icons.local_taxi;
-    }
-
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-      decoration: BoxDecoration(
-        color: color.withOpacity(0.1),
-        borderRadius: BorderRadius.circular(8),
-        border: Border.all(color: color.withOpacity(0.3)),
-      ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Icon(
-            icon,
-            size: 10,
-            color: color,
-          ),
-          const SizedBox(width: 2),
-          Text(
-            label,
-            style: TextStyle(
-              color: color,
-              fontSize: 9,
-              fontWeight: FontWeight.w600,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildTimeElapsed(DateTime createdAt) {
-    final now = DateTime.now();
-    final difference = now.difference(createdAt);
-    
-    String timeText;
-    Color color;
-    
-    if (difference.inDays > 0) {
-      timeText = '${difference.inDays}d';
-      color = difference.inDays > 2 ? Colors.red : Colors.orange;
-    } else if (difference.inHours > 0) {
-      timeText = '${difference.inHours}h';
-      color = difference.inHours > 12 ? Colors.orange : Colors.yellow.shade700;
-    } else {
-      timeText = '${difference.inMinutes}m';
-      color = Colors.green;
-    }
-    
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
-      decoration: BoxDecoration(
-        color: color.withOpacity(0.1),
-        borderRadius: BorderRadius.circular(6),
-      ),
-      child: Text(
-        timeText,
-        style: TextStyle(
-          fontSize: 10,
-          color: color,
-          fontWeight: FontWeight.bold,
-        ),
-      ),
+    return TripRequestCardWidget(
+      request: request,
+      onTap: () => _showRequestDetails(request),
+      showTimeElapsed: true, // Siempre mostrar tiempo transcurrido en pending requests
     );
   }
 
@@ -656,15 +438,5 @@ class _PendingRequestsScreenState extends State<PendingRequestsScreen> {
         ],
       ),
     );
-  }
-
-  String _formatTripDateTime(DateTime tripDate, String taxiType) {
-    if (taxiType.toLowerCase() == 'colectivo') {
-      // Solo mostrar fecha para colectivos
-      return DateFormat('dd/MM/yyyy').format(tripDate);
-    } else {
-      // Mostrar fecha y hora para privados
-      return DateFormat('dd/MM/yyyy HH:mm').format(tripDate);
-    }
   }
 }

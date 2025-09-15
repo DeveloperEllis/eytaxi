@@ -20,10 +20,10 @@ class ActiveRequestsCard extends StatefulWidget {
 }
 
 class _ActiveRequestsCardState extends State<ActiveRequestsCard> {
-  final Map<String, bool> _expandedStates = {};
   final TextEditingController _searchController = TextEditingController();
   String _searchQuery = '';
-  bool isLoading = true; // <-- NUEVO
+  String _selectedTaxiType = 'todos'; // Nuevo filtro: 'todos', 'colectivo', 'privado'
+  bool isLoading = true;
 
   @override
   void initState() {
@@ -48,19 +48,32 @@ class _ActiveRequestsCardState extends State<ActiveRequestsCard> {
   }
 
   List<TripRequest> _filterRequests() {
-    if (_searchQuery.isEmpty) return widget.requests;
-    return widget.requests.where((request) {
-      final origen = request.origen?.nombre.toLowerCase() ?? 'desconocido';
-      final destino = request.destino?.nombre.toLowerCase() ?? 'desconocido';
-      final origenProvincia =
-          request.origen?.provincia.toLowerCase() ?? 'desconocido';
-      final destinoProvincia =
-          request.destino?.provincia.toLowerCase() ?? 'desconocido';
-      return origen.contains(_searchQuery) ||
-          destino.contains(_searchQuery) ||
-          origenProvincia.contains(_searchQuery) ||
-          destinoProvincia.contains(_searchQuery);
-    }).toList();
+    var filtered = widget.requests;
+    
+    // Filtro por tipo de taxi
+    if (_selectedTaxiType != 'todos') {
+      filtered = filtered.where((request) => 
+        request.taxiType.toLowerCase() == _selectedTaxiType.toLowerCase()
+      ).toList();
+    }
+    
+    // Filtro por búsqueda de texto
+    if (_searchQuery.isNotEmpty) {
+      filtered = filtered.where((request) {
+        final origen = request.origen?.nombre.toLowerCase() ?? 'desconocido';
+        final destino = request.destino?.nombre.toLowerCase() ?? 'desconocido';
+        final origenProvincia =
+            request.origen?.provincia.toLowerCase() ?? 'desconocido';
+        final destinoProvincia =
+            request.destino?.provincia.toLowerCase() ?? 'desconocido';
+        return origen.contains(_searchQuery) ||
+            destino.contains(_searchQuery) ||
+            origenProvincia.contains(_searchQuery) ||
+            destinoProvincia.contains(_searchQuery);
+      }).toList();
+    }
+    
+    return filtered;
   }
 
   Color _getTaxiTypeColor(String taxiType) {
@@ -89,37 +102,131 @@ class _ActiveRequestsCardState extends State<ActiveRequestsCard> {
   Widget _buildSearchBar() {
     return Padding(
       padding: const EdgeInsets.all(16),
-      child: TextField(
-        controller: _searchController,
-        decoration: InputDecoration(
-          hintText: 'Buscar por origen o destino...',
-          prefixIcon: const Icon(Icons.search, size: 20),
-          suffixIcon:
-              _searchQuery.isNotEmpty
-                  ? IconButton(
-                    icon: const Icon(Icons.clear, size: 18),
-                    onPressed: () => _searchController.clear(),
-                  )
-                  : null,
-          filled: true,
-          fillColor: Colors.grey[50],
-          contentPadding: const EdgeInsets.symmetric(
-            vertical: 12,
-            horizontal: 16,
+      child: Row(
+        children: [
+          // Buscador
+          Expanded(
+            flex: 3,
+            child: TextField(
+              controller: _searchController,
+              decoration: InputDecoration(
+                hintText: 'Origen o Destino...',
+                prefixIcon: const Icon(Icons.search, size: 20),
+                suffixIcon:
+                    _searchQuery.isNotEmpty
+                        ? IconButton(
+                          icon: const Icon(Icons.clear, size: 18),
+                          onPressed: () => _searchController.clear(),
+                        )
+                        : null,
+                filled: true,
+                fillColor: Colors.grey[50],
+                contentPadding: const EdgeInsets.symmetric(
+                  vertical: 12,
+                  horizontal: 16,
+                ),
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12),
+                  borderSide: BorderSide.none,
+                ),
+                enabledBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12),
+                  borderSide: BorderSide(color: Colors.grey[200]!, width: 1),
+                ),
+                focusedBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12),
+                  borderSide: BorderSide(color: AppColors.primary, width: 1.5),
+                ),
+              ),
+            ),
           ),
-          border: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(12),
-            borderSide: BorderSide.none,
+          
+          const SizedBox(width: 12),
+          
+          // Filtro de tipo de taxi
+          Expanded(
+            flex: 2,
+            child: Container(
+              height: 48, // Altura fija para que coincida con el TextField
+              decoration: BoxDecoration(
+                color: Colors.grey[50],
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(color: Colors.grey[200]!, width: 1),
+              ),
+              child: DropdownButtonHideUnderline(
+                child: DropdownButton<String>(
+                  value: _selectedTaxiType,
+                  isExpanded: true,
+                  icon: const Icon(Icons.expand_more, size: 20, color: Colors.grey),
+                  elevation: 8,
+                  dropdownColor: Colors.white,
+                  borderRadius: BorderRadius.circular(12),
+                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 0),
+                  items: const [
+                    DropdownMenuItem(
+                      value: 'todos',
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Icon(Icons.all_inclusive, size: 16, color: Colors.grey),
+                          SizedBox(width: 6),
+                          Flexible(
+                            child: Text(
+                              'Todos', 
+                              style: TextStyle(fontSize: 13),
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    DropdownMenuItem(
+                      value: 'colectivo',
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Icon(Icons.group, size: 16, color: Colors.orange),
+                          SizedBox(width: 6),
+                          Flexible(
+                            child: Text(
+                              'Colectivo', 
+                              style: TextStyle(fontSize: 13),
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    DropdownMenuItem(
+                      value: 'privado',
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Icon(Icons.person, size: 16, color: Colors.blue),
+                          SizedBox(width: 6),
+                          Flexible(
+                            child: Text(
+                              'Privado', 
+                              style: TextStyle(fontSize: 13),
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                  onChanged: (value) {
+                    if (value != null) {
+                      setState(() {
+                        _selectedTaxiType = value;
+                      });
+                    }
+                  },
+                ),
+              ),
+            ),
           ),
-          enabledBorder: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(12),
-            borderSide: BorderSide(color: Colors.grey[200]!, width: 1),
-          ),
-          focusedBorder: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(12),
-            borderSide: BorderSide(color: AppColors.primary, width: 1.5),
-          ),
-        ),
+        ],
       ),
     );
   }
@@ -308,8 +415,10 @@ class _ActiveRequestsCardState extends State<ActiveRequestsCard> {
 
         // Fecha
         _buildMetadataChip(
-          icon: Icons.schedule,
-          text: DateFormat('dd/MM HH:mm').format(request.tripDate.toLocal()),
+          icon: Icons.calendar_today,
+          text: (request.taxiType == 'privado')
+              ? DateFormat('dd/MM HH:mm').format(request.tripDate.toLocal())
+              : DateFormat('dd/MM ').format(request.tripDate.toLocal()),
           color: Colors.teal,
         ),
 
@@ -345,53 +454,6 @@ class _ActiveRequestsCardState extends State<ActiveRequestsCard> {
           ),
         ],
       ),
-    );
-  }
-
-  Widget _buildDetailItem({
-    required IconData icon,
-    required String label,
-    required String value,
-    Color? iconColor,
-  }) {
-    return Row(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Container(
-          width: 36,
-          height: 36,
-          decoration: BoxDecoration(
-            color: (iconColor ?? Colors.grey).withOpacity(0.1),
-            borderRadius: BorderRadius.circular(10),
-          ),
-          child: Icon(icon, size: 20, color: iconColor ?? Colors.grey[600]),
-        ),
-        const SizedBox(width: 12),
-        Expanded(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                label,
-                style: TextStyle(
-                  fontSize: 13,
-                  fontWeight: FontWeight.w600,
-                  color: Colors.grey[700],
-                ),
-              ),
-              const SizedBox(height: 4),
-              Text(
-                value,
-                style: const TextStyle(
-                  fontSize: 14,
-                  fontWeight: FontWeight.w400,
-                  color: Colors.black87,
-                ),
-              ),
-            ],
-          ),
-        ),
-      ],
     );
   }
 

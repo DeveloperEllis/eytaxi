@@ -1,5 +1,6 @@
 import 'package:eytaxi/core/services/theme_notifier.dart';
 import 'package:eytaxi/features/admin/admin_dashboard.dart';
+import 'package:eytaxi/features/admin/presentation/screens/all_requests_screen.dart';
 import 'package:eytaxi/features/auth/presentation/login/login_screen.dart';
 import 'package:eytaxi/features/auth/presentation/registro/register_screen.dart';
 import 'package:eytaxi/features/home/presentation/pages/home_screen.dart';
@@ -29,6 +30,8 @@ class AppRoutes {
   static const String rejectedDriver = '/driver/rejected';
   // Administrador
   static const String admin = '/admin';
+  static const String all_requests = '/admin/all_request';
+  static const String pending_requests = '/admin/all_request';
   static final GoRouter router = GoRouter(
     initialLocation: splash,
     redirect: (context, state) {
@@ -97,6 +100,11 @@ class AppRoutes {
       GoRoute(
         path: admin,
         builder: (context, state) => const AdminDashboard(),
+      ),
+
+      //admin
+      GoRoute( path: all_requests,
+        builder: (context, state) => const AllRequestsScreen(),
       ),
 
       // Agrega más rutas aquí según lo necesites

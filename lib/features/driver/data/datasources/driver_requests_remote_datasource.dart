@@ -13,8 +13,8 @@ class DriverRequestsRemoteDataSource {
     final requests = await client
         .from('trip_requests')
         .select('*')
-        .eq('status', 'pending')
         .isFilter('driver_id', null)
+        .isFilter('external_driver_id', null)
         .gt('trip_date', now);
 
     // Excluir solicitudes ya respondidas por este conductor
@@ -50,14 +50,14 @@ class DriverRequestsRemoteDataSource {
   Stream<List<TripRequest>> watchPendingRequests(String driverId) {
     final stream = client
       .from('trip_requests')
-      .stream(primaryKey: ['id'])
-      .eq('status', 'pending');
+      .stream(primaryKey: ['id']);
 
     return stream.asyncMap((data) async {
-      // Solicitudes pendientes sin driver asignado y con fecha futura
+      // Solicitudes pendientes sin driver asignado, sin external driver y con fecha futura
       final pending = data
           .where((json) => 
               json['driver_id'] == null && 
+              json['external_driver_id'] == null &&
               json['trip_date'] != null &&
               DateTime.parse(json['trip_date']).isAfter(DateTime.now()))
           .toList();

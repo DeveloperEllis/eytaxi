@@ -1,3 +1,4 @@
+import 'package:eytaxi/core/constants/app_colors.dart';
 import 'package:flutter/material.dart';
 import 'package:eytaxi/features/trip_request/data/models/trip_request_model.dart';
 import 'package:intl/intl.dart';
@@ -5,11 +6,13 @@ import 'package:intl/intl.dart';
 class TripRequestCardWidget extends StatelessWidget {
   final TripRequest request;
   final VoidCallback onTap;
+  final bool showTimeElapsed;
 
   const TripRequestCardWidget({
     super.key,
     required this.request,
     required this.onTap,
+    this.showTimeElapsed = true,
   });
 
   @override
@@ -17,9 +20,7 @@ class TripRequestCardWidget extends StatelessWidget {
     return Card(
       margin: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
       elevation: 2,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(12),
-      ),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       child: InkWell(
         borderRadius: BorderRadius.circular(12),
         onTap: onTap,
@@ -44,6 +45,15 @@ class TripRequestCardWidget extends StatelessWidget {
                       _buildTaxiTypeChip(request.taxiType),
                       const SizedBox(width: 8),
                       _buildStatusChip(request.status.name),
+                      const SizedBox(width: 8),
+                      Text(
+                        request.price.toString(),
+                        style: TextStyle(
+                          fontSize: 18,
+                          fontWeight: FontWeight.bold,
+                          color: AppColors.confirmed,
+                        ),
+                      ),
                     ],
                   ),
                 ],
@@ -51,7 +61,11 @@ class TripRequestCardWidget extends StatelessWidget {
               const SizedBox(height: 12),
               Row(
                 children: [
-                  Icon(Icons.my_location, size: 16, color: Colors.green.shade600),
+                  Icon(
+                    Icons.my_location,
+                    size: 16,
+                    color: Colors.green.shade600,
+                  ),
                   const SizedBox(width: 8),
                   Expanded(
                     child: Text(
@@ -81,27 +95,31 @@ class TripRequestCardWidget extends StatelessWidget {
                 ],
               ),
               const SizedBox(height: 12),
+
               Row(
                 children: [
                   Icon(Icons.group, size: 14, color: Colors.grey.shade600),
                   const SizedBox(width: 4),
                   Text(
                     '${request.cantidadPersonas} personas',
-                    style: TextStyle(
-                      fontSize: 12,
-                      color: Colors.grey.shade700,
-                    ),
+                    style: TextStyle(fontSize: 12, color: Colors.grey.shade700),
                   ),
                   const SizedBox(width: 16),
-                  Icon(Icons.access_time, size: 14, color: Colors.grey.shade600),
+                  Icon(
+                    Icons.access_time,
+                    size: 14,
+                    color: Colors.grey.shade600,
+                  ),
                   const SizedBox(width: 4),
                   Text(
                     _formatTripDateTime(request.tripDate, request.taxiType),
-                    style: TextStyle(
-                      fontSize: 12,
-                      color: Colors.grey.shade700,
-                    ),
+                    style: TextStyle(fontSize: 12, color: Colors.grey.shade700),
                   ),
+                  const Spacer(),
+                  // Mostrar tiempo transcurrido en la esquina inferior derecha
+                  if (showTimeElapsed &&
+                      request.status.name.toLowerCase() == 'pending')
+                    _buildTimeElapsedChip(request.createdAt),
                 ],
               ),
               const SizedBox(height: 12),
@@ -111,9 +129,10 @@ class TripRequestCardWidget extends StatelessWidget {
                     Icon(Icons.person, size: 16, color: Colors.green.shade700),
                     const SizedBox(width: 8),
                     Text(
-                      'Conductor asignado',
+                      'CONDUCTOR ASIGNADO',
                       style: TextStyle(
-                        fontSize: 12,
+                        fontSize: 15,
+                        fontWeight: FontWeight.bold,
                         color: Colors.green.shade700,
                       ),
                     ),
@@ -129,27 +148,23 @@ class TripRequestCardWidget extends StatelessWidget {
   Widget _buildTaxiTypeChip(String taxiType) {
     Color color;
     String label;
-    IconData icon;
 
     switch (taxiType.toLowerCase()) {
       case 'colectivo':
         color = Colors.purple;
         label = 'Colectivo';
-        icon = Icons.group;
         break;
       case 'privado':
         color = Colors.indigo;
         label = 'Privado';
-        icon = Icons.person;
         break;
       default:
         color = Colors.grey;
         label = taxiType;
-        icon = Icons.local_taxi;
     }
 
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
       decoration: BoxDecoration(
         color: color.withAlpha((0.1 * 255).round()),
         borderRadius: BorderRadius.circular(8),
@@ -158,11 +173,6 @@ class TripRequestCardWidget extends StatelessWidget {
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(
-            icon,
-            size: 12,
-            color: color,
-          ),
           const SizedBox(width: 4),
           Text(
             label,
@@ -217,14 +227,17 @@ class TripRequestCardWidget extends StatelessWidget {
       default:
         color = Colors.grey;
         // Preserve original with capitalized first letter
-        label = status.isNotEmpty ? '${status[0].toUpperCase()}${status.substring(1)}' : status;
+        label =
+            status.isNotEmpty
+                ? '${status[0].toUpperCase()}${status.substring(1)}'
+                : status;
     }
 
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
       decoration: BoxDecoration(
-        color: color.withAlpha((0.12 * 255).round()),
-        borderRadius: BorderRadius.circular(12),
+        color: color.withAlpha((0.1 * 255).round()),
+        borderRadius: BorderRadius.circular(8),
         border: Border.all(color: color.withAlpha((0.3 * 255).round())),
       ),
       child: Text(
@@ -241,9 +254,58 @@ class TripRequestCardWidget extends StatelessWidget {
   String _formatTripDateTime(DateTime dateTime, String taxiType) {
     final formattedDate = DateFormat('dd/MM/yyyy').format(dateTime);
     final formattedTime = DateFormat('hh:mm a').format(dateTime);
+    if(taxiType == 'colectivo'){
+      return '$formattedDate';
+    }
+    
     return '$formattedDate $formattedTime';
   }
 
-  
-}
+  String _getShortTimeElapsed(DateTime createdAt) {
+    final now = DateTime.now();
+    final difference = now.difference(createdAt);
 
+    if (difference.inDays > 0) {
+      return '${difference.inDays}d';
+    } else if (difference.inHours > 0) {
+      return '${difference.inHours}h';
+    } else if (difference.inMinutes > 0) {
+      return '${difference.inMinutes}min';
+    } else {
+      return '<1min';
+    }
+  }
+
+  Widget _buildTimeElapsedChip(DateTime createdAt) {
+    final timeText = _getShortTimeElapsed(createdAt);
+    final now = DateTime.now();
+    final difference = now.difference(createdAt);
+
+    // Determinar color basado en el tiempo transcurrido
+    Color color;
+    if (difference.inDays > 2) {
+      color = Colors.red.shade600;
+    } else if (difference.inDays > 0 || difference.inHours > 12) {
+      color = Colors.orange.shade600;
+    } else {
+      color = Colors.amber.shade600;
+    }
+
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 3),
+      decoration: BoxDecoration(
+        color: color.withOpacity(0.1),
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(color: color.withOpacity(0.3)),
+      ),
+      child: Text(
+        timeText,
+        style: TextStyle(
+          fontSize: 10,
+          color: color,
+          fontWeight: FontWeight.bold,
+        ),
+      ),
+    );
+  }
+}

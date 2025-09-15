@@ -22,6 +22,7 @@ class _AllRequestsScreenState extends State<AllRequestsScreen> {
   String _searchQuery = '';
   String _statusFilter = 'todos';
   String _taxiTypeFilter = 'todos';
+  bool filter = false;
 
   @override
   void initState() {
@@ -127,6 +128,15 @@ class _AllRequestsScreenState extends State<AllRequestsScreen> {
         elevation: 2,
         actions: [
           IconButton(
+            icon: const Icon(Icons.filter_alt_outlined),
+            onPressed: () {
+              setState(() {
+                filter = !filter;
+              });
+            },
+            tooltip: 'Filtrar',
+          ),
+          IconButton(
             icon: const Icon(Icons.refresh),
             onPressed: _loadRequests,
             tooltip: 'Actualizar',
@@ -146,142 +156,139 @@ class _AllRequestsScreenState extends State<AllRequestsScreen> {
   }
 
   Widget _buildSearchSection() {
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        boxShadow: [
-          BoxShadow(
-            color: Colors.grey.withOpacity(0.1),
-            spreadRadius: 1,
-            blurRadius: 5,
-            offset: const Offset(0, 2),
-          ),
-        ],
-      ),
-      child: Column(
-        children: [
-          // Buscador
-          TextField(
-            decoration: InputDecoration(
-              labelText: 'Buscar solicitudes...',
-              hintText: 'ID, origen, destino, contacto',
-              prefixIcon: const Icon(Icons.search),
-              border: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(8),
-              ),
-              contentPadding: const EdgeInsets.symmetric(
-                vertical: 12,
-                horizontal: 16,
-              ),
-            ),
-            onChanged: (value) {
-              _searchQuery = value;
-              _filterRequests();
-            },
-          ),
-
-          const SizedBox(height: 12),
-
-          // Filtro por estado
-          Row(
-            children: [
-              const Text(
-                'Estado: ',
-                style: TextStyle(fontWeight: FontWeight.w500),
-              ),
-              Expanded(
-                child: DropdownButtonFormField<String>(
-                  value: _statusFilter,
-                  decoration: InputDecoration(
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                    contentPadding: const EdgeInsets.symmetric(
-                      vertical: 8,
-                      horizontal: 12,
-                    ),
-                  ),
-                  items: const [
-                    DropdownMenuItem(value: 'todos', child: Text('Todos')),
-                    DropdownMenuItem(
-                      value: 'pending',
-                      child: Text('Pendientes'),
-                    ),
-                    DropdownMenuItem(
-                      value: 'accepted',
-                      child: Text('Aceptados'),
-                    ),
-                    DropdownMenuItem(
-                      value: 'started',
-                      child: Text('Iniciados'),
-                    ),
-                    DropdownMenuItem(
-                      value: 'completed',
-                      child: Text('Completados'),
-                    ),
-                    DropdownMenuItem(
-                      value: 'cancelled',
-                      child: Text('Cancelados'),
-                    ),
-                    DropdownMenuItem(
-                      value: 'rejected',
-                      child: Text('Rechazados'),
-                    ),
-                  ],
-                  onChanged: (value) {
-                    setState(() {
-                      _statusFilter = value!;
-                    });
-                    _filterRequests();
-                  },
-                ),
+    return (filter)
+        ? Container(
+          padding: const EdgeInsets.all(16),
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(12),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.grey.withOpacity(0.1),
+                spreadRadius: 1,
+                blurRadius: 5,
+                offset: const Offset(0, 2),
               ),
             ],
           ),
-
-          const SizedBox(height: 12),
-
-          // Filtro por tipo de taxi
-          Row(
+          child: Column(
             children: [
-              const Text(
-                'Tipo: ',
-                style: TextStyle(fontWeight: FontWeight.w500),
+              // 🔍 Buscador
+              TextField(
+                decoration: InputDecoration(
+                  labelText: 'Buscar solicitudes...',
+                  hintText: 'ID, origen, destino, contacto',
+                  prefixIcon: const Icon(Icons.search),
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  contentPadding: const EdgeInsets.symmetric(
+                    vertical: 12,
+                    horizontal: 16,
+                  ),
+                ),
+                onChanged: (value) {
+                  _searchQuery = value;
+                  _filterRequests();
+                },
               ),
-              Expanded(
-                child: DropdownButtonFormField<String>(
-                  value: _taxiTypeFilter,
-                  decoration: InputDecoration(
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                    contentPadding: const EdgeInsets.symmetric(
-                      vertical: 8,
-                      horizontal: 12,
+
+              const SizedBox(height: 12),
+
+              // 🔹 Filtros en la misma fila
+              Row(
+                children: [
+                  // Filtro por estado
+                  Expanded(
+                    child: DropdownButtonFormField<String>(
+                      value: _statusFilter,
+                      decoration: InputDecoration(
+                        labelText: 'Estado',
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        contentPadding: const EdgeInsets.symmetric(
+                          vertical: 8,
+                          horizontal: 12,
+                        ),
+                      ),
+                      items: const [
+                        DropdownMenuItem(value: 'todos', child: Text('Todos')),
+                        DropdownMenuItem(
+                          value: 'pending',
+                          child: Text('Pendientes'),
+                        ),
+                        DropdownMenuItem(
+                          value: 'accepted',
+                          child: Text('Aceptados'),
+                        ),
+                        DropdownMenuItem(
+                          value: 'started',
+                          child: Text('Iniciados'),
+                        ),
+                        DropdownMenuItem(
+                          value: 'completed',
+                          child: Text('Completados'),
+                        ),
+                        DropdownMenuItem(
+                          value: 'cancelled',
+                          child: Text('Cancelados'),
+                        ),
+                        DropdownMenuItem(
+                          value: 'rejected',
+                          child: Text('Rechazados'),
+                        ),
+                      ],
+                      onChanged: (value) {
+                        setState(() {
+                          _statusFilter = value!;
+                        });
+                        _filterRequests();
+                      },
                     ),
                   ),
-                  items: const [
-                    DropdownMenuItem(value: 'todos', child: Text('Todos')),
-                    DropdownMenuItem(
-                      value: 'colectivo',
-                      child: Text('Colectivo'),
+
+                  const SizedBox(width: 12),
+
+                  // Filtro por tipo de taxi
+                  Expanded(
+                    child: DropdownButtonFormField<String>(
+                      value: _taxiTypeFilter,
+                      decoration: InputDecoration(
+                        labelText: 'Tipo de taxi',
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        contentPadding: const EdgeInsets.symmetric(
+                          vertical: 8,
+                          horizontal: 12,
+                        ),
+                      ),
+                      items: const [
+                        DropdownMenuItem(value: 'todos', child: Text('Todos')),
+                        DropdownMenuItem(
+                          value: 'colectivo',
+                          child: Text('Colectivo'),
+                        ),
+                        DropdownMenuItem(
+                          value: 'privado',
+                          child: Text('Privado'),
+                        ),
+                      ],
+                      onChanged: (value) {
+                        setState(() {
+                          _taxiTypeFilter = value!;
+                        });
+                        _filterRequests();
+                      },
                     ),
-                    DropdownMenuItem(value: 'privado', child: Text('Privado')),
-                  ],
-                  onChanged: (value) {
-                    setState(() {
-                      _taxiTypeFilter = value!;
-                    });
-                    _filterRequests();
-                  },
-                ),
+                  ),
+                ],
               ),
             ],
           ),
-        ],
-      ),
-    );
+        )
+        : Container();
   }
 
   Widget _buildBody() {
