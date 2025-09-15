@@ -402,7 +402,33 @@ class _AttendRequestScreenState extends State<AttendRequestScreen> {
                 Icons.directions_car,
                 Colors.indigo,
               ),
+              const SizedBox(height: 16),
             ],
+
+            // Botón de desvincular conductor
+            const SizedBox(height: 8),
+            SizedBox(
+              width: double.infinity,
+              child: ElevatedButton.icon(
+                onPressed: _isAssigning ? null : _unlinkDriver,
+                icon: _isAssigning 
+                    ? const SizedBox(
+                        width: 16,
+                        height: 16,
+                        child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
+                      )
+                    : const Icon(Icons.link_off, size: 20),
+                label: Text(_isAssigning ? 'Desvinculando...' : 'Desvincular Conductor'),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.red.shade600,
+                  foregroundColor: Colors.white,
+                  padding: const EdgeInsets.symmetric(vertical: 12),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                ),
+              ),
+            ),
           ],
         ),
       ),
@@ -1271,6 +1297,106 @@ class _AttendRequestScreenState extends State<AttendRequestScreen> {
                   ? 'Error al rechazar conductor: $e'
                   : 'Error al asignar conductor: $e',
             ),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isAssigning = false;
+        });
+      }
+    }
+  }
+
+  Future<void> _unlinkDriver() async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Confirmar Desvinculación'),
+        content: const Text(
+          '¿Estás seguro de que deseas desvincular este conductor de la solicitud? '
+          'La solicitud volverá al estado pendiente si no hay otros conductores que la hayan aceptado.',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(false),
+            child: const Text('Cancelar'),
+          ),
+          ElevatedButton(
+            onPressed: () => Navigator.of(context).pop(true),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.red,
+              foregroundColor: Colors.white,
+            ),
+            child: const Text('Desvincular'),
+          ),
+        ],
+      ),
+    );
+
+    if (confirmed != true) return;
+
+    try {
+      if (mounted) {
+        setState(() {
+          _isAssigning = true;
+        });
+      }
+
+      final user = Supabase.instance.client.auth.currentUser;
+      if (user == null) {
+        throw Exception('Usuario no autenticado');
+      }
+
+      // Desvincular conductor actualizando driver_id a null
+      await Supabase.instance.client
+          .from('trip_requests')
+          .update({
+            'driver_id': null,
+          })
+          .eq('id', widget.request.id!);
+
+      await Supabase.instance.client
+          .from('driver_responses')
+          .delete()
+          .eq('request_id', widget.request.id!)
+          .eq('driver_id', widget.request.driverId ?? '');    
+
+      // Verificar si hay otros conductores que han aceptado esta solicitud
+      final acceptedDriversResponse = await Supabase.instance.client
+          .from('driver_responses')
+          .select('driver_id')
+          .eq('request_id', widget.request.id!)
+          .eq('status', 'accepted');
+
+      // Si no hay otros conductores que hayan aceptado, cambiar status a pending
+      if (acceptedDriversResponse.isEmpty) {
+        await Supabase.instance.client
+            .from('trip_requests')
+            .update({
+              'status': 'pending',
+            })
+            .eq('id', widget.request.id!);
+      }
+
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Conductor desvinculado exitosamente'),
+            backgroundColor: Colors.green,
+          ),
+        );
+
+        // Volver a la pantalla anterior y notificar el cambio
+        Navigator.of(context).pop(true);
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Error al desvincular conductor: $e'),
             backgroundColor: Colors.red,
           ),
         );
