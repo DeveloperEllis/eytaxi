@@ -294,6 +294,32 @@ class _PendingRequestsScreenState extends State<PendingRequestsScreen> {
     );
   }
 
+  Future<void> _deleteTripRequest(TripRequest request) async {
+    try {
+      await _service.deleteTripRequestCascade(request.id!);
+      
+      if (mounted) {
+        Navigator.pop(context); // Cerrar el diálogo
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Solicitud eliminada correctamente'),
+            backgroundColor: Colors.green,
+          ),
+        );
+        _loadRequests();
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Error al eliminar: ${e.toString()}'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    }
+  }
+
   void _navigateToEditRequest(TripRequest request) {
     Navigator.pop(context); // Cerrar el diálogo de detalles
     context.push(AppRoutes.attend_request, extra: request).then((_) => _loadRequests());
