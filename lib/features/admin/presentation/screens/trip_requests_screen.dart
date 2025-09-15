@@ -1,7 +1,5 @@
 import 'package:eytaxi/core/constants/app_routes.dart';
-import 'package:eytaxi/features/admin/presentation/screens/all_requests_screen.dart';
 import 'package:flutter/material.dart';
-import 'package:eytaxi/features/admin/presentation/screens/pending_requests_screen.dart';
 import 'package:eytaxi/features/admin/data/admin_trip_request_service.dart';
 import 'dart:developer' as developer;
 
@@ -28,20 +26,20 @@ class _TripRequestsScreenState extends State<TripRequestsScreen> {
     try {
       developer.log('🔄 TripRequestsScreen: Cargando contadores de solicitudes', name: 'TripRequestsScreen');
       
-      final counts = await _service.getRequestCountsByStatus();
+      // Usar el nuevo método que aplica los mismos filtros que las pantallas
+      final realCounts = await _service.getRealRequestCounts();
       final taxiTypeCounts = await _service.getRequestCountsByTaxiType();
-      final totalCount = await _service.getTotalRequestsCount();
       
       if (mounted) {
         setState(() {
-          _requestCounts = counts;
+          _requestCounts = realCounts;
           _taxiTypeCounts = taxiTypeCounts;
-          _totalRequestsCount = totalCount;
+          _totalRequestsCount = realCounts['all'] ?? 0;
         });
         
-        developer.log('✅ TripRequestsScreen: Contadores cargados: $counts', name: 'TripRequestsScreen');
+        developer.log('✅ TripRequestsScreen: Contadores reales cargados: $realCounts', name: 'TripRequestsScreen');
         developer.log('✅ TripRequestsScreen: Contadores taxi: $taxiTypeCounts', name: 'TripRequestsScreen');
-        developer.log('✅ TripRequestsScreen: Total solicitudes: $totalCount', name: 'TripRequestsScreen');
+        developer.log('✅ TripRequestsScreen: Total solicitudes: $_totalRequestsCount', name: 'TripRequestsScreen');
       }
     } catch (e) {
       developer.log('❌ TripRequestsScreen: Error al cargar contadores: $e', name: 'TripRequestsScreen');

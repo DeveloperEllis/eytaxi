@@ -330,8 +330,35 @@ class _InProgressRequestsScreenState extends State<InProgressRequestsScreen> {
       builder: (context) => TripRequestDetailDialog(
         request: request,
         onAttendRequest: (request) => _navigateToEditRequest(request),
+        onDelete: (request) => _deleteTripRequest(request),
       ),
     );
+  }
+
+  Future<void> _deleteTripRequest(TripRequest request) async {
+    try {
+      await _service.deleteTripRequest(request.id!);
+      
+      if (mounted) {
+        Navigator.pop(context); // Cerrar el diálogo
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Solicitud eliminada correctamente'),
+            backgroundColor: Colors.green,
+          ),
+        );
+        _loadRequests();
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Error al eliminar: ${e.toString()}'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    }
   }
 
   void _navigateToEditRequest(TripRequest request) {

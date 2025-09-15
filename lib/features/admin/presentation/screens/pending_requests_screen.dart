@@ -3,7 +3,8 @@ import 'package:eytaxi/features/admin/data/admin_trip_request_service.dart';
 import 'package:eytaxi/features/trip_request/data/models/trip_request_model.dart';
 import 'package:eytaxi/features/admin/presentation/widgets/trip_request_detail_dialog.dart';
 import 'package:eytaxi/features/admin/presentation/widgets/trip_request_card_widget.dart';
-import 'package:eytaxi/features/admin/presentation/screens/attend_request_screen.dart';
+import 'package:eytaxi/core/constants/app_routes.dart';
+import 'package:go_router/go_router.dart';
 import 'dart:developer' as developer;
 
 class PendingRequestsScreen extends StatefulWidget {
@@ -37,16 +38,30 @@ class _PendingRequestsScreenState extends State<PendingRequestsScreen> {
         _errorMessage = null;
       });
 
-      final requests = await _service.getPendingRequests();
+      // Obtener todas las solicitudes y filtrar las pendientes
+      final allRequests = await _service.getAllTripRequests();
+      final now = DateTime.now();
+      final today = DateTime(now.year, now.month, now.day); // Inicio del día de hoy
+      
+      final pendingRequests = allRequests.where((request) {
+        // Solo solicitudes pendientes
+        final isPending = request.status.name.toLowerCase() == 'pending';
+        
+        // Fecha de hoy en adelante (incluyendo hoy)
+        final requestDate = DateTime(request.tripDate.year, request.tripDate.month, request.tripDate.day);
+        final isFromToday = requestDate.isAtSameMomentAs(today) || requestDate.isAfter(today);
+        
+        return isPending && isFromToday;
+      }).toList();
       
       if (mounted) {
         setState(() {
-          _requests = requests;
-          _filteredRequests = requests;
+          _requests = pendingRequests;
+          _filteredRequests = pendingRequests;
           _isLoading = false;
         });
         
-        developer.log('✅ PendingRequestsScreen: ${requests.length} solicitudes pendientes cargadas', name: 'PendingRequestsScreen');
+        developer.log('✅ PendingRequestsScreen: ${pendingRequests.length} solicitudes pendientes cargadas', name: 'PendingRequestsScreen');
       }
     } catch (e, stackTrace) {
       developer.log('❌ PendingRequestsScreen: Error al cargar solicitudes: $e', name: 'PendingRequestsScreen');
@@ -97,11 +112,6 @@ class _PendingRequestsScreenState extends State<PendingRequestsScreen> {
             onPressed: _loadRequests,
             tooltip: 'Actualizar',
           ),
-          IconButton(
-            icon: const Icon(Icons.info_outline),
-            onPressed: () => _showInfoDialog(),
-            tooltip: 'Información',
-          ),
         ],
       ),
       body: Column(
@@ -110,7 +120,9 @@ class _PendingRequestsScreenState extends State<PendingRequestsScreen> {
           _buildSearchSection(),
           
           // Lista de solicitudes
-          Expanded(child: _buildBody()),
+          Expanded(
+            child: _buildRequestsList(),
+          ),
         ],
       ),
     );
@@ -119,59 +131,46 @@ class _PendingRequestsScreenState extends State<PendingRequestsScreen> {
   Widget _buildSearchSection() {
     return Container(
       padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        boxShadow: [
-          BoxShadow(
-            color: Colors.grey.withOpacity(0.1),
-            spreadRadius: 1,
-            blurRadius: 5,
-            offset: const Offset(0, 2),
-          ),
-        ],
-      ),
+      color: Colors.grey.shade50,
       child: Column(
         children: [
-          // Buscador
+          // Barra de búsqueda
           TextField(
-            decoration: InputDecoration(
-              labelText: 'Buscar solicitudes pendientes...',
-              hintText: 'ID, origen, destino, contacto',
-              prefixIcon: const Icon(Icons.search),
-              border: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(8),
-              ),
-              contentPadding: const EdgeInsets.symmetric(
-                vertical: 12,
-                horizontal: 16,
-              ),
-            ),
             onChanged: (value) {
-              _searchQuery = value;
+              setState(() {
+                _searchQuery = value;
+              });
               _filterRequests();
             },
+            decoration: InputDecoration(
+              hintText: 'Buscar por origen, destino, pasajero o ID...',
+              prefixIcon: const Icon(Icons.search),
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(12),
+                borderSide: BorderSide.none,
+              ),
+              filled: true,
+              fillColor: Colors.white,
+              contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+            ),
           ),
-          
           const SizedBox(height: 12),
           
           // Filtro por tipo de taxi
           Row(
             children: [
-              const Text(
-                'Tipo: ',
-                style: TextStyle(fontWeight: FontWeight.w500),
-              ),
+              const Text('Tipo de taxi: ', style: TextStyle(fontWeight: FontWeight.w600)),
               Expanded(
                 child: DropdownButtonFormField<String>(
                   value: _taxiTypeFilter,
                   decoration: InputDecoration(
                     border: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(8),
+                      borderSide: BorderSide.none,
                     ),
-                    contentPadding: const EdgeInsets.symmetric(
-                      vertical: 8,
-                      horizontal: 12,
-                    ),
+                    filled: true,
+                    fillColor: Colors.white,
+                    contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
                   ),
                   items: const [
                     DropdownMenuItem(value: 'todos', child: Text('Todos')),
@@ -180,7 +179,7 @@ class _PendingRequestsScreenState extends State<PendingRequestsScreen> {
                   ],
                   onChanged: (value) {
                     setState(() {
-                      _taxiTypeFilter = value!;
+                      _taxiTypeFilter = value ?? 'todos';
                     });
                     _filterRequests();
                   },
@@ -193,11 +192,16 @@ class _PendingRequestsScreenState extends State<PendingRequestsScreen> {
     );
   }
 
-  Widget _buildBody() {
+  Widget _buildRequestsList() {
     if (_isLoading) {
       return const Center(
-        child: CircularProgressIndicator(
-          valueColor: AlwaysStoppedAnimation<Color>(Colors.orange),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            CircularProgressIndicator(),
+            SizedBox(height: 16),
+            Text('Cargando solicitudes pendientes...'),
+          ],
         ),
       );
     }
@@ -207,16 +211,12 @@ class _PendingRequestsScreenState extends State<PendingRequestsScreen> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(
-              Icons.error_outline,
-              size: 64,
-              color: Colors.red.shade400,
-            ),
+            Icon(Icons.error_outline, size: 64, color: Colors.red.shade300),
             const SizedBox(height: 16),
             Text(
               _errorMessage!,
-              style: const TextStyle(fontSize: 16),
               textAlign: TextAlign.center,
+              style: const TextStyle(fontSize: 16),
             ),
             const SizedBox(height: 16),
             ElevatedButton(
@@ -233,31 +233,27 @@ class _PendingRequestsScreenState extends State<PendingRequestsScreen> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(
-              Icons.check_circle_outline,
-              size: 64,
-              color: Colors.green.shade400,
-            ),
+            Icon(Icons.inbox_outlined, size: 64, color: Colors.grey.shade400),
             const SizedBox(height: 16),
             Text(
               _requests.isEmpty
-                  ? '¡Excelente! No hay solicitudes pendientes'
+                  ? 'No hay solicitudes pendientes'
                   : 'No se encontraron solicitudes con los filtros aplicados',
+              textAlign: TextAlign.center,
               style: TextStyle(
                 fontSize: 16,
                 color: Colors.grey.shade600,
               ),
-              textAlign: TextAlign.center,
             ),
             if (_requests.isNotEmpty) ...[
-              const SizedBox(height: 16),
-              ElevatedButton(
+              const SizedBox(height: 8),
+              TextButton(
                 onPressed: () {
                   setState(() {
                     _searchQuery = '';
                     _taxiTypeFilter = 'todos';
-                    _filteredRequests = _requests;
                   });
+                  _filterRequests();
                 },
                 child: const Text('Limpiar filtros'),
               ),
@@ -270,20 +266,20 @@ class _PendingRequestsScreenState extends State<PendingRequestsScreen> {
     return RefreshIndicator(
       onRefresh: _loadRequests,
       child: ListView.builder(
-        padding: const EdgeInsets.all(8),
+        padding: const EdgeInsets.all(16),
         itemCount: _filteredRequests.length,
         itemBuilder: (context, index) {
-          return _buildRequestCard(_filteredRequests[index]);
+          final request = _filteredRequests[index];
+          return Padding(
+            padding: const EdgeInsets.only(bottom: 12),
+            child: TripRequestCardWidget(
+              request: request,
+              showTimeElapsed: true,
+              onTap: () => _showRequestDetails(request),
+            ),
+          );
         },
       ),
-    );
-  }
-
-  Widget _buildRequestCard(TripRequest request) {
-    return TripRequestCardWidget(
-      request: request,
-      onTap: () => _showRequestDetails(request),
-      showTimeElapsed: true, // Siempre mostrar tiempo transcurrido en pending requests
     );
   }
 
@@ -292,151 +288,14 @@ class _PendingRequestsScreenState extends State<PendingRequestsScreen> {
       context: context,
       builder: (context) => TripRequestDetailDialog(
         request: request,
-        customTitle: 'Solicitud Pendiente #${request.id?.substring(0, 8) ?? 'N/A'}',
-        onAttendRequest: (request) => _attendRequest(request),
-        onUpdateStatus: (request) => _showUpdateStatusDialog(request),
+        onAttendRequest: (request) => _navigateToEditRequest(request),
         onDelete: (request) => _deleteTripRequest(request),
       ),
     );
   }
 
-  void _attendRequest(TripRequest request) {
-    Navigator.pop(context); // Cerrar el diálogo
-    Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder: (context) => AttendRequestScreen(request: request),
-      ),
-    ).then((result) {
-      // Recargar solicitudes si hubo cambios
-      if (result == true) {
-        _loadRequests();
-      }
-    });
-  }
-
-  Future<void> _deleteTripRequest(TripRequest request) async {
-    try {
-      await _service.deleteTripRequest(request.id!);
-      
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Solicitud eliminada correctamente'),
-            backgroundColor: Colors.green,
-          ),
-        );
-        _loadRequests();
-      }
-    } catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Error al eliminar: ${e.toString()}'),
-            backgroundColor: Colors.red,
-          ),
-        );
-      }
-    }
-  }
-
-  void _showUpdateStatusDialog(TripRequest request) {
-    final currentStatus = request.status.name;
-    String selectedStatus = currentStatus;
-
-    showDialog(
-      context: context,
-      builder: (context) => StatefulBuilder(
-        builder: (context, setState) => AlertDialog(
-          title: const Text('Actualizar Estado'),
-          content: DropdownButtonFormField<String>(
-            value: selectedStatus,
-            decoration: const InputDecoration(
-              labelText: 'Nuevo Estado',
-              border: OutlineInputBorder(),
-            ),
-            items: const [
-              DropdownMenuItem(value: 'pending', child: Text('Pendiente')),
-              DropdownMenuItem(value: 'accepted', child: Text('Aceptado')),
-              DropdownMenuItem(value: 'started', child: Text('Iniciado')),
-              DropdownMenuItem(value: 'completed', child: Text('Completado')),
-              DropdownMenuItem(value: 'cancelled', child: Text('Cancelado')),
-              DropdownMenuItem(value: 'rejected', child: Text('Rechazado')),
-            ],
-            onChanged: (value) {
-              setState(() {
-                selectedStatus = value!;
-              });
-            },
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(context),
-              child: const Text('Cancelar'),
-            ),
-            ElevatedButton(
-              onPressed: selectedStatus != currentStatus
-                  ? () => _updateStatus(request.id!, selectedStatus)
-                  : null,
-              child: const Text('Actualizar'),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Future<void> _updateStatus(String requestId, String newStatus) async {
-    try {
-      await _service.updateTripRequestStatus(requestId, newStatus);
-      
-      if (mounted) {
-        Navigator.pop(context);
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Estado actualizado correctamente'),
-            backgroundColor: Colors.green,
-          ),
-        );
-        _loadRequests();
-      }
-    } catch (e) {
-      if (mounted) {
-        Navigator.pop(context);
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Error al actualizar: ${e.toString()}'),
-            backgroundColor: Colors.red,
-          ),
-        );
-      }
-    }
-  }
-
-  void _showInfoDialog() {
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: Row(
-          children: [
-            Icon(Icons.info, color: Colors.orange.shade700),
-            const SizedBox(width: 8),
-            const Text('Solicitudes Pendientes'),
-          ],
-        ),
-        content: const Text(
-          'Esta pantalla muestra solicitudes que:\n\n'
-          '• No han recibido respuesta de ningún taxista\n'
-          '• Solo han sido rechazadas por todos los taxistas que respondieron\n\n'
-          'Estas solicitudes necesitan atención para encontrar un conductor disponible.',
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('Entendido'),
-          ),
-        ],
-      ),
-    );
+  void _navigateToEditRequest(TripRequest request) {
+    Navigator.pop(context); // Cerrar el diálogo de detalles
+    context.push(AppRoutes.attend_request, extra: request).then((_) => _loadRequests());
   }
 }

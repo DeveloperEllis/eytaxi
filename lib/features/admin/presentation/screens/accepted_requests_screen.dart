@@ -41,6 +41,7 @@ class _AcceptedRequestsScreenState extends State<AcceptedRequestsScreen> {
       // Obtener todas las solicitudes y filtrar las aceptadas sin chofer asignado
       final allRequests = await _service.getAllTripRequests();
       final now = DateTime.now();
+      final today = DateTime(now.year, now.month, now.day); // Inicio del día de hoy
       
       final acceptedRequests = allRequests.where((request) {
         // Solo solicitudes aceptadas
@@ -49,10 +50,11 @@ class _AcceptedRequestsScreenState extends State<AcceptedRequestsScreen> {
         // Sin chofer asignado (ni driver_id ni external_driver_id)
         final hasNoDriver = request.driverId == null && request.externalDriverId == null;
         
-        // Fecha mayor que hoy
-        final isFutureDate = request.tripDate.isAfter(now);
+        // Fecha de hoy en adelante (incluyendo hoy)
+        final requestDate = DateTime(request.tripDate.year, request.tripDate.month, request.tripDate.day);
+        final isFromToday = requestDate.isAtSameMomentAs(today) || requestDate.isAfter(today);
         
-        return isAccepted && hasNoDriver && isFutureDate;
+        return isAccepted && hasNoDriver && isFromToday;
       }).toList();
       
       if (mounted) {
@@ -290,8 +292,35 @@ class _AcceptedRequestsScreenState extends State<AcceptedRequestsScreen> {
       builder: (context) => TripRequestDetailDialog(
         request: request,
         onAttendRequest: (request) => _navigateToEditRequest(request),
+        onDelete: (request) => _deleteTripRequest(request),
       ),
     );
+  }
+
+  Future<void> _deleteTripRequest(TripRequest request) async {
+    try {
+      await _service.deleteTripRequest(request.id!);
+      
+      if (mounted) {
+        Navigator.pop(context); // Cerrar el diálogo
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Solicitud eliminada correctamente'),
+            backgroundColor: Colors.green,
+          ),
+        );
+        _loadRequests();
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Error al eliminar: ${e.toString()}'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    }
   }
 
   void _navigateToEditRequest(TripRequest request) {

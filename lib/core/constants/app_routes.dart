@@ -36,9 +36,9 @@ class AppRoutes {
   // Administrador
   static const String admin = '/admin';
   static const String all_requests = '/admin/all_request';
-  static const String pending_requests = '/admin/all_request';
-  static const String accepted_requests= '/admin/accepted_request';
-  static const String in_progress_requests = '/admin/in_progres_request';
+  static const String pending_requests = '/admin/pending_requests';
+  static const String accepted_requests= '/admin/accepted_requests';
+  static const String in_progress_requests = '/admin/in_progres_requests';
   static const String attend_request = '/admin/attend_request';
   static final GoRouter router = GoRouter(
     initialLocation: splash,
