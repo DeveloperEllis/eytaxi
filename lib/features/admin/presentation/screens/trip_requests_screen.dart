@@ -1,3 +1,4 @@
+import 'package:eytaxi/core/constants/app_routes.dart';
 import 'package:eytaxi/features/admin/presentation/screens/all_requests_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:eytaxi/features/admin/presentation/screens/pending_requests_screen.dart';
@@ -84,12 +85,7 @@ class _TripRequestsScreenState extends State<TripRequestsScreen> {
                 color: Colors.blue.shade600,
                 count: _getTotalRequests(),
                 onTap: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (context) => const AllRequestsScreen(),
-                    ),
-                  );
+                  AppRoutes.router.go(AppRoutes.all_requests);
                 },
               );
             case 1:
@@ -100,7 +96,9 @@ class _TripRequestsScreenState extends State<TripRequestsScreen> {
                 icon: Icons.check_circle,
                 color: Colors.green.shade600,
                 count: _getCountForStatus('accepted'),
-                onTap: () => _showComingSoon(context, 'Solicitudes Aceptadas'),
+                onTap:(){
+                  AppRoutes.router.go(AppRoutes.accepted_requests);
+                },
               );
             case 2:
               return _buildRequestBox(
@@ -111,12 +109,7 @@ class _TripRequestsScreenState extends State<TripRequestsScreen> {
                 color: Colors.orange.shade600,
                 count: _getCountForStatus('pending'),
                 onTap: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (context) => const PendingRequestsScreen(),
-                    ),
-                  );
+                  AppRoutes.router.go(AppRoutes.pending_requests);
                 },
               );
             case 3:
@@ -127,7 +120,9 @@ class _TripRequestsScreenState extends State<TripRequestsScreen> {
                 icon: Icons.directions_car,
                 color: Colors.purple.shade600,
                 count: _getCountForStatus('in_progress'),
-                onTap: () => _showComingSoon(context, 'Solicitudes En Curso'),
+                onTap: () {
+                  AppRoutes.router.go(AppRoutes.in_progress_requests);
+                },
               );
             case 4:
               return _buildRequestBox(

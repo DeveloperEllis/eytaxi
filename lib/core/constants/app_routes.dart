@@ -1,6 +1,10 @@
 import 'package:eytaxi/core/services/theme_notifier.dart';
 import 'package:eytaxi/features/admin/admin_dashboard.dart';
+import 'package:eytaxi/features/admin/presentation/screens/accepted_requests_screen.dart';
 import 'package:eytaxi/features/admin/presentation/screens/all_requests_screen.dart';
+import 'package:eytaxi/features/admin/presentation/screens/attend_request_screen.dart';
+import 'package:eytaxi/features/admin/presentation/screens/in_progress_requests_screen.dart';
+import 'package:eytaxi/features/admin/presentation/screens/pending_requests_screen.dart';
 import 'package:eytaxi/features/auth/presentation/login/login_screen.dart';
 import 'package:eytaxi/features/auth/presentation/registro/register_screen.dart';
 import 'package:eytaxi/features/home/presentation/pages/home_screen.dart';
@@ -8,6 +12,7 @@ import 'package:eytaxi/features/driver/presentation/home/driver_home.dart';
 import 'package:eytaxi/features/driver/presentation/status/pending_driver_screen.dart';
 import 'package:eytaxi/features/driver/presentation/status/rejected_driver_screen.dart';
 import 'package:eytaxi/features/splashscreen/splash_screen.dart';
+import 'package:eytaxi/features/trip_request/data/models/trip_request_model.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
@@ -32,6 +37,9 @@ class AppRoutes {
   static const String admin = '/admin';
   static const String all_requests = '/admin/all_request';
   static const String pending_requests = '/admin/all_request';
+  static const String accepted_requests= '/admin/accepted_request';
+  static const String in_progress_requests = '/admin/in_progres_request';
+  static const String attend_request = '/admin/attend_request';
   static final GoRouter router = GoRouter(
     initialLocation: splash,
     redirect: (context, state) {
@@ -106,6 +114,28 @@ class AppRoutes {
       GoRoute( path: all_requests,
         builder: (context, state) => const AllRequestsScreen(),
       ),
+      GoRoute( path: pending_requests,
+        builder: (context, state) => const PendingRequestsScreen(),
+      ),
+      GoRoute( path: accepted_requests,
+        builder: (context, state) => const AcceptedRequestsScreen(),
+      ),
+      GoRoute( path: in_progress_requests,
+        builder: (context, state) => const InProgressRequestsScreen(),
+      ),
+      GoRoute(
+        path: attend_request,
+        builder: (context, state) {
+          final request = state.extra as TripRequest?;
+          if (request == null) {
+            return const Scaffold(
+              body: Center(child: Text('Error: No se recibió la solicitud')),
+            );
+          }
+          return AttendRequestScreen(request: request);
+        },
+      ),
+
 
       // Agrega más rutas aquí según lo necesites
     ],

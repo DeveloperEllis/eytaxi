@@ -21,7 +21,8 @@ class TripRequest {
 	final Ubicacion? destino;
 	final GuestContact? contact;
 	final int driverResponseCount;
-	final Driver? driver; // Add driver property
+	final Driver? driver;
+  final String? externalDriverId;
 
 	TripRequest({
 		this.id,
@@ -42,6 +43,7 @@ class TripRequest {
 		this.contact,
 		this.driverResponseCount = 0,
 		this.driver,
+    this.externalDriverId
 	});
 
 		 factory TripRequest.fromJson(Map<String, dynamic> json) {
@@ -67,7 +69,8 @@ class TripRequest {
 						 destino: json['destino'] != null ? Ubicacion.fromJson(json['destino']) : null,
 						 contact: json['contact'] != null ? GuestContact.fromJson(json['contact']) : null,
 						 driverResponseCount: json['driver_response_count'] as int? ?? 0,
-						 driver: json['driver'] != null ? Driver.fromJson(json['driver']) : null, // Parse driver details
+						 driver: json['driver'] != null ? Driver.fromJson(json['driver']) : null,
+             externalDriverId: json['externalDriverId']  as String? ?? null,
 				 );
 		 }
 
@@ -85,6 +88,7 @@ class TripRequest {
       'price': price ?? 0.0,
       'distance_km': distanceKm ?? 0.0,
       'estimated_time_minutes': estimatedTimeMinutes ?? 0,
+      'externalDriverId': externalDriverId ?? null,
     };
   }
 
