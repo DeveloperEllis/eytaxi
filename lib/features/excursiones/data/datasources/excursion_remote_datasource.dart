@@ -6,15 +6,17 @@ class ExcursionRemoteDataSource {
   final SupabaseClient client;
   ExcursionRemoteDataSource(this.client);
 
+  Future<void> createExcursionReservation(ReservaExc reserva, GuestContact contact) async {
+    try {
+      print('🔄 Iniciando creación de reserva en el servicio...');
 
-    Future<void> createExcursionReservation(ReservaExc reserva, GuestContact contact) async {
       // Insertar el contacto del invitado
       final contactResponse = await client
           .from('guest_contacts')
           .insert(contact.toJson())
           .select()
           .single();
-      
+
       final contactId = contactResponse['id'];
       print(contactId);
       // Insertar la reserva de excursión con el ID del contacto
@@ -22,6 +24,10 @@ class ExcursionRemoteDataSource {
         ...reserva.toJson(),
         'contact_id': contactId,
       });
+    } catch (e) {
+      print('❌ Error en el servicio: $e');
+      rethrow; // Re-lanzar el error para que sea capturado arriba
+    }
   }
 
   Future<List<ReservaExc>> getExcursionReservations() async {

@@ -38,18 +38,14 @@ class AuthRepositoryImpl {
   }
 
   Future<AuthResponse> signInWithPassword(String email, String password) async {
-    
     String? token;
-    
-    
-      // Solicitar permisos para notificaciones en iOS
-      await FirebaseMessaging.instance.requestPermission();
-      FirebaseMessaging messaging = FirebaseMessaging.instance;
-      token = await messaging.getToken();
-    
 
     final response = await remoteDataSource.signInWithPassword(email, password);
     final user = await Supabase.instance.client.auth.currentUser;
+
+    await FirebaseMessaging.instance.requestPermission();
+    FirebaseMessaging messaging = FirebaseMessaging.instance;
+    token = await messaging.getToken();
 
     if (user != null && token != null) {
       // Actualizar el campo fcmtoken en user_profiles
@@ -74,12 +70,12 @@ class AuthRepositoryImpl {
 
     try {
       print('DEBUG: Checking driver status for user: ${user.id}');
-      
+
       // Verificar el estado del conductor
       final driverStatus = await _driverDataSource.getDriverStatus(user.id);
-      
+
       print('DEBUG: Driver status: $driverStatus');
-      
+
       if (driverStatus == null) {
         // El usuario no está registrado como conductor, dirigir al driverHome normal
         print('DEBUG: User is not a driver, redirecting to driverHome');
@@ -100,12 +96,16 @@ class AuthRepositoryImpl {
           signOut();
           break;
         case 'approved':
-          print('DEBUG: Driver status is approved/active, redirecting to driver home');
+          print(
+            'DEBUG: Driver status is approved/active, redirecting to driver home',
+          );
           AppRoutes.router.go(AppRoutes.driverHome);
           break;
         default:
           // Estado desconocido, dirigir al driverHome por defecto
-          print('DEBUG: Unknown driver status: $driverStatus, redirecting to driverHome');
+          print(
+            'DEBUG: Unknown driver status: $driverStatus, redirecting to driverHome',
+          );
           AppRoutes.router.go(AppRoutes.driverHome);
       }
     } catch (e) {

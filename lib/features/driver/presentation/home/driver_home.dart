@@ -100,10 +100,10 @@ class _DriverHomeState extends State<DriverHome> with TickerProviderStateMixin {
       await Provider.of<ThemeNotifier>(context, listen: false).toggleDriverStatus(value);
       if (value) {
         _statusAnimationController.forward();
-        LogsMessages.showOnlineDriver(context, "Estás online para recibir viajes");
+        LogsMessages.showOnline(context,"Estás online para recibir viajes");
       } else {
         _statusAnimationController.reverse();
-        LogsMessages.showOfflineDriver(context, "Estás offline y no recibirás viajes");
+        LogsMessages.showOffline(context,"Estás offline y no recibirás viajes");
       }
     } catch (e) {
       if (mounted) {

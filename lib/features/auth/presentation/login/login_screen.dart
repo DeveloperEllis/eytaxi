@@ -105,8 +105,7 @@ class _LoginScreenState extends State<LoginScreen> {
                       ),
                       obscureText: _obscurePassword,
                       onChanged: (value) => _password = value,
-                      validator:
-                          Validators.validatePassword,
+                      validator: Validators.validatePassword,
                     ),
                     const SizedBox(height: 2),
                     const Align(
@@ -155,10 +154,7 @@ class _LoginScreenState extends State<LoginScreen> {
                                         message =
                                             'Ocurrió un error inesperado. Intenta nuevamente.';
                                       }
-                                      LogsMessages.showInfoError(
-                                        context,
-                                        message,
-                                      );
+                                      LogsMessages.showError(context,message);
                                     } catch (e) {
                                       ScaffoldMessenger.of(
                                         context,

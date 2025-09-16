@@ -236,7 +236,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
           null) {
         _goToNextStep();
       } else {
-        LogsMessages.showInfoError(
+        LogsMessages.showInfo(
           context,
           RegisterValidators.validateDriverInfo(
             _licenseController.text,
@@ -247,14 +247,16 @@ class _RegisterScreenState extends State<RegisterScreen> {
         );
       }
     } else if (_currentStep == 2) {
-      if (RegisterValidators.validateProfilePhoto(_profilePhotoBytes) == null &&
-          RegisterValidators.validateVehiclePhoto(_vehiclePhotoBytes) == null) {
+      // Validar que ambas fotos estén seleccionadas según la plataforma
+      bool hasValidProfilePhoto =
+          kIsWeb ? _profilePhotoBytes != null : _profilePhotoFile != null;
+      bool hasValidVehiclePhoto =
+          kIsWeb ? _vehiclePhotoBytes != null : _vehiclePhotoFile != null;
+
+      if (hasValidProfilePhoto && hasValidVehiclePhoto) {
         _register();
       } else {
-        LogsMessages.showInfoError(
-          context,
-          'Por favor, debe de subir ambas fotos',
-        );
+        LogsMessages.showInfo(context, 'Por favor, debe de subir ambas fotos');
       }
     }
   }
@@ -294,7 +296,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
     try {
       final error = await registerDriverUseCase(params);
       if (error != null) {
-        LogsMessages.showInfoError(context, error);
+        LogsMessages.showInfo(context, error);
       } else {
         // Mostrar el diálogo de éxito primero
         if (mounted) {
@@ -304,7 +306,8 @@ class _RegisterScreenState extends State<RegisterScreen> {
             builder: (BuildContext context) {
               return CustomDialog(
                 title: 'Éxito',
-                message: 'Su solicitud está pendiente a revisión, le notificaremos',
+                message:
+                    'Su solicitud está pendiente a revisión, le notificaremos en cuanto todo esté listo ',
                 buttonText: 'Ok',
                 onPressed: () {
                   Navigator.of(context).pop();
@@ -317,7 +320,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
         }
       }
     } catch (e) {
-      LogsMessages.showInfoError(context, e.toString());
+      LogsMessages.showInfo(context, e.toString());
     } finally {
       if (mounted) setState(() => _loading = false);
     }

@@ -76,7 +76,6 @@ class MyApp extends StatelessWidget {
       darkTheme: ThemeData.dark(),
       themeMode: themeNotifier.value,
       routerConfig: AppRoutes.router,
-
       // Configuración para easy_localization
       localizationsDelegates: context.localizationDelegates,
       supportedLocales: context.supportedLocales,

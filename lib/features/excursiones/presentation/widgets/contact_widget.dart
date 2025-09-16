@@ -1,6 +1,7 @@
 import 'package:eytaxi/core/constants/app_colors.dart';
 import 'package:eytaxi/core/constants/app_constants.dart';
 import 'package:eytaxi/core/utils/validators.dart';
+import 'package:eytaxi/core/widgets/messages/logs.dart';
 import 'package:eytaxi/core/widgets/messages/mesages.dart';
 import 'package:eytaxi/data/models/guest_contact_model.dart';
 import 'package:eytaxi/features/excursiones/data/models/reserva_excusion_model.dart';
@@ -70,23 +71,29 @@ class _ReservationFormDialogState extends State<ReservationFormDialog> {
   Widget build(BuildContext context) {
     final isDarkMode = Theme.of(context).brightness == Brightness.dark;
     final media = MediaQuery.of(context);
-    final double dialogWidth = media.size.width * 0.90;
-    final double dialogHeight = media.size.height * 0.90;
-
-    return Dialog(
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-      insetPadding: EdgeInsets.symmetric(
-        horizontal: media.size.width * 0.05,
-        vertical: media.size.height * 0.05,
-      ),
-      child: Container(
-        width: dialogWidth,
-        height: dialogHeight,
-        padding: const EdgeInsets.all(20),
-        decoration: BoxDecoration(
-          color: isDarkMode ? Colors.grey[900] : Colors.white,
-          borderRadius: BorderRadius.circular(16),
-        ),
+    
+    return Material(
+      type: MaterialType.transparency,
+      child: Center(
+        child: Container(
+          width: media.size.width * 0.90,
+          height: media.size.height * 0.85,
+          margin: EdgeInsets.symmetric(
+            horizontal: media.size.width * 0.05,
+            vertical: media.size.height * 0.075,
+          ),
+          padding: const EdgeInsets.all(20),
+          decoration: BoxDecoration(
+            color: isDarkMode ? Colors.grey[900] : Colors.white,
+            borderRadius: BorderRadius.circular(16),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withOpacity(0.3),
+                blurRadius: 10,
+                offset: const Offset(0, 4),
+              ),
+            ],
+          ),
         child: Column(
           children: [
             _buildHeader(isDarkMode),
@@ -121,6 +128,7 @@ class _ReservationFormDialogState extends State<ReservationFormDialog> {
             const SizedBox(height: 20),
             _buildActionButtons(isDarkMode),
           ],
+        ),
         ),
       ),
     );
@@ -657,8 +665,14 @@ class _ReservationFormDialogState extends State<ReservationFormDialog> {
   }
 
 
-  Future<void> _submitReservation() async {
-    if (!_formKey.currentState!.validate() || _selectedDate == null) {
+  Future<void> _submitReservation() async {    
+    if (!_formKey.currentState!.validate()) {
+      LogsMessages.showError(context,"Por favor, completa todos los campos requeridos correctamente.");
+      return;
+    }
+    
+    if (_selectedDate == null) {
+      LogsMessages.showError(context,"Por favor, selecciona una fecha para la excursión.");
       return;
     }
 
@@ -666,29 +680,35 @@ class _ReservationFormDialogState extends State<ReservationFormDialog> {
       _isLoading = true;
     });
 
-    if (mounted) {
-      setState(() {
-        _isLoading = false;
-      });
+    try {
+      if (!mounted) {
+        return;
+      }
 
-      //excursion
+      // Preparar datos
       String cantidadPersonas = _cantidadController.text.trim();
       bool guia = _includeGuide;
       DateTime fecha = _selectedDate!;
-      double precio =
-          (!_includeGuide)
-              ? widget.excursion['precio']
-              : widget.excursion['precio'] + 12;
+      double precio = (!_includeGuide)
+          ? widget.excursion['precio'].toDouble()
+          : widget.excursion['precio'].toDouble() + 12;
 
-      //contact
+
+
+      // Preparar contacto
       String name = _nombreController.text.trim();
       String method = _selectedContactMethod.toString();
-      String contacto =
-          _selectedContactMethod == ContactMethod.whatsapp
-              ? '$_selectedCountryCode${_contactoController.text.trim()}'
-              : _contactoController.text.trim();
+      String contacto = _selectedContactMethod == ContactMethod.whatsapp
+          ? '$_selectedCountryCode${_contactoController.text.trim()}'
+          : _contactoController.text.trim();
       String address = _direccionController.text.trim();
       String extraInfo = _datosExtrasController.text.trim();
+
+      print('👤 Datos de contacto preparados:');
+      print('   Nombre: $name');
+      print('   Método: $method');
+      print('   Contacto: $contacto');
+      print('   Dirección: $address');
 
       GuestContact guestContact = GuestContact(
         name: name,
@@ -705,18 +725,91 @@ class _ReservationFormDialogState extends State<ReservationFormDialog> {
         fecha: fecha,
         incluir_guia: guia,
       );
-
+      
+      // Aquí es donde probablemente falla en Android
       await _service.createExcursionReservation(reservexc, guestContact);
-      Navigator.pop(context);
+            
+      if (mounted) {
+        Navigator.pop(context);
+        widget.onReservationConfirmed?.call();
+        
+        CustomDialog.showSuccessDialog(
+          context,
+          "reserva_enviada_exitosamente".tr(),
+          "contactaremos_pronto".tr(),
+        );
+      }
 
-      widget.onReservationConfirmed?.call();
-      CustomDialog.showSuccessDialog(
-        context,
-        "reserva_enviada_exitosamente".tr(),
-        "contactaremos_pronto".tr(),
-      );
+    } catch (e, stackTrace) {
+      LogsMessages.showError(context,"Error al crear reserva: $e");
+      LogsMessages.showError(context,"Stack trace: $stackTrace");
+
+      if (mounted) {
+        _showErrorDialog("Error al procesar la reserva: ${e.toString()}");
+      }
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isLoading = false;
+        });
+      }
     }
   }
 
-  // Método estático para mostrar el dialog
+  void _showErrorDialog(String message) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Error'),
+        content: Text(message),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('OK'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  // Método estático para mostrar el dialog sin redimensionamiento
+  static Future<void> show(
+    BuildContext context, {
+    required Map<String, dynamic> excursion,
+    VoidCallback? onReservationConfirmed,
+  }) {
+    return showGeneralDialog(
+      context: context,
+      barrierDismissible: true,
+      barrierLabel: MaterialLocalizations.of(context).modalBarrierDismissLabel,
+      barrierColor: Colors.black54,
+      transitionDuration: const Duration(milliseconds: 200),
+      transitionBuilder: (context, animation, secondaryAnimation, child) {
+        return FadeTransition(
+          opacity: animation,
+          child: ScaleTransition(
+            scale: Tween<double>(begin: 0.8, end: 1.0).animate(
+              CurvedAnimation(parent: animation, curve: Curves.easeOutCubic),
+            ),
+            child: child,
+          ),
+        );
+      },
+      pageBuilder: (context, animation, secondaryAnimation) {
+        return MediaQuery.removeViewInsets(
+          context: context,
+          removeLeft: true,
+          removeTop: true,
+          removeRight: true,
+          removeBottom: true, // Esto evita que reaccione al teclado
+          child: Center(
+            child: ReservationFormDialog(
+              excursion: excursion,
+              onReservationConfirmed: onReservationConfirmed,
+            ),
+          ),
+        );
+      },
+    );
+  }
 }

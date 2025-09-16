@@ -208,10 +208,12 @@ class _ForgotPasswordDialogState extends State<_ForgotPasswordDialog> {
     final email = _emailController.text.trim();
 
     // Validación de email mejorada
-    if(Validators.validateEmail(email) != null) {
-      LogsMessages.showWarning(context, 'Por favor, ingresa un correo electrónico válido.');
+    if (Validators.validateEmail(email) != null) {
+      LogsMessages.showWarning(context,
+        'Por favor, ingresa un correo electrónico válido.',
+      );
       return;
-    }   
+    }
 
     setState(() => _submitting = true);
     try {
@@ -224,8 +226,7 @@ class _ForgotPasswordDialogState extends State<_ForgotPasswordDialog> {
 
       // Si la respuesta está vacía, el email no existe
       if (response.isEmpty) {
-        LogsMessages.showWarning(
-          context,
+        LogsMessages.showError(context,
           'No encontramos ninguna cuenta con ese correo electrónico',
         );
         setState(() => _submitting = false);
@@ -237,8 +238,7 @@ class _ForgotPasswordDialogState extends State<_ForgotPasswordDialog> {
       Navigator.of(context).pop();
 
       // Mensaje de éxito
-      LogsMessages.showSuccess(
-        context,
+      LogsMessages.showSuccess(context,
         'Te enviamos un enlace para restablecer tu contraseña. Revisa tu correo.',
       );
       await Supabase.instance.client.auth.resetPasswordForEmail(email);
@@ -260,10 +260,9 @@ class _ForgotPasswordDialogState extends State<_ForgotPasswordDialog> {
       }
 
       // Usar LogsMessages.showError en lugar de showInfoError para consistencia
-      LogsMessages.showError(context, message);
+      LogsMessages.showError(context,message);
     } catch (e) {
-      LogsMessages.showError(
-        context,
+      LogsMessages.showError(context,
         'Ocurrió un error inesperado. Intenta nuevamente.',
       );
     } finally {
