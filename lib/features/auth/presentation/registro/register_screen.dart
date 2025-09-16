@@ -4,8 +4,6 @@ import 'package:eytaxi/core/constants/app_colors.dart';
 import 'package:eytaxi/core/constants/app_routes.dart';
 import 'package:eytaxi/core/services/storage_service.dart';
 import 'package:eytaxi/core/widgets/messages/mesages.dart';
-import 'package:eytaxi/data/models/driver_model.dart';
-import 'package:eytaxi/data/models/user_model.dart';
 import 'package:eytaxi/features/auth/data/datasources/auth_remote_datasource.dart';
 import 'package:eytaxi/core/services/supabase_service.dart';
 import 'package:eytaxi/core/widgets/messages/logs.dart';

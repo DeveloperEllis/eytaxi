@@ -1,7 +1,7 @@
+import 'package:eytaxi/core/utils/validators.dart';
 import 'package:flutter/material.dart';
 import 'package:eytaxi/core/styles/input_decorations.dart';
 import 'package:eytaxi/core/constants/app_colors.dart';
-import 'package:eytaxi/core/utils/regex_utils.dart';
 
 class PersonalInfoStep extends StatelessWidget {
   final GlobalKey<FormState> formKey;
@@ -35,8 +35,8 @@ class PersonalInfoStep extends StatelessWidget {
     required this.onToggleConfirmPasswordVisibility,
     required this.validatePassword,
     required this.onNameChanged,
-  required this.onEmailChanged,
-  required this.validateConfirmPassword,
+    required this.onEmailChanged,
+    required this.validateConfirmPassword,
   });
 
   @override
@@ -70,8 +70,7 @@ class PersonalInfoStep extends StatelessWidget {
                 prefixIcon: Icons.person_outline,
               ),
               onChanged: onNameChanged,
-              validator: (value) =>
-                  value == null || value.isEmpty ? 'Ingrese su nombre' : null,
+              validator: Validators.validateNombre,
             ),
             const SizedBox(height: 16),
             TextFormField(
@@ -81,8 +80,7 @@ class PersonalInfoStep extends StatelessWidget {
                 labelText: 'Apellidos',
                 prefixIcon: Icons.person,
               ),
-              validator: (value) =>
-                  value == null || value.isEmpty ? 'Ingrese sus apellidos' : null,
+              validator: Validators.validateApellidos,
             ),
             const SizedBox(height: 16),
             TextFormField(
@@ -94,14 +92,7 @@ class PersonalInfoStep extends StatelessWidget {
               ),
               keyboardType: TextInputType.emailAddress,
               onChanged: onEmailChanged,
-              validator: (value) {
-                if (value == null || value.isEmpty) {
-                  return 'Ingrese su correo';
-                } else if (!RegexUtils.isValidEmail(value)) {
-                  return 'Ingrese un correo válido';
-                }
-                return null;
-              },
+              validator: Validators.validateEmail,
             ),
             const SizedBox(height: 16),
             Row(
@@ -120,7 +111,10 @@ class PersonalInfoStep extends StatelessWidget {
                   child: const Center(
                     child: Text(
                       '🇨🇺 +53',
-                      style: TextStyle(fontSize: 14, fontWeight: FontWeight.w500),
+                      style: TextStyle(
+                        fontSize: 14,
+                        fontWeight: FontWeight.w500,
+                      ),
                     ),
                   ),
                 ),
@@ -135,14 +129,7 @@ class PersonalInfoStep extends StatelessWidget {
                       prefixIcon: Icons.phone_outlined,
                       hintText: '12345678',
                     ),
-                    validator: (value) {
-                      if (value == null || value.isEmpty) {
-                        return 'Ingrese su teléfono';
-                      } else if (!RegexUtils.isValidPhone(value)) {
-                        return 'Ingrese un número válido';
-                      }
-                      return null;
-                    },
+                    validator: Validators.validatePhoneNumber,
                   ),
                 ),
               ],
@@ -186,7 +173,9 @@ class PersonalInfoStep extends StatelessWidget {
                 prefixIcon: Icons.lock,
                 suffixIcon: IconButton(
                   icon: Icon(
-                    obscureConfirmPassword ? Icons.visibility_off : Icons.visibility,
+                    obscureConfirmPassword
+                        ? Icons.visibility_off
+                        : Icons.visibility,
                     color: AppColors.primary,
                   ),
                   onPressed: onToggleConfirmPasswordVisibility,

@@ -1,0 +1,1 @@
+enum ContactMethod {  whatsapp, phone }

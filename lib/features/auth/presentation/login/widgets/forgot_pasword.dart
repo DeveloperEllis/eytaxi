@@ -1,3 +1,4 @@
+import 'package:eytaxi/core/utils/validators.dart';
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:eytaxi/core/widgets/messages/logs.dart';
@@ -207,13 +208,10 @@ class _ForgotPasswordDialogState extends State<_ForgotPasswordDialog> {
     final email = _emailController.text.trim();
 
     // Validación de email mejorada
-    if (email.isEmpty || !email.contains('@') || !email.contains('.')) {
-      LogsMessages.showWarning(
-        context,
-        'Por favor, ingresa un correo electrónico válido',
-      );
+    if(Validators.validateEmail(email) != null) {
+      LogsMessages.showWarning(context, 'Por favor, ingresa un correo electrónico válido.');
       return;
-    }
+    }   
 
     setState(() => _submitting = true);
     try {

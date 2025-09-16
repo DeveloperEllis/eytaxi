@@ -1,5 +1,6 @@
 import 'dart:typed_data';
 
+import 'package:eytaxi/core/utils/validators.dart';
 
 class RegisterValidators {
   static String? validatePassword(String? value) {
@@ -34,54 +35,18 @@ class RegisterValidators {
     return null;
   }
 
-  static String? validateEmail(String? value) {
-    if (value == null || value.isEmpty) {
-      return 'Ingrese su correo electrónico';
-    }
-    if (!RegExp(r'^[^@]+@[^@]+\.[^@]+').hasMatch(value)) {
-      return 'Ingrese un correo electrónico válido';
-    }
-    return null;
-  }
-
-  static String? validatePhone(String? value) {
-  if (value == null || value.trim().isEmpty) {
-    return 'Ingrese su número de teléfono';
-  }
-
-  // Verificar que tenga exactamente 8 dígitos numéricos
-  if (!RegExp(r'^[0-9]{8}$').hasMatch(value)) {
-    return 'El número debe contener exactamente 8 dígitos';
-  }
-
-  return null;
-}
-
-  static String? validateVehicleCapacity(String? value) {
-    if (value == null || value.isEmpty) {
-      return 'Ingrese la capacidad del vehículo';
-    }
-    if (!RegExp(r'^[1-9]\d*$').hasMatch(value)) {
-      return 'Ingrese un número válido';
-    }
-    return null;
-  }
-
-  static String? validateNonEmpty(String? value, String fieldName) {
-    if (value == null || value.isEmpty) {
-      return 'Ingrese su $fieldName';
-    }
-    return null;
-  }
-  
-
-  static String? validateDriverInfo(String? license, String? vehicleCapacity, List<String> routes, bool viajesLocales) {
-    final licenseError = validateNonEmpty(license, 'licencia');
+  static String? validateDriverInfo(
+    String? license,
+    String? vehicleCapacity,
+    List<String> routes,
+    bool viajesLocales,
+  ) {
+    final licenseError = Validators.validateLicenseNumber(license);
     if (licenseError != null) {
       return licenseError;
     }
 
-    final capacityError = validateVehicleCapacity(vehicleCapacity);
+    final capacityError = Validators.validateVehicleCapacity(vehicleCapacity);
     if (capacityError != null) {
       return capacityError;
     }
@@ -106,7 +71,4 @@ class RegisterValidators {
     }
     return null;
   }
-
-  
-
 }

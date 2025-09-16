@@ -1,18 +1,17 @@
 import 'package:eytaxi/core/constants/app_colors.dart';
 import 'package:eytaxi/core/constants/app_constants.dart';
-import 'package:eytaxi/core/utils/regex_utils.dart';
+import 'package:eytaxi/core/utils/validators.dart';
 import 'package:eytaxi/core/widgets/messages/mesages.dart';
 import 'package:eytaxi/data/models/guest_contact_model.dart';
 import 'package:eytaxi/features/excursiones/data/models/reserva_excusion_model.dart';
 import 'package:eytaxi/features/excursiones/data/datasources/excursion_remote_datasource.dart';
 import 'package:eytaxi/features/excursiones/data/repositories/excursion_repository.dart';
+import 'package:eytaxi/features/trip_request/presentation/pages/widgets/pickup_dialog.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:easy_localization/easy_localization.dart';
-
-enum ContactMethod {  whatsapp, phone }
 
 class ReservationFormDialog extends StatefulWidget {
   final Map<String, dynamic> excursion;
@@ -199,15 +198,7 @@ class _ReservationFormDialogState extends State<ReservationFormDialog> {
             "ingresa_nombre_completo".tr(),
             isDarkMode,
           ),
-          validator: (value) {
-            if (value == null || value.trim().isEmpty) {
-              return "nombre_es_requerido".tr();
-            }
-            if (value.trim().length < 2) {
-              return "nombre_minimo_caracteres".tr();
-            }
-            return null;
-          },
+          validator: Validators.validateNombre,
         ),
       ],
     );
@@ -224,16 +215,7 @@ class _ReservationFormDialogState extends State<ReservationFormDialog> {
           keyboardType: TextInputType.number,
           inputFormatters: [FilteringTextInputFormatter.digitsOnly],
           decoration: _getInputDecoration("numero_personas".tr(), isDarkMode),
-          validator: (value) {
-            if (value == null || value.trim().isEmpty) {
-              return "cantidad_es_requerida".tr();
-            }
-            final cantidad = int.tryParse(value);
-            if (cantidad == null || cantidad < 1 || cantidad > 50) {
-              return "numero_valido_1_50".tr();
-            }
-            return null;
-          },
+          validator: Validators.validateCantidadPersonas,
         ),
       ],
     );
@@ -385,7 +367,7 @@ class _ReservationFormDialogState extends State<ReservationFormDialog> {
 
     switch (_selectedContactMethod) {
       case ContactMethod.whatsapp:
-        hintText = '5XXXXXXX';
+        hintText = '525648965';
         label = "numero_whatsapp_requerido".tr();
         keyboardType = TextInputType.phone;
         inputFormatters = [
@@ -393,7 +375,7 @@ class _ReservationFormDialogState extends State<ReservationFormDialog> {
         ];
         break;
       case ContactMethod.phone:
-        hintText = '+53 5XXXXXXX';
+        hintText = '56325631';
         label = "numero_telefono_llamadas_requerido".tr();
         keyboardType = TextInputType.phone;
         inputFormatters = [
@@ -446,12 +428,6 @@ class _ReservationFormDialogState extends State<ReservationFormDialog> {
                         _selectedCountryCode = value!;
                       });
                     },
-                    validator: (value) {
-                      if (value == null || value.isEmpty) {
-                        return "selecciona_codigo".tr();
-                      }
-                      return null;
-                    },
                   ),
                 ),
                 const SizedBox(width: 10),
@@ -462,7 +438,7 @@ class _ReservationFormDialogState extends State<ReservationFormDialog> {
                     keyboardType: keyboardType,
                     inputFormatters: inputFormatters,
                     decoration: _getInputDecoration(hintText, isDarkMode),
-                    validator: (value) => _validateContact(value),
+                    validator: Validators.validatePhoneNumber,
                     onChanged:
                         (value) => setState(() {
                           _contactoController.text = value.trim();
@@ -483,7 +459,7 @@ class _ReservationFormDialogState extends State<ReservationFormDialog> {
               keyboardType: keyboardType,
               inputFormatters: inputFormatters,
               decoration: _getInputDecoration(hintText, isDarkMode),
-              validator: (value) => _validateContact(value),
+              validator: Validators.validatePhoneNumber,
               onChanged:
                   (value) => setState(() {
                     _contactoController.text = value.trim();
@@ -510,15 +486,7 @@ class _ReservationFormDialogState extends State<ReservationFormDialog> {
             "direccion_donde_recogeremos".tr(),
             isDarkMode,
           ),
-          validator: (value) {
-            if (value == null || value.trim().isEmpty) {
-              return "direccion_es_requerida".tr();
-            }
-            if (value.trim().length < 10) {
-              return "direccion_mas_detallada".tr();
-            }
-            return null;
-          },
+          validator: Validators.valdateDireccion,
         ),
       ],
     );
@@ -688,29 +656,6 @@ class _ReservationFormDialogState extends State<ReservationFormDialog> {
     }
   }
 
-  String? _validateContact(String? value) {
-    if (value == null || value.trim().isEmpty) {
-      return "este_campo_requerido".tr();
-    }
-    switch (_selectedContactMethod) {
-      case ContactMethod.whatsapp:
-        final cleanedValue = value.replaceAll(RegExp(r'[\s-]'), '');
-        if (!RegexUtils.phoneRegex.hasMatch(
-          _selectedCountryCode + cleanedValue,
-        )) {
-          return "numero_whatsapp_valido_excursion".tr();
-        }
-        break;
-      case ContactMethod.phone:
-        if (!RegexUtils.phoneRegex.hasMatch(
-          value.replaceAll(RegExp(r'[\s-]'), ''),
-        )) {
-          return "numero_cubano_valido_excursion".tr();
-        }
-        break;
-    }
-    return null;
-  }
 
   Future<void> _submitReservation() async {
     if (!_formKey.currentState!.validate() || _selectedDate == null) {
@@ -720,9 +665,6 @@ class _ReservationFormDialogState extends State<ReservationFormDialog> {
     setState(() {
       _isLoading = true;
     });
-
-    // Simular llamada a API
-    await Future.delayed(const Duration(seconds: 2));
 
     if (mounted) {
       setState(() {
@@ -764,7 +706,7 @@ class _ReservationFormDialogState extends State<ReservationFormDialog> {
         incluir_guia: guia,
       );
 
-  await _service.createExcursionReservation(reservexc, guestContact);
+      await _service.createExcursionReservation(reservexc, guestContact);
       Navigator.pop(context);
 
       widget.onReservationConfirmed?.call();
@@ -773,24 +715,8 @@ class _ReservationFormDialogState extends State<ReservationFormDialog> {
         "reserva_enviada_exitosamente".tr(),
         "contactaremos_pronto".tr(),
       );
-
     }
   }
 
   // Método estático para mostrar el dialog
-  static Future<void> show(
-    BuildContext context,
-    Map<String, dynamic> excursion, {
-    VoidCallback? onReservationConfirmed,
-  }) {
-    return showDialog<void>(
-      context: context,
-      barrierDismissible: false,
-      builder:
-          (context) => ReservationFormDialog(
-            excursion: excursion,
-            onReservationConfirmed: onReservationConfirmed,
-          ),
-    );
-  }
 }

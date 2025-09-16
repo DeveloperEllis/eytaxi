@@ -1,6 +1,7 @@
 import 'dart:io';
 import 'package:eytaxi/core/constants/app_colors.dart';
 import 'package:eytaxi/core/services/storage_service.dart';
+import 'package:eytaxi/core/utils/validators.dart';
 import 'package:eytaxi/data/models/ubicacion_model.dart';
 import 'package:eytaxi/features/auth/utils/register_validators.dart';
 import 'package:eytaxi/features/driver/data/datasources/driver_profile_remote_datasource.dart';
@@ -284,9 +285,7 @@ class _ProfilePageState extends State<ProfilePage> {
     return Container(
       height: 250,
       width: double.infinity,
-      decoration: BoxDecoration(
-        color: AppColors.primary,
-      ),
+      decoration: BoxDecoration(color: AppColors.primary),
       child: Stack(
         children: [
           // Foto del vehículo como fondo (cover photo)
@@ -455,18 +454,14 @@ class _ProfilePageState extends State<ProfilePage> {
               label: 'Nombre',
               controller: _nombreController,
               icon: Icons.person,
-              validator:
-                  (value) =>
-                      RegisterValidators.validateNonEmpty(value, 'nombre'),
+              validator: Validators.validateNombre,
             ),
             const SizedBox(height: 16),
             _buildEditableField(
               label: 'Apellidos',
               controller: _apellidosController,
               icon: Icons.person_outline,
-              validator:
-                  (value) =>
-                      RegisterValidators.validateNonEmpty(value, 'apellidos'),
+              validator:Validators.validateApellidos,
             ),
             const SizedBox(height: 16),
             _buildEditableField(
@@ -474,7 +469,7 @@ class _ProfilePageState extends State<ProfilePage> {
               controller: _phoneController,
               icon: Icons.phone,
               keyboardType: TextInputType.phone,
-              validator: RegisterValidators.validatePhone,
+              validator: Validators.validatePhoneNumber,
             ),
             const SizedBox(height: 16),
           ],
@@ -491,11 +486,7 @@ class _ProfilePageState extends State<ProfilePage> {
                 label: 'Número de licencia',
                 controller: _licenseController,
                 icon: Icons.credit_card,
-                validator:
-                    (value) => RegisterValidators.validateNonEmpty(
-                      value,
-                      'número de licencia',
-                    ),
+                validator:Validators.validateLicenseNumber,
               ),
               const SizedBox(height: 16),
               _buildCiudadOrigenField(),
@@ -516,11 +507,11 @@ class _ProfilePageState extends State<ProfilePage> {
                       label: 'Número de teléfono',
                       value: _phoneController.text,
                     ),
-                    _buildInfoRow(
-                      icon: Icons.credit_card,
-                      label: 'Número de Licencia',
-                      value: _licenseController.text,
-                    ),
+                  _buildInfoRow(
+                    icon: Icons.credit_card,
+                    label: 'Número de Licencia',
+                    value: _licenseController.text,
+                  ),
                   if (model.driver!.origen != null)
                     _buildInfoRow(
                       icon: Icons.home_work,

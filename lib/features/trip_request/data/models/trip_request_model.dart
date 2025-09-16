@@ -70,7 +70,7 @@ class TripRequest {
 						 contact: json['contact'] != null ? GuestContact.fromJson(json['contact']) : null,
 						 driverResponseCount: json['driver_response_count'] as int? ?? 0,
 						 driver: json['driver'] != null ? Driver.fromJson(json['driver']) : null,
-             externalDriverId: json['externalDriverId']  as String? ?? null,
+             externalDriverId: json['external_driver_id']  as String? ?? null,
 				 );
 		 }
 
@@ -88,7 +88,7 @@ class TripRequest {
       'price': price ?? 0.0,
       'distance_km': distanceKm ?? 0.0,
       'estimated_time_minutes': estimatedTimeMinutes ?? 0,
-      'externalDriverId': externalDriverId ?? null,
+      'external_driver_id': externalDriverId ?? null,
     };
   }
 

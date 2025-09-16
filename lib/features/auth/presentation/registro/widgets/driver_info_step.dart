@@ -1,11 +1,10 @@
+import 'package:eytaxi/core/utils/validators.dart';
 import 'package:eytaxi/data/models/user_model.dart';
 import 'package:eytaxi/features/trip_request/presentation/pages/widgets/location_autocomplete.dart';
 import 'package:flutter/material.dart';
 import 'package:eytaxi/core/styles/input_decorations.dart';
 import 'package:eytaxi/core/constants/app_colors.dart';
-import 'package:eytaxi/core/utils/regex_utils.dart';
 import 'package:eytaxi/data/models/ubicacion_model.dart';
-import 'package:supabase_flutter/supabase_flutter.dart';
 
 class DriverInfoStep extends StatelessWidget {
   final TextEditingController licenseController;
@@ -74,15 +73,7 @@ class DriverInfoStep extends StatelessWidget {
               prefixIcon: Icons.badge,
               hintText: 'Ej: ABC123456',
             ),
-            validator: (value) {
-              if (value == null || value.isEmpty) {
-                return 'Ingrese su número de licencia';
-              }
-              if (!RegexUtils.isValidLicencia(value)) {
-                return 'Ingrese un número de licencia válido';
-              }
-              return null;
-            },
+            validator:  Validators.validateLicenseNumber,
           ),
 
           const SizedBox(height: 16),
@@ -119,12 +110,7 @@ class DriverInfoStep extends StatelessWidget {
                   vehicleCapacityController.text = newValue;
                 }
               },
-              validator: (value) {
-                if (value == null || value.isEmpty) {
-                  return 'Seleccione la capacidad del vehículo';
-                }
-                return null;
-              },
+              validator: Validators.validateVehicleCapacity,
             ),
           ),
 
