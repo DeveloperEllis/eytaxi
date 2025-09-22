@@ -1,6 +1,8 @@
 import 'package:easy_localization/easy_localization.dart';
+import 'package:eytaxi/core/constants/app_constants.dart';
 import 'package:flutter/material.dart';
 import 'package:eytaxi/core/constants/app_colors.dart';
+import 'package:google_fonts/google_fonts.dart';
 
 class HomeAppBar extends StatelessWidget implements PreferredSizeWidget {
   final String title;
@@ -33,19 +35,22 @@ class HomeAppBar extends StatelessWidget implements PreferredSizeWidget {
       case 'fr':
         flagEmoji = '🇫🇷';
         break;
-      case 'ru':
-        flagEmoji = '🇷🇺';
-        break;
-      case 'it':
-        flagEmoji = '🇮🇹';
-        break;
       default:
         flagEmoji = '🇪🇸'; // Default to Spanish
     }
 
     return AppBar(
       centerTitle: false,
-      title: Text(title),
+      title: Row(
+        children: [
+          Container(
+            height: 30,
+            width: 30,
+            child: Image.asset(AppConstants.logoicono)),
+            SizedBox(width: 5),
+          Text(title, style: GoogleFonts.jua()),
+        ],
+      ),
       backgroundColor: AppColors.primary,
       foregroundColor: AppColors.white,
       automaticallyImplyLeading: false,

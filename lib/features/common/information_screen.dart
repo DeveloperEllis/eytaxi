@@ -38,8 +38,8 @@ class InfoScreen extends StatelessWidget {
                 decoration: BoxDecoration(
                   gradient: LinearGradient(
                     colors: isDarkMode
-                        ? [AppColors.primary.withOpacity(0.8), AppColors.secondary.withOpacity(0.8)]
-                        : [AppColors.primary, AppColors.secondary],
+                        ? [AppColors.primary, AppColors.primary.withOpacity(0.6)]
+                        : [AppColors.primary, AppColors.primary.withOpacity(0.6)],
                     begin: Alignment.topCenter,
                     end: Alignment.bottomCenter,
                   ),
@@ -66,25 +66,16 @@ class InfoScreen extends StatelessWidget {
                           ),
                         ],
                       ),
-                      child: const Icon(
-                        Icons.local_taxi,
-                        size: 60,
-                        color: AppColors.primary,
+                
+                      child: ClipRRect(
+                        borderRadius: BorderRadius.circular(20),
+                        child: Image.asset(
+                          AppConstants.iconoapk,
+                          fit: BoxFit.cover,
+                        ),
                       ),
                     ),
-                    const SizedBox(height: 20),
-                    
-                    // Título y subtítulo
-                    Text(
-                      AppConstants.appname,
-                      style: TextStyle(
-                        fontSize: 36,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.white,
-                        letterSpacing: 1.2,
-                      ),
-                    ),
-                    const SizedBox(height: 8),
+                  const SizedBox(height: 16),
                     Text(
                       AppConstants.slogan,
                       style: TextStyle(
@@ -93,10 +84,7 @@ class InfoScreen extends StatelessWidget {
                         fontStyle: FontStyle.italic,
                       ),
                     ),
-                    const SizedBox(height: 24),
-                    TextButton(onPressed: () {
-                      AppRoutes.router.go('/admin');
-                    }, child: const Text('Admin')),
+                    const SizedBox(height: 16),
                     // Sección de redes sociales mejorada
                     Row(
                       mainAxisAlignment: MainAxisAlignment.center,
@@ -166,7 +154,7 @@ class InfoScreen extends StatelessWidget {
                       ],
                     ),
                     child: Text(
-                      'TaxiCuba es la aplicación líder en Cuba que conecta de manera segura y eficiente a viajeros con taxistas profesionales. Facilitamos todo tipo de transporte en la isla: viajes locales, excursiones turísticas, viajes personalizados y traslados especiales. Tu medio de transporte ideal, cuando lo necesites.',
+                      '${AppConstants.appname} es la aplicación líder en Cuba que conecta de manera segura y eficiente a viajeros con taxistas profesionales. Facilitamos todo tipo de transporte en la isla: viajes locales, excursiones turísticas, viajes personalizados y traslados especiales. Tu medio de transporte ideal, cuando lo necesites.',
                       style: TextStyle(
                         fontSize: 16,
                         height: 1.6,

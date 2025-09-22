@@ -42,7 +42,7 @@ class AppRoutes {
   static const String attend_request = '/admin/attend_request';
   static final GoRouter router = GoRouter(
     initialLocation: splash,
-    redirect: (context, state) {
+    redirect: (context, state) async {
       final user = Supabase.instance.client.auth.currentUser;
       final currentLocation = state.matchedLocation;
 
@@ -72,6 +72,29 @@ class AppRoutes {
       if (currentLocation == login || currentLocation == register) {
         print('DEBUG ROUTER: Usuario autenticado intentando acceder a auth, redirigiendo a driverHome');
         return driverHome;
+      }
+      
+      // Verificar acceso a rutas de administrador
+      final adminRoutes = [admin, all_requests, pending_requests, accepted_requests, in_progress_requests, attend_request];
+      if (adminRoutes.contains(currentLocation)) {
+        try {
+          final userProfile = await Supabase.instance.client
+              .from('user_profiles')
+              .select('user_type')
+              .eq('id', user.id)
+              .maybeSingle();
+          
+          final userType = userProfile?['user_type'] as String?;
+          print('DEBUG ROUTER: User type for admin route check: $userType');
+          
+          if (userType != 'admin') {
+            print('DEBUG ROUTER: Usuario no autorizado para ruta de admin, redirigiendo a driverHome');
+            return driverHome; // Redirigir a driverHome si no es admin
+          }
+        } catch (e) {
+          print('DEBUG ROUTER: Error verificando tipo de usuario: $e');
+          return driverHome; // En caso de error, redirigir a driverHome por seguridad
+        }
       }
       
       // Para otras rutas, permitir acceso (el repositorio maneja la lógica específica de estado del conductor)
@@ -143,4 +166,5 @@ class AppRoutes {
         (context, state) =>
             const Scaffold(body: Center(child: Text('Página no encontrada'))),
   );
+
 }

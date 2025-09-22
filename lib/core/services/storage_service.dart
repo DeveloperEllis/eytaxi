@@ -19,8 +19,11 @@ class StorageService {
       final String bucket = type == 'profile' ? 'profilephotos' : 'vehiclephotos';
 
       print('Intentando subir imagen a $bucket/$path');
+      print('Platform: ${kIsWeb ? "Web" : "Mobile"}');
+      print('Image data type: ${imageData.runtimeType}');
 
       if (kIsWeb && imageData is Uint8List) {
+        print('Uploading as Uint8List for web platform');
         await _supabase.storage.from(bucket).uploadBinary(
               path,
               imageData,
@@ -29,6 +32,13 @@ class StorageService {
               ),
             );
       } else if (imageData is File) {
+        print('Uploading as File for mobile platform');
+        print('File path: ${imageData.path}');
+        print('File exists: ${await imageData.exists()}');
+        if (!(await imageData.exists())) {
+          print('ERROR: File does not exist at path ${imageData.path}');
+          return null;
+        }
         await _supabase.storage.from(bucket).upload(
               path,
               imageData,
@@ -37,7 +47,9 @@ class StorageService {
               ),
             );
       } else {
-        throw Exception('Tipo de imagen no válido');
+        print('ERROR: Invalid image data type: ${imageData.runtimeType}');
+        print('Expected: Uint8List for web or File for mobile');
+        throw Exception('Tipo de imagen no válido: ${imageData.runtimeType}');
       }
 
       final String publicUrl = _supabase.storage.from(bucket).getPublicUrl(path);
@@ -46,6 +58,7 @@ class StorageService {
       return publicUrl;
     } catch (e) {
       print('Error detallado al subir imagen: $e');
+      print('Stack trace: ${StackTrace.current}');
       return null;
     }
   }

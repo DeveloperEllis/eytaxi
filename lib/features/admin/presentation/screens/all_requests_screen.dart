@@ -1,3 +1,4 @@
+import 'package:eytaxi/core/constants/app_routes.dart';
 import 'package:flutter/material.dart';
 import 'package:eytaxi/features/admin/data/admin_trip_request_service.dart';
 import 'package:eytaxi/features/trip_request/data/models/trip_request_model.dart';
@@ -119,6 +120,11 @@ class _AllRequestsScreenState extends State<AllRequestsScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back),
+          onPressed: () => AppRoutes.router.go(AppRoutes.admin),
+          tooltip: 'Volver',
+        ),
         title: const Text(
           'Todas las Solicitudes',
           style: TextStyle(fontWeight: FontWeight.bold),

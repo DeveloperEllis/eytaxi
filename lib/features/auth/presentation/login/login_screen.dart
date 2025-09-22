@@ -123,15 +123,19 @@ class _LoginScreenState extends State<LoginScreen> {
                                   if (_formKey.currentState!.validate()) {
                                     setState(() => _loading = true);
                                     try {
+                                      print('DEBUG LOGIN: Iniciando proceso de login');
                                       await _authRepository.signInWithPassword(
                                         _email,
                                         _password,
                                       );
+                                      print('DEBUG LOGIN: Login exitoso, iniciando redirección');
                                       // Si llega aquí sin excepción, login exitoso
                                       // Verificar estado del conductor antes de redirigir
                                       await _authRepository
                                           .handlePostLoginRedirection();
+                                      print('DEBUG LOGIN: Redirección completada');
                                     } on AuthException catch (e) {
+                                      print('DEBUG LOGIN: AuthException: ${e.message}');
                                       String message =
                                           'Error al iniciar sesión.';
                                       final msg = e.message.toLowerCase();
@@ -155,13 +159,15 @@ class _LoginScreenState extends State<LoginScreen> {
                                             'Ocurrió un error inesperado. Intenta nuevamente.';
                                       }
                                       LogsMessages.showError(context,message);
-                                    } catch (e) {
+                                    } catch (e, stackTrace) {
+                                      print('DEBUG LOGIN: Error no manejado: $e');
+                                      print('DEBUG LOGIN: Stack trace: $stackTrace');
                                       ScaffoldMessenger.of(
                                         context,
                                       ).showSnackBar(
-                                        const SnackBar(
+                                        SnackBar(
                                           content: Text(
-                                            'Ocurrió un error inesperado. Intenta nuevamente.',
+                                            'Error inesperado: ${e.toString()}',
                                           ),
                                         ),
                                       );

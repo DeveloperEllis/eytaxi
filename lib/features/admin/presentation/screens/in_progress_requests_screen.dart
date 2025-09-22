@@ -1,3 +1,4 @@
+import 'package:eytaxi/core/constants/app_colors.dart';
 import 'package:flutter/material.dart';
 import 'package:eytaxi/features/admin/data/admin_trip_request_service.dart';
 import 'package:eytaxi/features/trip_request/data/models/trip_request_model.dart';
@@ -11,7 +12,8 @@ class InProgressRequestsScreen extends StatefulWidget {
   const InProgressRequestsScreen({super.key});
 
   @override
-  State<InProgressRequestsScreen> createState() => _InProgressRequestsScreenState();
+  State<InProgressRequestsScreen> createState() =>
+      _InProgressRequestsScreenState();
 }
 
 class _InProgressRequestsScreenState extends State<InProgressRequestsScreen> {
@@ -32,8 +34,11 @@ class _InProgressRequestsScreenState extends State<InProgressRequestsScreen> {
 
   Future<void> _loadRequests() async {
     try {
-      developer.log('🚀 InProgressRequestsScreen: Iniciando carga de solicitudes en curso', name: 'InProgressRequestsScreen');
-      
+      developer.log(
+        '🚀 InProgressRequestsScreen: Iniciando carga de solicitudes en curso',
+        name: 'InProgressRequestsScreen',
+      );
+
       setState(() {
         _isLoading = true;
         _errorMessage = null;
@@ -41,30 +46,42 @@ class _InProgressRequestsScreenState extends State<InProgressRequestsScreen> {
 
       // Obtener todas las solicitudes y filtrar las que tienen chofer asignado
       final allRequests = await _service.getAllTripRequests();
-      
-      final inProgressRequests = allRequests.where((request) {
-        // Tiene chofer asignado (driver_id O external_driver_id)
-        final hasDriver = request.driverId != null || request.externalDriverId != null;
-        
-        return hasDriver;
-      }).toList();
-      
+
+      final inProgressRequests =
+          allRequests.where((request) {
+            // Tiene chofer asignado (driver_id O external_driver_id)
+            final hasDriver =
+                request.driverId != null || request.externalDriverId != null;
+
+            return hasDriver;
+          }).toList();
+
       if (mounted) {
         setState(() {
           _requests = inProgressRequests;
           _filteredRequests = inProgressRequests;
           _isLoading = false;
         });
-        
-        developer.log('✅ InProgressRequestsScreen: ${inProgressRequests.length} solicitudes en curso cargadas', name: 'InProgressRequestsScreen');
+
+        developer.log(
+          '✅ InProgressRequestsScreen: ${inProgressRequests.length} solicitudes en curso cargadas',
+          name: 'InProgressRequestsScreen',
+        );
       }
     } catch (e, stackTrace) {
-      developer.log('❌ InProgressRequestsScreen: Error al cargar solicitudes: $e', name: 'InProgressRequestsScreen');
-      developer.log('📚 InProgressRequestsScreen: StackTrace: $stackTrace', name: 'InProgressRequestsScreen');
-      
+      developer.log(
+        '❌ InProgressRequestsScreen: Error al cargar solicitudes: $e',
+        name: 'InProgressRequestsScreen',
+      );
+      developer.log(
+        '📚 InProgressRequestsScreen: StackTrace: $stackTrace',
+        name: 'InProgressRequestsScreen',
+      );
+
       if (mounted) {
         setState(() {
-          _errorMessage = 'Error al cargar las solicitudes en curso: ${e.toString()}';
+          _errorMessage =
+              'Error al cargar las solicitudes en curso: ${e.toString()}';
           _isLoading = false;
         });
       }
@@ -73,24 +90,41 @@ class _InProgressRequestsScreenState extends State<InProgressRequestsScreen> {
 
   void _filterRequests() {
     setState(() {
-      _filteredRequests = _requests.where((request) {
-        // Filtro por búsqueda
-        final matchesSearch = _searchQuery.isEmpty ||
-            request.origen?.nombre.toLowerCase().contains(_searchQuery.toLowerCase()) == true ||
-            request.destino?.nombre.toLowerCase().contains(_searchQuery.toLowerCase()) == true ||
-            request.contact?.name?.toLowerCase().contains(_searchQuery.toLowerCase()) == true ||
-            request.id?.toLowerCase().contains(_searchQuery.toLowerCase()) == true;
+      _filteredRequests =
+          _requests.where((request) {
+            // Filtro por búsqueda
+            final matchesSearch =
+                _searchQuery.isEmpty ||
+                request.origen?.nombre.toLowerCase().contains(
+                      _searchQuery.toLowerCase(),
+                    ) ==
+                    true ||
+                request.destino?.nombre.toLowerCase().contains(
+                      _searchQuery.toLowerCase(),
+                    ) ==
+                    true ||
+                request.contact?.name?.toLowerCase().contains(
+                      _searchQuery.toLowerCase(),
+                    ) ==
+                    true ||
+                request.id?.toLowerCase().contains(
+                      _searchQuery.toLowerCase(),
+                    ) ==
+                    true;
 
-        // Filtro por estado
-        final matchesStatus = _statusFilter == 'todos' ||
-            request.status.name.toLowerCase() == _statusFilter.toLowerCase();
+            // Filtro por estado
+            final matchesStatus =
+                _statusFilter == 'todos' ||
+                request.status.name.toLowerCase() ==
+                    _statusFilter.toLowerCase();
 
-        // Filtro por tipo de taxi
-        final matchesTaxiType = _taxiTypeFilter == 'todos' ||
-            request.taxiType.toLowerCase() == _taxiTypeFilter.toLowerCase();
+            // Filtro por tipo de taxi
+            final matchesTaxiType =
+                _taxiTypeFilter == 'todos' ||
+                request.taxiType.toLowerCase() == _taxiTypeFilter.toLowerCase();
 
-        return matchesSearch && matchesStatus && matchesTaxiType;
-      }).toList();
+            return matchesSearch && matchesStatus && matchesTaxiType;
+          }).toList();
     });
   }
 
@@ -98,11 +132,16 @@ class _InProgressRequestsScreenState extends State<InProgressRequestsScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back),
+          onPressed: () => AppRoutes.router.go(AppRoutes.admin),
+          tooltip: 'Volver',
+        ),
         title: const Text(
           'Solicitudes En Curso',
           style: TextStyle(fontWeight: FontWeight.bold),
         ),
-        backgroundColor: Colors.orange.shade700,
+        backgroundColor: const Color.fromARGB(255, 136, 73, 165),
         foregroundColor: Colors.white,
         elevation: 2,
         actions: [
@@ -117,11 +156,9 @@ class _InProgressRequestsScreenState extends State<InProgressRequestsScreen> {
         children: [
           // Sección de búsqueda y filtros
           _buildSearchSection(),
-          
+
           // Lista de solicitudes
-          Expanded(
-            child: _buildRequestsList(),
-          ),
+          Expanded(child: _buildRequestsList()),
         ],
       ),
     );
@@ -150,55 +187,27 @@ class _InProgressRequestsScreenState extends State<InProgressRequestsScreen> {
               ),
               filled: true,
               fillColor: Colors.white,
-              contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+              contentPadding: const EdgeInsets.symmetric(
+                horizontal: 16,
+                vertical: 12,
+              ),
             ),
           ),
           const SizedBox(height: 12),
-          
+
           // Filtros en fila
           Row(
             children: [
               // Filtro por estado
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    const Text('Estado: ', style: TextStyle(fontWeight: FontWeight.w600)),
-                    DropdownButtonFormField<String>(
-                      value: _statusFilter,
-                      decoration: InputDecoration(
-                        border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(8),
-                          borderSide: BorderSide.none,
-                        ),
-                        filled: true,
-                        fillColor: Colors.white,
-                        contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                      ),
-                      items: const [
-                        DropdownMenuItem(value: 'todos', child: Text('Todos')),
-                        DropdownMenuItem(value: 'accepted', child: Text('Aceptado')),
-                        DropdownMenuItem(value: 'started', child: Text('En Progreso')),
-                        DropdownMenuItem(value: 'completed', child: Text('Completado')),
-                      ],
-                      onChanged: (value) {
-                        setState(() {
-                          _statusFilter = value ?? 'todos';
-                        });
-                        _filterRequests();
-                      },
-                    ),
-                  ],
-                ),
+              const Text(
+                'Tipo: ',
+                style: TextStyle(fontWeight: FontWeight.w600),
               ),
-              const SizedBox(width: 12),
-              
               // Filtro por tipo de taxi
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    const Text('Tipo: ', style: TextStyle(fontWeight: FontWeight.w600)),
                     DropdownButtonFormField<String>(
                       value: _taxiTypeFilter,
                       decoration: InputDecoration(
@@ -208,12 +217,21 @@ class _InProgressRequestsScreenState extends State<InProgressRequestsScreen> {
                         ),
                         filled: true,
                         fillColor: Colors.white,
-                        contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                        contentPadding: const EdgeInsets.symmetric(
+                          horizontal: 12,
+                          vertical: 8,
+                        ),
                       ),
                       items: const [
                         DropdownMenuItem(value: 'todos', child: Text('Todos')),
-                        DropdownMenuItem(value: 'colectivo', child: Text('Colectivo')),
-                        DropdownMenuItem(value: 'privado', child: Text('Privado')),
+                        DropdownMenuItem(
+                          value: 'colectivo',
+                          child: Text('Colectivo'),
+                        ),
+                        DropdownMenuItem(
+                          value: 'privado',
+                          child: Text('Privado'),
+                        ),
                       ],
                       onChanged: (value) {
                         setState(() {
@@ -280,10 +298,7 @@ class _InProgressRequestsScreenState extends State<InProgressRequestsScreen> {
                   ? 'No hay solicitudes en curso'
                   : 'No se encontraron solicitudes con los filtros aplicados',
               textAlign: TextAlign.center,
-              style: TextStyle(
-                fontSize: 16,
-                color: Colors.grey.shade600,
-              ),
+              style: TextStyle(fontSize: 16, color: Colors.grey.shade600),
             ),
             if (_requests.isNotEmpty) ...[
               const SizedBox(height: 8),
@@ -327,18 +342,19 @@ class _InProgressRequestsScreenState extends State<InProgressRequestsScreen> {
   void _showRequestDetails(TripRequest request) {
     showDialog(
       context: context,
-      builder: (context) => TripRequestDetailDialog(
-        request: request,
-        onAttendRequest: (request) => _navigateToEditRequest(request),
-        onDelete: (request) => _deleteTripRequest(request),
-      ),
+      builder:
+          (context) => TripRequestDetailDialog(
+            request: request,
+            onAttendRequest: (request) => _navigateToEditRequest(request),
+            onDelete: (request) => _deleteTripRequest(request),
+          ),
     );
   }
 
   Future<void> _deleteTripRequest(TripRequest request) async {
     try {
       await _service.deleteTripRequest(request.id!);
-      
+
       if (mounted) {
         Navigator.pop(context); // Cerrar el diálogo
         ScaffoldMessenger.of(context).showSnackBar(
@@ -363,6 +379,8 @@ class _InProgressRequestsScreenState extends State<InProgressRequestsScreen> {
 
   void _navigateToEditRequest(TripRequest request) {
     Navigator.pop(context); // Cerrar el diálogo de detalles
-    context.push(AppRoutes.attend_request, extra: request).then((_) => _loadRequests());
+    context
+        .push(AppRoutes.attend_request, extra: request)
+        .then((_) => _loadRequests());
   }
 }

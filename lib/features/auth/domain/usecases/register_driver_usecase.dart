@@ -73,17 +73,31 @@ class RegisterDriverUseCase {
       final userId = authResponse.user!.id;
 
       // 3. Subir fotos
+      debugPrint('DEBUG: Subiendo foto de perfil...');
       final profilePhotoUrl = await storageService.uploadImage(
         imageData: kIsWeb ? params.profilePhotoBytes : params.profilePhotoFile,
         userId: userId,
         type: 'profile',
       );
 
+      if (profilePhotoUrl == null) {
+        debugPrint('ERROR: Failed to upload profile photo');
+        return 'Error al subir la foto de perfil. Verifique su conexión a internet.';
+      }
+
+      debugPrint('DEBUG: Subiendo foto del vehículo...');
       final vehiclePhotoUrl = await storageService.uploadImage(
         imageData: kIsWeb ? params.vehiclePhotoBytes : params.vehiclePhotoFile,
         userId: userId,
         type: 'vehicle',
       );
+
+      if (vehiclePhotoUrl == null) {
+        debugPrint('ERROR: Failed to upload vehicle photo');
+        return 'Error al subir la foto del vehículo. Verifique su conexión a internet.';
+      }
+
+      debugPrint('DEBUG: Ambas fotos subidas exitosamente');
 
       // 4. Crear perfil y conductor en la base de datos
       final token = await FirebaseMessaging.instance.getToken();

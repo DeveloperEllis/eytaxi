@@ -1,8 +1,12 @@
 class AppConstants {
 
-static String appname = 'Cubva';
+static String appname = 'Kubaxi';
 static String slogan = 'Conectamos viajeros con taxistas en Cuba';
 static const String registroexitoso = 'assets/checkanimation.json';
+static const String logo = "assets/images/logo.png";
+static const String logoicono = "assets/images/logo_icono.png";
+static const String iconoapk = "assets/images/icono_apk.png";
+
 static const String numero_soporte = '+5358408409';
 static const String numero_gestion = '+5352375007';
 

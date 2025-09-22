@@ -498,6 +498,7 @@ class _PickupDialogContentState extends State<_PickupDialogContent>
                         context: context,
                         labelText: _getContactInputLabel(_selectedContactMethod!),
                         prefixIcon: _getContactIcon(_selectedContactMethod!),
+                        hintText: _getContactInputLabel(_selectedContactMethod!),
                       ).copyWith(
                         filled: true,
                         fillColor:

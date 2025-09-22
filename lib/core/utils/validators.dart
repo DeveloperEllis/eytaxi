@@ -1,10 +1,10 @@
+import 'package:easy_localization/easy_localization.dart';
 import 'package:eytaxi/core/utils/regex_utils.dart';
-import 'package:eytaxi/features/trip_request/presentation/pages/widgets/pickup_dialog.dart';
 
 class Validators {
   static String? validateEmail(String? value) {
     if (value == null || value.isEmpty) {
-      return 'Ingrese un correo electrónico';
+      return 'campo requerido'.tr();
     }
     if (!RegexUtils.emailRegex.hasMatch(value)) {
       return 'Ingrese un correo válido';
@@ -14,7 +14,7 @@ class Validators {
 
   static String? validatePhoneNumber(String? value) {
     if (value == null || value.isEmpty) {
-      return 'Ingrese un número de teléfono';
+      return 'campo requerido'.tr();
     }
     if (!RegexUtils.phoneRegex.hasMatch(value)) {
       return 'Ingrese un número válido';
@@ -24,7 +24,7 @@ class Validators {
 
   static String? validatePassword(String? value) {
     if (value == null || value.isEmpty) {
-      return 'Ingrese una contraseña';
+      return 'campo requerido'.tr();
     }
     if (!RegexUtils.passwordRegex.hasMatch(value)) {
       return 'Contraseña incorrecta';
@@ -34,7 +34,7 @@ class Validators {
 
   static String? validateLicenseNumber(String? value) {
     if (value == null || value.isEmpty) {
-      return 'Ingrese un número de licencia';
+      return 'campo requerido'.tr();
     }
     if (!RegexUtils.isValidLicenciaNumber.hasMatch(value)) {
       return 'El número de licencia no es válido';
@@ -51,7 +51,7 @@ class Validators {
 
   static String? validateVehicleCapacity(String? value) {
     if (value == null || value.isEmpty) {
-      return 'Ingrese la capacidad del vehículo';
+      return 'campo requerido'.tr();
     }
     final capacity = int.tryParse(value);
     if (capacity == null || capacity <= 0) {
@@ -62,14 +62,14 @@ class Validators {
 
   static String? validateNombre(String? value) {
     if (value == null || value.isEmpty) {
-      return 'Ingrese su nombre';
+      return 'campo requerido'.tr();
     }
     return null;
   }
 
   static String? validateApellidos(String? value) {
     if (value == null || value.isEmpty) {
-      return 'Ingrese su apellido';
+      return 'campo requerido'.tr();
     }
     return null;
   }
@@ -83,7 +83,7 @@ class Validators {
 
   static String? valdateDireccion(String? direccion) {
     if (direccion == null || direccion.isEmpty) {
-      return 'Ingrese una dirección';
+      return 'campo requerido'.tr();
     }
     if (direccion.length < 10) {
       return 'Especifique una dirección más detallada';
@@ -93,7 +93,7 @@ class Validators {
 
   static String? validateCantidadPersonas(String? value) {
     if (value == null || value.trim().isEmpty) {
-      return "La cantidad es requerida";
+      return 'campo requerido'.tr();
     }
     final cantidad = int.tryParse(value);
     if (cantidad == null || cantidad < 1 || cantidad > 50) {

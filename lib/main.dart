@@ -46,8 +46,7 @@ Future<void> main() async {
         Locale('en'), // Inglés
         Locale('es'), // Español
         Locale('fr'), // Francés
-        Locale('ru'), // Ruso
-        Locale('it'), // Italiano
+
       ],
       path: 'assets/translations', // Carpeta de traducciones
       fallbackLocale: const Locale('es'),

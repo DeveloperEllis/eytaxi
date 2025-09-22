@@ -1,3 +1,4 @@
+import 'package:eytaxi/core/constants/app_routes.dart';
 import 'package:eytaxi/features/admin/data/admin_trip_request_service.dart';
 import 'package:eytaxi/features/admin/presentation/widgets/trip_request_card_widget.dart';
 import 'package:flutter/material.dart';
@@ -98,6 +99,7 @@ class _AttendRequestScreenState extends State<AttendRequestScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
+        
         title: Text(
           'Atender Solicitud #${widget.request.id?.substring(0, 8) ?? 'N/A'}',
         ),

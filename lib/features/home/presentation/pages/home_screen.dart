@@ -23,7 +23,10 @@ class _HomeScreenState extends State<HomeScreen> {
     final selected = await showMenu<Locale>(
       context: context,
       position: RelativeRect.fromLTRB(
-        position.dx, position.dy, position.dx + 1, position.dy + 1,
+        position.dx,
+        position.dy,
+        position.dx + 1,
+        position.dy + 1,
       ),
       items: const [
         PopupMenuItem(
@@ -59,28 +62,6 @@ class _HomeScreenState extends State<HomeScreen> {
             ],
           ),
         ),
-        PopupMenuItem(
-          value: Locale('ru'),
-          child: Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Text('🇷🇺', style: TextStyle(fontSize: 18)),
-              SizedBox(width: 8),
-              Text('Русский'),
-            ],
-          ),
-        ),
-        PopupMenuItem(
-          value: Locale('it'),
-          child: Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Text('🇮🇹', style: TextStyle(fontSize: 18)),
-              SizedBox(width: 8),
-              Text('Italiano'),
-            ],
-          ),
-        ),
       ],
     );
 
@@ -102,11 +83,7 @@ class _HomeScreenState extends State<HomeScreen> {
       ),
       body: IndexedStack(
         index: _currentIndex,
-        children: const [
-          TripRequestScreen(),
-          ExcursionTab(),
-          InfoScreen(),
-        ],
+        children: const [TripRequestScreen(), ExcursionTab(), InfoScreen()],
       ),
       bottomNavigationBar: HomeBottomNav(
         currentIndex: _currentIndex,

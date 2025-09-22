@@ -35,7 +35,12 @@ class DriverServices {
           .from('drivers')
           .select('routes')
           .eq('id', user.id)
-          .single();
+          .maybeSingle();
+
+      if (driverData == null) {
+        print('DEBUG: User ${user.id} is not a driver, no routes available');
+        return [];
+      }
 
       final List<String> driverRoutes = driverData['routes'] != null
           ? List<String>.from(driverData['routes'])
